@@ -40,6 +40,8 @@ async function getCardId(prBody) {
 
 	const comments = await getPullRequestComments()
 
+	console.log('Received comments', comments)
+
 	for (const comment of comments) {
 		console.log('Looking at comment', comment.body)
 		cardId = matchCardId(comment.body)
