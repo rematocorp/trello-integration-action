@@ -1,6 +1,6 @@
-import axios from 'axios'
-import core from '@actions/core'
-import github from '@actions/github'
+import * as axios from 'axios'
+import * as core from '@actions/core'
+import * as github from '@actions/github'
 
 const { context = {} } = github
 const { pull_request } = context.payload

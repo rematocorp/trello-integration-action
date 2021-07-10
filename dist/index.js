@@ -8974,13 +8974,13 @@ __nccwpck_require__.r(__webpack_exports__);
 
 
 
-const { context = {} } = (_actions_github__WEBPACK_IMPORTED_MODULE_2___default())
+const { context = {} } = _actions_github__WEBPACK_IMPORTED_MODULE_2__
 const { pull_request } = context.payload
 
-const trelloApiKey = _actions_core__WEBPACK_IMPORTED_MODULE_1___default().getInput('trello-api-key', { required: true })
-const trelloAuthToken = _actions_core__WEBPACK_IMPORTED_MODULE_1___default().getInput('trello-auth-token', { required: true })
-const trelloListIdPullRequestOpen = _actions_core__WEBPACK_IMPORTED_MODULE_1___default().getInput('trello-list-id-pr-open')
-const trelloListIdPullRequestClosed = _actions_core__WEBPACK_IMPORTED_MODULE_1___default().getInput('trello-list-id-pr-closed')
+const trelloApiKey = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-api-key', { required: true })
+const trelloAuthToken = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-auth-token', { required: true })
+const trelloListIdPullRequestOpen = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-list-id-pr-open')
+const trelloListIdPullRequestClosed = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-list-id-pr-closed')
 
 async function run(pr) {
 	const url = pr.html_url || pr.url
@@ -9019,7 +9019,7 @@ async function addAttachmentToCard(cardId, link) {
 
 	const url = `https://api.trello.com/1/cards/${cardId}/attachments`
 
-	return await axios__WEBPACK_IMPORTED_MODULE_0___default().post(url, {
+	return await axios__WEBPACK_IMPORTED_MODULE_0__.post(url, {
 			key: trelloApiKey,
 			token: trelloAuthToken,
 			url: link,
@@ -9039,7 +9039,7 @@ async function moveCardToList(cardId, listId) {
 	if (listId && listId.length > 0) {
 		const url = `https://api.trello.com/1/cards/${cardId}`
 
-		return await axios__WEBPACK_IMPORTED_MODULE_0___default().put(url, {
+		return await axios__WEBPACK_IMPORTED_MODULE_0__.put(url, {
 				key: trelloApiKey,
 				token: trelloAuthToken,
 				idList: listId,
