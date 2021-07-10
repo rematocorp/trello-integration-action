@@ -8992,9 +8992,14 @@ async function run(pr) {
 
 		await addAttachmentToCard(cardId, url)
 
-		if (pr.state == 'open' && trelloListIdPullRequestOpen && trelloListIdPullRequestOpen.length > 0) {
+		if (
+			pr.state === 'open' &&
+			pr.mergeable_state !== 'draft' &&
+			trelloListIdPullRequestOpen &&
+			trelloListIdPullRequestOpen.length > 0
+		) {
 			await moveCardToList(cardId, trelloListIdPullRequestOpen)
-		} else if (pr.state == 'closed' && trelloListIdPullRequestClosed && trelloListIdPullRequestClosed.length > 0) {
+		} else if (pr.state === 'closed' && trelloListIdPullRequestClosed && trelloListIdPullRequestClosed.length > 0) {
 			await moveCardToList(cardId, trelloListIdPullRequestClosed)
 		}
 	}
