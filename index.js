@@ -50,7 +50,7 @@ async function getCardId(prBody) {
 }
 
 function matchCardId(text) {
-	const linkRegex = /(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)?/
+	const linkRegex = /(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)/
 	const matches = linkRegex.exec(text)
 
 	if (matches && matches[2]) {
