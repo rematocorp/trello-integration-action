@@ -8985,7 +8985,7 @@ const trelloListIdPullRequestClosed = _actions_core__WEBPACK_IMPORTED_MODULE_1__
 
 async function run(pr) {
 	const url = pr.html_url || pr.url
-	const cardId = getCardId(pr.body)
+	const cardId = await getCardId(pr.body)
 
 	if (cardId && cardId.length > 0) {
 		console.log('Found card id', cardId)
@@ -9000,7 +9000,7 @@ async function run(pr) {
 	}
 }
 
-function getCardId(prBody) {
+async function getCardId(prBody) {
 	console.log('Searching for card id in PR description')
 
 	let cardId = matchCardId(prBody)
@@ -9010,7 +9010,7 @@ function getCardId(prBody) {
 	}
 	console.log('Searching for card id in PR comments')
 
-	const comments = getPullRequestComments()
+	const comments = await getPullRequestComments()
 
 	for (const comment in comments) {
 		cardId = matchCardId(comment.body)
@@ -9030,10 +9030,10 @@ function matchCardId(text) {
 	}
 }
 
-function getPullRequestComments() {
-	const octokit = new _actions_github__WEBPACK_IMPORTED_MODULE_2__.GitHub(githubToken)
+async function getPullRequestComments() {
+	const octokit = _actions_github__WEBPACK_IMPORTED_MODULE_2__.getOctokit(githubToken)
 
-	return octokit.issues.listComments({
+	return await octokit.rest.issues.listComments({
 		owner: (payload.organization || payload.repository.owner).login,
 		repo: payload.repository.name,
 		issue_number: payload.pull_request.number,
