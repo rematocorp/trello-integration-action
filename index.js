@@ -43,6 +43,12 @@ function getCardId(prBody) {
 }
 
 async function addAttachmentToCard(cardId, link) {
+	const extantAttachments = getCardAttachments(cardId)
+
+	if (extantAttachments && extantAttachments.some((it) => it.url === link)) {
+		console.log('Found existing attachment, skipping', cardId, link)
+		return null
+	}
 	console.log('Adding attachment to the card', cardId, link)
 
 	const url = `https://api.trello.com/1/cards/${cardId}/attachments`
@@ -55,6 +61,25 @@ async function addAttachmentToCard(cardId, link) {
 		})
 		.then((response) => {
 			return response.status == 200
+		})
+		.catch((error) => {
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+			return null
+		})
+}
+
+async function getCardAttachments(cardId) {
+	console.log('Checking existing attachments', cardId)
+
+	const url = `https://api.trello.com/1/cards/${cardId}/attachments`
+
+	return await axios
+		.get(url, {
+			key: trelloApiKey,
+			token: trelloAuthToken,
+		})
+		.then((response) => {
+			return response.data
 		})
 		.catch((error) => {
 			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
