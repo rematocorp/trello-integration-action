@@ -12,15 +12,11 @@ const trelloListNamePullRequestOpen = core.getInput('trello-list-name-pr-open', 
 const trelloListNamePullRequestClosed = core.getInput('trello-list-name-pr-closed', { required: false })
 
 function getCardNumber(prBody) {
-	console.log('prBody', prBody)
 	const linkRegex = /^\s*(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)?\s*$/
 	const lines = prBody.split('\r\n')
 
-	console.log('lines', lines)
-
 	for (const line of lines) {
 		const matches = linkRegex.exec(line)
-		console.log('matches', matches)
 
 		if (matches && matches[2]) {
 			return matches[2]
