@@ -13,7 +13,7 @@ jobs:
         with:
           trello-api-key: ${{ secrets.TRELLO_API_KEY }}
           trello-auth-token: ${{ secrets.TRELLO_API_TOKEN }}
-          trello-board-id: ${{ secrets.TRELLO_BOARD }}
+          trello-board-id: ${{ secrets.TRELLO_BOARD_ID }}
           trello-list-name-pr-open: "In Review"
           trello-list-name-pr-closed: "Done"
 ```
