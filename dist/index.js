@@ -9045,8 +9045,10 @@ async function getCardAttachments(cardId) {
 	const url = `https://api.trello.com/1/cards/${cardId}/attachments`
 
 	return await axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
-			key: trelloApiKey,
-			token: trelloAuthToken,
+			params: {
+				key: trelloApiKey,
+				token: trelloAuthToken,
+			},
 		})
 		.then((response) => {
 			return response.data

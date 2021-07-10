@@ -75,8 +75,10 @@ async function getCardAttachments(cardId) {
 
 	return await axios
 		.get(url, {
-			key: trelloApiKey,
-			token: trelloAuthToken,
+			params: {
+				key: trelloApiKey,
+				token: trelloAuthToken,
+			},
 		})
 		.then((response) => {
 			return response.data
