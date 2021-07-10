@@ -11,10 +11,10 @@ inputs:
     trello-auth-token:
         description: Trello auth token, visit https://trello.com/app-key then click generate a token
         required: true
-    trello-list-name-pr-open:
+    trello-list-id-pr-open:
         description: Trello list ID for open pull request, visit a board then append .json to url to find id
         required: false
-    trello-list-name-pr-closed:
+    trello-list-id-pr-closed:
         description: Trello list ID for closed pull request, visit a board then append .json to url to find id
         required: false
 runs:

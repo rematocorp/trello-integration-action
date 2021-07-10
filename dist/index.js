@@ -9015,7 +9015,7 @@ function getCardId(prBody) {
 }
 
 async function addAttachmentToCard(cardId, link) {
-	const extantAttachments = getCardAttachments(cardId)
+	const extantAttachments = await getCardAttachments(cardId)
 
 	if (extantAttachments && extantAttachments.some((it) => it.url === link)) {
 		console.log('Found existing attachment, skipping', cardId, link)
