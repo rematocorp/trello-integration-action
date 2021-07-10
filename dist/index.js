@@ -9040,7 +9040,7 @@ async function getPullRequestComments() {
 		owner: (payload.organization || payload.repository.owner).login,
 		repo: payload.repository.name,
 		issue_number: payload.pull_request.number,
-	})
+	}).data
 }
 
 async function addAttachmentToCard(cardId, link) {
