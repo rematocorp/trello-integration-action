@@ -1,6 +1,6 @@
 # Trello integration action
 
-The action looks for Trello card URL within the Pull Request description (the URL needs to be on a separate line). If found, it will add the Pull Request URL as an attachment to the Trello card. Once PR is opened or closed, it will also move the card to a defined list.
+The action looks for Trello card URL within the Pull Request description and comments. If found, it will add the Pull Request URL as an attachment to the Trello card. Once PR is opened or closed, it will also move the card to a defined list.
 
 ```yaml
 name: Trello integration

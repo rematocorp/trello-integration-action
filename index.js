@@ -3,7 +3,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 
 const { context = {} } = github
-const { pull_request } = context.payload
+const payload = context.payload
 
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
@@ -28,24 +28,49 @@ async function run(pr) {
 }
 
 function getCardId(prBody) {
-	console.log('Searching for card id')
+	console.log('Searching for card id in PR description')
 
-	const linkRegex = /^\s*(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)?\s*$/
-	const lines = prBody.split('\r\n')
+	let cardId = matchCardId(prBody)
 
-	for (const line of lines) {
-		const matches = linkRegex.exec(line)
+	if (cardId) {
+		return cardId
+	}
+	console.log('Searching for card id in PR comments')
 
-		if (matches && matches[2]) {
-			return matches[2]
+	const comments = getPullRequestComments()
+
+	for (const comment in comments) {
+		cardId = matchCardId(comment.body)
+
+		if (cardId) {
+			return cardId
 		}
 	}
+}
+
+function matchCardId(text) {
+	const linkRegex = /(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)?/
+	const matches = linkRegex.exec(text)
+
+	if (matches && matches[2]) {
+		return matches[2]
+	}
+}
+
+function getPullRequestComments() {
+	const octokit = new github.GitHub(ghToken)
+
+	return octokit.issues.listComments({
+		owner: (payload.organization || payload.repository.owner).login,
+		repo: payload.repository.name,
+		issue_number: payload.pull_request.number,
+	})
 }
 
 async function addAttachmentToCard(cardId, link) {
 	const extantAttachments = await getCardAttachments(cardId)
 
-	if (extantAttachments && extantAttachments.some((it) => it.url === link)) {
+	if (extantAttachments && extantAttachments.some((it) => it.url.includes(link))) {
 		console.log('Found existing attachment, skipping', cardId, link)
 		return null
 	}
@@ -112,4 +137,4 @@ async function moveCardToList(cardId, listId) {
 	return null
 }
 
-run(pull_request)
+run(payload.pull_request)
