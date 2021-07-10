@@ -140,4 +140,4 @@ async function moveCardToList(cardId, listId) {
 	return null
 }
 
-run(payload.pull_request)
+run(payload.pull_request || (payload.issue && payload.issue.pull_request))
