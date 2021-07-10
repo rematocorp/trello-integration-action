@@ -1,6 +1,6 @@
-const github = require('@actions/github')
 const axios = require('axios')
 const core = require('@actions/core')
+const github = require('@actions/github')
 
 const { context = {} } = github
 const { pull_request } = context.payload
