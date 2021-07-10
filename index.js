@@ -1,6 +1,6 @@
-import * as axios from 'axios'
-import * as core from '@actions/core'
-import * as github from '@actions/github'
+const github = require('@actions/github')
+const axios = require('axios')
+const core = require('@actions/core')
 
 const { context = {} } = github
 const { pull_request } = context.payload
@@ -25,10 +25,11 @@ function getCardNumber(prBody) {
 }
 
 async function getCardOnBoard(board, prBody) {
-	let card = getCardNumber(prBody)
+	const card = getCardNumber(prBody)
 
 	if (card && card.length > 0) {
-		let url = `https://trello.com/1/boards/${board}/cards/${card}`
+		const url = `https://trello.com/1/boards/${board}/cards/${card}`
+
 		return await axios
 			.get(url, {
 				params: {
@@ -48,7 +49,7 @@ async function getCardOnBoard(board, prBody) {
 }
 
 async function getListOnBoard(board, list) {
-	let url = `https://trello.com/1/boards/${board}/lists`
+	const url = `https://trello.com/1/boards/${board}/lists`
 
 	return await axios
 		.get(url, {
@@ -58,7 +59,7 @@ async function getListOnBoard(board, list) {
 			},
 		})
 		.then((response) => {
-			let result = response.data.find((l) => l.closed == false && l.name == list)
+			const result = response.data.find((l) => l.closed == false && l.name == list)
 			return result ? result.id : null
 		})
 		.catch((error) => {
@@ -68,7 +69,7 @@ async function getListOnBoard(board, list) {
 }
 
 async function addAttachmentToCard(card, link) {
-	let url = `https://api.trello.com/1/cards/${card}/attachments`
+	const url = `https://api.trello.com/1/cards/${card}/attachments`
 
 	return await axios
 		.post(url, {
@@ -86,10 +87,11 @@ async function addAttachmentToCard(card, link) {
 }
 
 async function moveCardToList(board, card, list) {
-	let listId = await getListOnBoard(board, list)
+	const listId = await getListOnBoard(board, list)
 
 	if (listId && listId.length > 0) {
-		let url = `https://api.trello.com/1/cards/${card}`
+		const url = `https://api.trello.com/1/cards/${card}`
+
 		return await axios
 			.put(url, {
 				key: trelloApiKey,
@@ -107,9 +109,9 @@ async function moveCardToList(board, card, list) {
 	return null
 }
 
-async function handlePullRequest(data) {
-	let url = data.html_url || data.url
-	let card = await getCardOnBoard(trelloBoardId, data.body)
+async function run(data) {
+	const url = data.html_url || data.url
+	const card = await getCardOnBoard(trelloBoardId, data.body)
 
 	if (card && card.length > 0) {
 		await addAttachmentToCard(card, url)
@@ -126,4 +128,4 @@ async function handlePullRequest(data) {
 	}
 }
 
-handlePullRequest(pull_request)
+run(pull_request)
