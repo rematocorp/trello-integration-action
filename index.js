@@ -12,6 +12,8 @@ const trelloListNamePullRequestOpen = core.getInput('trello-list-name-pr-open', 
 const trelloListNamePullRequestClosed = core.getInput('trello-list-name-pr-closed', { required: false })
 
 function getCardId(prBody) {
+	console.log('Finding card id')
+
 	const linkRegex = /^\s*(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)?\s*$/
 	const lines = prBody.split('\r\n')
 
@@ -91,9 +93,11 @@ async function moveCardToList(board, card, list) {
 
 async function run(data) {
 	const url = data.html_url || data.url
-	const card = await getCardId(trelloBoardId, data.body)
+	const card = getCardId(trelloBoardId, data.body)
 
 	if (card && card.length > 0) {
+		console.log('Found card id', card)
+
 		await addAttachmentToCard(card, url)
 
 		if (data.state == 'open' && trelloListNamePullRequestOpen && trelloListNamePullRequestOpen.length > 0) {
