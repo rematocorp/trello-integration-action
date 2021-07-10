@@ -4,6 +4,7 @@ import * as github from '@actions/github'
 
 const { context = {} } = github
 const payload = context.payload
+const pullRequest = payload.pull_request || (payload.issue && payload.issue.pull_request)
 
 const githubToken = core.getInput('github-token', { required: true })
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
@@ -64,7 +65,7 @@ async function getPullRequestComments() {
 	const response = await octokit.rest.issues.listComments({
 		owner: (payload.organization || payload.repository.owner).login,
 		repo: payload.repository.name,
-		issue_number: payload.pull_request.number,
+		issue_number: pullRequest.number,
 	})
 
 	return response.data
@@ -140,4 +141,4 @@ async function moveCardToList(cardId, listId) {
 	return null
 }
 
-run(payload.pull_request || (payload.issue && payload.issue.pull_request))
+run(pullRequest)
