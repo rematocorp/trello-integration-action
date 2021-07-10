@@ -9012,7 +9012,7 @@ async function getCardId(prBody) {
 
 	const comments = await getPullRequestComments()
 
-	for (const comment in comments) {
+	for (const comment of comments) {
 		console.log('Looking at comment', comment.body)
 		cardId = matchCardId(comment.body)
 
