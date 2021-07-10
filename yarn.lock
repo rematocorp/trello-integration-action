@@ -115,6 +115,11 @@
   resolved "https://registry.yarnpkg.com/@remato/prettier-config/-/prettier-config-1.0.0.tgz#671a1057ea9613ed3fbfe6e8ef51869a13e41de3"
   integrity sha512-b6E3LmgaMlaGS2EfZXsncifqcLWffmki4tel+oTEpNA+e0X4AD4OLw0yke0El3YriBQaZu9TPKb7eEEbGvxwZg==
 
+"@vercel/ncc@^0.28.6":
+  version "0.28.6"
+  resolved "https://registry.yarnpkg.com/@vercel/ncc/-/ncc-0.28.6.tgz#073c0ce8e0269210c0a9f180fb0bf949eecc20e0"
+  integrity sha512-t4BoSSuyK8BZaUE0gV18V6bkFs4st7baumtFGa50dv1tMu2GDBEBF8sUZaKBdKiL6DzJ2D2+XVCwYWWDcQOYdQ==
+
 axios@^0.21.1:
   version "0.21.1"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.1.tgz#22563481962f4d6bde9a76d516ef0e5d3c09b2b8"
