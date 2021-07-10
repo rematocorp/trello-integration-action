@@ -8935,7 +8935,7 @@ const trelloBoardId = core.getInput('trello-board-id', { required: true })
 const trelloListNamePullRequestOpen = core.getInput('trello-list-name-pr-open', { required: false })
 const trelloListNamePullRequestClosed = core.getInput('trello-list-name-pr-closed', { required: false })
 
-function getCardNumber(prBody) {
+function getCardId(prBody) {
 	const linkRegex = /^\s*(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)?\s*$/
 	const lines = prBody.split('\r\n')
 
@@ -8946,30 +8946,6 @@ function getCardNumber(prBody) {
 			return matches[2]
 		}
 	}
-}
-
-async function getCardOnBoard(board, prBody) {
-	const card = getCardNumber(prBody)
-
-	if (card && card.length > 0) {
-		const url = `https://trello.com/1/boards/${board}/cards/${card}`
-
-		return await axios
-			.get(url, {
-				params: {
-					key: trelloApiKey,
-					token: trelloAuthToken,
-				},
-			})
-			.then((response) => {
-				return response.data.id
-			})
-			.catch((error) => {
-				console.error(url, `Error ${error.response.status} ${error.response.statusText}`)
-				return null
-			})
-	}
-	return null
 }
 
 async function getListOnBoard(board, list) {
@@ -9035,7 +9011,7 @@ async function moveCardToList(board, card, list) {
 
 async function run(data) {
 	const url = data.html_url || data.url
-	const card = await getCardOnBoard(trelloBoardId, data.body)
+	const card = await getCardId(trelloBoardId, data.body)
 
 	if (card && card.length > 0) {
 		await addAttachmentToCard(card, url)
