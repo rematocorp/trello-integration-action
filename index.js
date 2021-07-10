@@ -5,6 +5,7 @@ import * as github from '@actions/github'
 const { context = {} } = github
 const payload = context.payload
 
+const githubToken = core.getInput('github-token', { required: true })
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
 const trelloListIdPullRequestOpen = core.getInput('trello-list-id-pr-open')
@@ -58,7 +59,7 @@ function matchCardId(text) {
 }
 
 function getPullRequestComments() {
-	const octokit = new github.GitHub(ghToken)
+	const octokit = new github.GitHub(githubToken)
 
 	return octokit.issues.listComments({
 		owner: (payload.organization || payload.repository.owner).login,

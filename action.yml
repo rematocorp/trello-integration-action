@@ -5,6 +5,9 @@ branding:
     color: yellow
     icon: anchor
 inputs:
+    github-token:
+        description: Github token, https://docs.github.com/en/actions/reference/authentication-in-a-workflow
+        required: true
     trello-api-key:
         description: Trello API key, visit https://trello.com/app-key for key
         required: true

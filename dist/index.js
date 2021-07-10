@@ -8977,6 +8977,7 @@ __nccwpck_require__.r(__webpack_exports__);
 const { context = {} } = _actions_github__WEBPACK_IMPORTED_MODULE_2__
 const payload = context.payload
 
+const githubToken = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('github-token', { required: true })
 const trelloApiKey = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-api-key', { required: true })
 const trelloAuthToken = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-auth-token', { required: true })
 const trelloListIdPullRequestOpen = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-list-id-pr-open')
@@ -9030,7 +9031,7 @@ function matchCardId(text) {
 }
 
 function getPullRequestComments() {
-	const octokit = new _actions_github__WEBPACK_IMPORTED_MODULE_2__.GitHub(ghToken)
+	const octokit = new _actions_github__WEBPACK_IMPORTED_MODULE_2__.GitHub(githubToken)
 
 	return octokit.issues.listComments({
 		owner: (payload.organization || payload.repository.owner).login,
