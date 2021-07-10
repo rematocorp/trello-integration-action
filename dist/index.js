@@ -8916,24 +8916,88 @@ module.exports = require("zlib");;
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__nccwpck_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__nccwpck_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__nccwpck_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__nccwpck_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";/************************************************************************/
 var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
-const axios = __nccwpck_require__(6545)
-const core = __nccwpck_require__(2186)
-const github = __nccwpck_require__(5438)
+"use strict";
+__nccwpck_require__.r(__webpack_exports__);
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(6545);
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(2186);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(5438);
+/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__nccwpck_require__.n(_actions_github__WEBPACK_IMPORTED_MODULE_2__);
 
-const { context = {} } = github
+
+
+
+const { context = {} } = (_actions_github__WEBPACK_IMPORTED_MODULE_2___default())
 const { pull_request } = context.payload
 
-const trelloApiKey = core.getInput('trello-api-key', { required: true })
-const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
-const trelloBoardId = core.getInput('trello-board-id', { required: true })
-const trelloListNamePullRequestOpen = core.getInput('trello-list-name-pr-open', { required: false })
-const trelloListNamePullRequestClosed = core.getInput('trello-list-name-pr-closed', { required: false })
+const trelloApiKey = _actions_core__WEBPACK_IMPORTED_MODULE_1___default().getInput('trello-api-key', { required: true })
+const trelloAuthToken = _actions_core__WEBPACK_IMPORTED_MODULE_1___default().getInput('trello-auth-token', { required: true })
+const trelloListIdPullRequestOpen = _actions_core__WEBPACK_IMPORTED_MODULE_1___default().getInput('trello-list-id-pr-open')
+const trelloListIdPullRequestClosed = _actions_core__WEBPACK_IMPORTED_MODULE_1___default().getInput('trello-list-id-pr-closed')
+
+async function run(pr) {
+	const url = pr.html_url || pr.url
+	const cardId = getCardId(pr.body)
+
+	if (cardId && cardId.length > 0) {
+		console.log('Found card id', cardId)
+
+		await addAttachmentToCard(cardId, url)
+
+		if (pr.state == 'open' && trelloListIdPullRequestOpen && trelloListIdPullRequestOpen.length > 0) {
+			await moveCardToList(cardId, trelloListIdPullRequestOpen)
+		} else if (pr.state == 'closed' && trelloListIdPullRequestClosed && trelloListIdPullRequestClosed.length > 0) {
+			await moveCardToList(cardId, trelloListIdPullRequestClosed)
+		}
+	}
+}
 
 function getCardId(prBody) {
 	console.log('Searching for card id')
@@ -8950,33 +9014,12 @@ function getCardId(prBody) {
 	}
 }
 
-async function getListOnBoard(board, list) {
-	const url = `https://trello.com/1/boards/${board}/lists`
+async function addAttachmentToCard(cardId, link) {
+	console.log('Adding attachment to the card', cardId, link)
 
-	return await axios
-		.get(url, {
-			params: {
-				key: trelloApiKey,
-				token: trelloAuthToken,
-			},
-		})
-		.then((response) => {
-			const result = response.data.find((l) => l.closed == false && l.name == list)
-			return result ? result.id : null
-		})
-		.catch((error) => {
-			console.error(url, `Error ${error.response.status} ${error.response.statusText}`)
-			return null
-		})
-}
+	const url = `https://api.trello.com/1/cards/${cardId}/attachments`
 
-async function addAttachmentToCard(card, link) {
-	console.log('Adding attachment to the card', card, link)
-
-	const url = `https://api.trello.com/1/cards/${card}/attachments`
-
-	return await axios
-		.post(url, {
+	return await axios__WEBPACK_IMPORTED_MODULE_0___default().post(url, {
 			key: trelloApiKey,
 			token: trelloAuthToken,
 			url: link,
@@ -8985,21 +9028,18 @@ async function addAttachmentToCard(card, link) {
 			return response.status == 200
 		})
 		.catch((error) => {
-			console.error(url, `Error ${error.response.status} ${error.response.statusText}`)
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
 			return null
 		})
 }
 
-async function moveCardToList(board, card, list) {
-	console.log('Moving card to a list', board, card, list)
-
-	const listId = await getListOnBoard(board, list)
+async function moveCardToList(cardId, listId) {
+	console.log('Moving card to a list', cardId, listId)
 
 	if (listId && listId.length > 0) {
-		const url = `https://api.trello.com/1/cards/${card}`
+		const url = `https://api.trello.com/1/cards/${cardId}`
 
-		return await axios
-			.put(url, {
+		return await axios__WEBPACK_IMPORTED_MODULE_0___default().put(url, {
 				key: trelloApiKey,
 				token: trelloAuthToken,
 				idList: listId,
@@ -9008,32 +9048,11 @@ async function moveCardToList(board, card, list) {
 				return response && response.status == 200
 			})
 			.catch((error) => {
-				console.error(url, `Error ${error.response.status} ${error.response.statusText}`)
+				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
 				return null
 			})
 	}
 	return null
-}
-
-async function run(data) {
-	const url = data.html_url || data.url
-	const card = getCardId(data.body)
-
-	if (card && card.length > 0) {
-		console.log('Found card id', card)
-
-		await addAttachmentToCard(card, url)
-
-		if (data.state == 'open' && trelloListNamePullRequestOpen && trelloListNamePullRequestOpen.length > 0) {
-			await moveCardToList(trelloBoardId, card, trelloListNamePullRequestOpen)
-		} else if (
-			data.state == 'closed' &&
-			trelloListNamePullRequestClosed &&
-			trelloListNamePullRequestClosed.length > 0
-		) {
-			await moveCardToList(trelloBoardId, card, trelloListNamePullRequestClosed)
-		}
-	}
 }
 
 run(pull_request)
