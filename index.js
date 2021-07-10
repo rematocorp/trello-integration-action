@@ -28,7 +28,7 @@ async function getCardOnBoard(board, prBody) {
 	const card = getCardNumber(prBody)
 
 	if (card && card.length > 0) {
-		const url = `https://trello.com/1/boards/${board}/cards/${card}`
+		const url = `https://api.trello.com/1/boards/${board}/cards/${card}`
 
 		return await axios
 			.get(url, {
