@@ -1,0 +1,15 @@
+{
+	"name": "@remato/trello-integration-action",
+	"version": "0.0.0",
+	"license": "MIT",
+	"description": "GitHub Action to integrate Github pull requests with Trello cards",
+	"main": "index.js",
+	"dependencies": {
+		"@actions/core": "^1.2.7",
+		"@actions/github": "^5.0.0",
+		"axios": "^0.21.1"
+	},
+	"devDependencies": {
+		"@remato/prettier-config": "^1.0.0"
+	}
+}

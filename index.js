@@ -1,0 +1,129 @@
+import * as axios from 'axios'
+import * as core from '@actions/core'
+import * as github from '@actions/github'
+
+const { context = {} } = github
+const { pull_request } = context.payload
+
+const trelloApiKey = core.getInput('trello-api-key', { required: true })
+const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
+const trelloBoardId = core.getInput('trello-board-id', { required: true })
+const trelloListNamePullRequestOpen = core.getInput('trello-list-name-pr-open', { required: false })
+const trelloListNamePullRequestClosed = core.getInput('trello-list-name-pr-closed', { required: false })
+
+function getCardNumber(prBody) {
+	const linkRegex = /^\s*(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)?\s*$/
+	const lines = prBody.split('\r\n')
+
+	for (const line of lines) {
+		const matches = linkRegex.exec(line)
+
+		if (matches && matches[2]) {
+			return matches[2]
+		}
+	}
+}
+
+async function getCardOnBoard(board, prBody) {
+	let card = getCardNumber(prBody)
+
+	if (card && card.length > 0) {
+		let url = `https://trello.com/1/boards/${board}/cards/${card}`
+		return await axios
+			.get(url, {
+				params: {
+					key: trelloApiKey,
+					token: trelloAuthToken,
+				},
+			})
+			.then((response) => {
+				return response.data.id
+			})
+			.catch((error) => {
+				console.error(url, `Error ${error.response.status} ${error.response.statusText}`)
+				return null
+			})
+	}
+	return null
+}
+
+async function getListOnBoard(board, list) {
+	let url = `https://trello.com/1/boards/${board}/lists`
+
+	return await axios
+		.get(url, {
+			params: {
+				key: trelloApiKey,
+				token: trelloAuthToken,
+			},
+		})
+		.then((response) => {
+			let result = response.data.find((l) => l.closed == false && l.name == list)
+			return result ? result.id : null
+		})
+		.catch((error) => {
+			console.error(url, `Error ${error.response.status} ${error.response.statusText}`)
+			return null
+		})
+}
+
+async function addAttachmentToCard(card, link) {
+	let url = `https://api.trello.com/1/cards/${card}/attachments`
+
+	return await axios
+		.post(url, {
+			key: trelloApiKey,
+			token: trelloAuthToken,
+			url: link,
+		})
+		.then((response) => {
+			return response.status == 200
+		})
+		.catch((error) => {
+			console.error(url, `Error ${error.response.status} ${error.response.statusText}`)
+			return null
+		})
+}
+
+async function moveCardToList(board, card, list) {
+	let listId = await getListOnBoard(board, list)
+
+	if (listId && listId.length > 0) {
+		let url = `https://api.trello.com/1/cards/${card}`
+		return await axios
+			.put(url, {
+				key: trelloApiKey,
+				token: trelloAuthToken,
+				idList: listId,
+			})
+			.then((response) => {
+				return response && response.status == 200
+			})
+			.catch((error) => {
+				console.error(url, `Error ${error.response.status} ${error.response.statusText}`)
+				return null
+			})
+	}
+	return null
+}
+
+async function handlePullRequest(data) {
+	let url = data.html_url || data.url
+	let card = await getCardOnBoard(trelloBoardId, data.body)
+
+	if (card && card.length > 0) {
+		await addAttachmentToCard(card, url)
+
+		if (data.state == 'open' && trelloListNamePullRequestOpen && trelloListNamePullRequestOpen.length > 0) {
+			await moveCardToList(trelloBoardId, card, trelloListNamePullRequestOpen)
+		} else if (
+			data.state == 'closed' &&
+			trelloListNamePullRequestClosed &&
+			trelloListNamePullRequestClosed.length > 0
+		) {
+			await moveCardToList(trelloBoardId, card, trelloListNamePullRequestClosed)
+		}
+	}
+}
+
+handlePullRequest(pull_request)

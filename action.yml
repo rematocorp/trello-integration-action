@@ -1,0 +1,25 @@
+author: Remato
+name: trello-integration
+description: GitHub Action to integrate Github pull requests with Trello cards
+branding:
+    color: yellow
+    icon: anchor
+inputs:
+    trello-api-key:
+        description: Trello API key, visit https://trello.com/app-key for key
+        required: true
+    trello-auth-token:
+        description: Trello auth token, visit https://trello.com/app-key then click generate a token
+        required: true
+    trello-board-id:
+        description: Trello board ID, visit a board then append .json to url to find id
+        required: true
+    trello-list-name-pr-open:
+        description: Trello list name for open pull request, e.g. "In Review"
+        required: false
+    trello-list-name-pr-closed:
+        description: Trello list name for closed pull request, e.g. "Done"
+        required: false
+runs:
+    using: node12
+    main: index.js
