@@ -1,6 +1,6 @@
 {
 	"name": "@remato/trello-integration-action",
-	"version": "1.3.0",
+	"version": "1.3.1",
 	"license": "MIT",
 	"description": "GitHub Action to integrate Github pull requests with Trello cards",
 	"main": "dist/index.js",
