@@ -8992,6 +8992,8 @@ async function run(pr) {
 
 		await addAttachmentToCard(cardId, url)
 
+		console.log('Checking PR state', pr, pr.state)
+
 		if (pr.state == 'open' && trelloListIdPullRequestOpen && trelloListIdPullRequestOpen.length > 0) {
 			await moveCardToList(cardId, trelloListIdPullRequestOpen)
 		} else if (pr.state == 'closed' && trelloListIdPullRequestClosed && trelloListIdPullRequestClosed.length > 0) {
