@@ -8969,6 +8969,8 @@ async function getListOnBoard(board, list) {
 }
 
 async function addAttachmentToCard(card, link) {
+	console.log('Adding attachment to the card', card, link)
+
 	const url = `https://api.trello.com/1/cards/${card}/attachments`
 
 	return await axios
@@ -8987,6 +8989,8 @@ async function addAttachmentToCard(card, link) {
 }
 
 async function moveCardToList(board, card, list) {
+	console.log('Moving card to a list', board, card, list)
+
 	const listId = await getListOnBoard(board, list)
 
 	if (listId && listId.length > 0) {
