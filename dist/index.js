@@ -9012,8 +9012,6 @@ async function getCardId(prBody) {
 
 	const comments = await getPullRequestComments()
 
-	console.log('Received comments', comments)
-
 	for (const comment of comments) {
 		console.log('Looking at comment', comment.body)
 		cardId = matchCardId(comment.body)
@@ -9036,11 +9034,13 @@ function matchCardId(text) {
 async function getPullRequestComments() {
 	const octokit = _actions_github__WEBPACK_IMPORTED_MODULE_2__.getOctokit(githubToken)
 
-	return await octokit.rest.issues.listComments({
+	const response = await octokit.rest.issues.listComments({
 		owner: (payload.organization || payload.repository.owner).login,
 		repo: payload.repository.name,
 		issue_number: payload.pull_request.number,
-	}).data
+	})
+
+	return response.data
 }
 
 async function addAttachmentToCard(cardId, link) {
