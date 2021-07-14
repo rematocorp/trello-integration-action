@@ -8985,12 +8985,13 @@ const trelloListIdPullRequestClosed = _actions_core__WEBPACK_IMPORTED_MODULE_1__
 
 async function run(pr) {
 	const url = pr.html_url || pr.url
-	const cardId = await getCardId(pr.body)
+	const comments = await getPullRequestComments()
+	const cardIds = await getCardIds(pr.body, comments)
 
-	if (cardId && cardId.length > 0) {
-		console.log('Found card id', cardId)
+	if (cardIds.length) {
+		console.log('Found card ids', cardIds)
 
-		await addAttachmentToCard(cardId, url)
+		await addAttachmentToCards(cardIds, url)
 
 		if (
 			pr.state === 'open' &&
@@ -8998,41 +8999,36 @@ async function run(pr) {
 			trelloListIdPullRequestOpen &&
 			trelloListIdPullRequestOpen.length > 0
 		) {
-			await moveCardToList(cardId, trelloListIdPullRequestOpen)
+			await moveCardsToList(cardIds, trelloListIdPullRequestOpen)
 		} else if (pr.state === 'closed' && trelloListIdPullRequestClosed && trelloListIdPullRequestClosed.length > 0) {
-			await moveCardToList(cardId, trelloListIdPullRequestClosed)
+			await moveCardsToList(cardIds, trelloListIdPullRequestClosed)
 		}
 	}
 }
 
-async function getCardId(prBody) {
-	console.log('Searching for card id in PR description')
+async function getCardIds(prBody, comments) {
+	console.log('Searching for card ids')
 
-	let cardId = matchCardId(prBody)
-
-	if (cardId) {
-		return cardId
-	}
-	console.log('Searching for card id in PR comments')
-
-	const comments = await getPullRequestComments()
+	let cardIds = matchCardIds(prBody)
 
 	for (const comment of comments) {
-		cardId = matchCardId(comment.body)
-
-		if (cardId) {
-			return cardId
-		}
+		cardIds = [...cardIds, ...matchCardIds(comment.body)]
 	}
+	return cardIds
 }
 
-function matchCardId(text) {
-	const linkRegex = /(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)/
-	const matches = linkRegex.exec(text)
+function matchCardIds(text) {
+	const matches = text.match(/(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)/g) || []
 
-	if (matches && matches[2]) {
-		return matches[2]
-	}
+	return matches
+		.map((match) => {
+			const result = /(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)/.exec(match)
+
+			if (result && result[2]) {
+				return result[2]
+			}
+		})
+		.filter((cardId, index, self) => cardId && self.indexOf(cardId) === index)
 }
 
 async function getPullRequestComments() {
@@ -9047,29 +9043,27 @@ async function getPullRequestComments() {
 	return response.data
 }
 
-async function addAttachmentToCard(cardId, link) {
-	const extantAttachments = await getCardAttachments(cardId)
+async function addAttachmentToCards(cardIds, link) {
+	cardIds.forEach(async (cardId) => {
+		const extantAttachments = await getCardAttachments(cardId)
 
-	if (extantAttachments && extantAttachments.some((it) => it.url.includes(link))) {
-		console.log('Found existing attachment, skipping', cardId, link)
-		return null
-	}
-	console.log('Adding attachment to the card', cardId, link)
+		if (extantAttachments && extantAttachments.some((it) => it.url.includes(link))) {
+			console.log('Found existing attachment, skipping', cardId, link)
+			return
+		}
+		console.log('Adding attachment to the card', cardId, link)
 
-	const url = `https://api.trello.com/1/cards/${cardId}/attachments`
+		const url = `https://api.trello.com/1/cards/${cardId}/attachments`
 
-	return await axios__WEBPACK_IMPORTED_MODULE_0__.post(url, {
-			key: trelloApiKey,
-			token: trelloAuthToken,
-			url: link,
-		})
-		.then((response) => {
-			return response.status == 200
-		})
-		.catch((error) => {
-			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
-			return null
-		})
+		axios__WEBPACK_IMPORTED_MODULE_0__.post(url, {
+				key: trelloApiKey,
+				token: trelloAuthToken,
+				url: link,
+			})
+			.catch((error) => {
+				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+			})
+	})
 }
 
 async function getCardAttachments(cardId) {
@@ -9092,26 +9086,23 @@ async function getCardAttachments(cardId) {
 		})
 }
 
-async function moveCardToList(cardId, listId) {
-	console.log('Moving card to a list', cardId, listId)
+function moveCardsToList(cardIds, listId) {
+	cardIds.forEach((cardId) => {
+		console.log('Moving card to a list', cardId, listId)
 
-	if (listId && listId.length > 0) {
-		const url = `https://api.trello.com/1/cards/${cardId}`
+		if (listId && listId.length > 0) {
+			const url = `https://api.trello.com/1/cards/${cardId}`
 
-		return await axios__WEBPACK_IMPORTED_MODULE_0__.put(url, {
-				key: trelloApiKey,
-				token: trelloAuthToken,
-				idList: listId,
-			})
-			.then((response) => {
-				return response && response.status == 200
-			})
-			.catch((error) => {
-				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
-				return null
-			})
-	}
-	return null
+			axios__WEBPACK_IMPORTED_MODULE_0__.put(url, {
+					key: trelloApiKey,
+					token: trelloAuthToken,
+					idList: listId,
+				})
+				.catch((error) => {
+					console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+				})
+		}
+	})
 }
 
 run(payload.pull_request || payload.issue)
