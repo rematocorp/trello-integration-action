@@ -8,29 +8,29 @@ const payload = context.payload
 const githubToken = core.getInput('github-token', { required: true })
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
-const trelloListIdPullRequestOpen = core.getInput('trello-list-id-pr-open')
-const trelloListIdPullRequestClosed = core.getInput('trello-list-id-pr-closed')
+const trelloListIdPrOpen = core.getInput('trello-list-id-pr-open')
+const trelloListIdPrClosed = core.getInput('trello-list-id-pr-closed')
 
 async function run(pr) {
 	const url = pr.html_url || pr.url
-	const comments = await getPullRequestComments()
-	const cardIds = await getCardIds(pr.body, comments)
 
-	if (cardIds.length) {
-		console.log('Found card ids', cardIds)
+	try {
+		const comments = await getPullRequestComments()
+		const cardIds = await getCardIds(pr.body, comments)
 
-		await addAttachmentToCards(cardIds, url)
+		if (cardIds.length) {
+			console.log('Found card ids', cardIds)
 
-		if (
-			pr.state === 'open' &&
-			pr.mergeable_state !== 'draft' &&
-			trelloListIdPullRequestOpen &&
-			trelloListIdPullRequestOpen.length > 0
-		) {
-			await moveCardsToList(cardIds, trelloListIdPullRequestOpen)
-		} else if (pr.state === 'closed' && trelloListIdPullRequestClosed && trelloListIdPullRequestClosed.length > 0) {
-			await moveCardsToList(cardIds, trelloListIdPullRequestClosed)
+			await addAttachmentToCards(cardIds, url)
+
+			if (pr.state === 'open' && pr.mergeable_state !== 'draft' && trelloListIdPrOpen) {
+				await moveCardsToList(cardIds, trelloListIdPrOpen)
+			} else if (pr.state === 'closed' && trelloListIdPrClosed) {
+				await moveCardsToList(cardIds, trelloListIdPrClosed)
+			}
 		}
+	} catch (error) {
+		core.setFailed(error)
 	}
 }
 
@@ -45,7 +45,7 @@ async function getCardIds(prBody, comments) {
 	return cardIds
 }
 
-function matchCardIds(text) {
+function matchCardIds(text = '') {
 	const matches = text.match(/(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)/g) || []
 
 	return matches
@@ -76,7 +76,7 @@ async function addAttachmentToCards(cardIds, link) {
 		const extantAttachments = await getCardAttachments(cardId)
 
 		if (extantAttachments && extantAttachments.some((it) => it.url.includes(link))) {
-			console.log('Found existing attachment, skipping', cardId, link)
+			console.log('Found existing attachment, skipping adding attachment', cardId, link)
 			return
 		}
 		console.log('Adding attachment to the card', cardId, link)
