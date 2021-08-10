@@ -9009,7 +9009,7 @@ async function run(pr) {
 async function getCardIds(prBody, comments) {
 	console.log('Searching for card ids')
 
-	let cardIds = matchCardIds(prBody)
+	let cardIds = matchCardIds(prBody || '')
 
 	for (const comment of comments) {
 		cardIds = [...cardIds, ...matchCardIds(comment.body)]
@@ -9017,7 +9017,7 @@ async function getCardIds(prBody, comments) {
 	return cardIds
 }
 
-function matchCardIds(text = '') {
+function matchCardIds(text) {
 	const matches = text.match(/(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)/g) || []
 
 	return matches
