@@ -9119,6 +9119,7 @@ async function addLabelToCards(cardIds, branchName) {
 	if (!branchName) {
 		console.warn('Skipping label adding to cards because PR branchName is missing')
 	}
+
 	cardIds.forEach(async (cardId) => {
 		const cardInfo = await getCardInfo(cardId)
 
@@ -9126,6 +9127,7 @@ async function addLabelToCards(cardIds, branchName) {
 			console.log('Skipping label adding to a card because card already has labels')
 			return
 		}
+
 		const boardLabels = await getBoardLabels(cardInfo.idBoard)
 		const branchLabel = getBranchLabel(branchName)
 		const matchingLabel = findMatchingLabel(branchLabel, boardLabels)
@@ -9153,10 +9155,7 @@ async function getCardInfo(cardId) {
 				token: trelloAuthToken,
 			},
 		})
-		.then((response) => {
-			console.log('Card info', JSON.stringify(response.data))
-			return response.data
-		})
+		.then((response) => response.data)
 		.catch((error) => {
 			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
 		})
@@ -9173,10 +9172,7 @@ async function getBoardLabels(boardId) {
 				token: trelloAuthToken,
 			},
 		})
-		.then((response) => {
-			console.log('Board labels', response.data)
-			return response.data
-		})
+		.then((response) => response.data)
 		.catch((error) => {
 			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
 		})
@@ -9196,7 +9192,14 @@ function findMatchingLabel(branchLabel, boardLabels) {
 	if (!branchLabel) {
 		return
 	}
-	return boardLabels.find((label) => label.name === branchLabel)
+	const match = boardLabels.find((label) => label.name === branchLabel)
+
+	if (match) {
+		return match
+	}
+	console.log('Could not match the exact label name, trying to find partially matching label')
+
+	return boardLabels.find((label) => branchLabel.startsWith(label.name))
 }
 
 async function addLabelToCard(cardId, labelId) {
