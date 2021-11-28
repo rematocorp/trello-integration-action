@@ -9154,14 +9154,11 @@ async function getCardInfo(cardId) {
 			},
 		})
 		.then((response) => {
-			console.log('Card info', JSON.stringify(cardInfo))
+			console.log('Card info', JSON.stringify(response.data))
 			return response.data
 		})
 		.catch((error) => {
-			if (error.response) {
-				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
-			}
-			console.error('Error', error.message, url)
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
 		})
 }
 
