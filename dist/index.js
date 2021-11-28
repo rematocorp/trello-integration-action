@@ -9145,7 +9145,7 @@ async function addLabelToCards(cardIds, branchName) {
 }
 
 async function getCardInfo(cardId) {
-	console.log('Getting card info')
+	console.log('Getting card info', cardId)
 
 	const url = `https://api.trello.com/1/cards/${cardId}`
 
@@ -9162,7 +9162,7 @@ async function getCardInfo(cardId) {
 }
 
 async function getBoardLabels(boardId) {
-	console.log('Getting board labels')
+	console.log('Getting board labels', boardId)
 
 	const url = `https://api.trello.com/1/boards/${boardId}/labels`
 
