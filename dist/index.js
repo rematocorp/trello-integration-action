@@ -9147,7 +9147,7 @@ async function getCardInfo(cardId) {
 
 	const url = `https://api.trello.com/1/cards/${cardId}`
 
-	await axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
+	return await axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
 			params: {
 				key: trelloApiKey,
 				token: trelloAuthToken,
@@ -9165,7 +9165,7 @@ async function getCardInfo(cardId) {
 async function getBoardLabels(boardId) {
 	const url = `https://api.trello.com/1/boards/${boardId}/labels`
 
-	await axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
+	return await axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
 			params: {
 				key: trelloApiKey,
 				token: trelloAuthToken,

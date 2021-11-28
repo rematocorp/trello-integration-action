@@ -178,7 +178,7 @@ async function getCardInfo(cardId) {
 
 	const url = `https://api.trello.com/1/cards/${cardId}`
 
-	await axios
+	return await axios
 		.get(url, {
 			params: {
 				key: trelloApiKey,
@@ -197,7 +197,7 @@ async function getCardInfo(cardId) {
 async function getBoardLabels(boardId) {
 	const url = `https://api.trello.com/1/boards/${boardId}/labels`
 
-	await axios
+	return await axios
 		.get(url, {
 			params: {
 				key: trelloApiKey,
