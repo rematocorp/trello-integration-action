@@ -27,6 +27,14 @@ async function run(pr) {
 				await moveCardsToList(cardIds, trelloListIdPrOpen)
 			} else if (pr.state === 'closed' && trelloListIdPrClosed) {
 				await moveCardsToList(cardIds, trelloListIdPrClosed)
+			} else {
+				console.log(
+					'Skipping moving the cards',
+					pr.state,
+					pr.mergeable_state,
+					trelloListIdPrOpen,
+					trelloListIdPrClosed,
+				)
 			}
 		}
 	} catch (error) {
@@ -120,19 +128,17 @@ function moveCardsToList(cardIds, listId) {
 	cardIds.forEach((cardId) => {
 		console.log('Moving card to a list', cardId, listId)
 
-		if (listId && listId.length > 0) {
-			const url = `https://api.trello.com/1/cards/${cardId}`
+		const url = `https://api.trello.com/1/cards/${cardId}`
 
-			axios
-				.put(url, {
-					key: trelloApiKey,
-					token: trelloAuthToken,
-					idList: listId,
-				})
-				.catch((error) => {
-					console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
-				})
-		}
+		axios
+			.put(url, {
+				key: trelloApiKey,
+				token: trelloAuthToken,
+				idList: listId,
+			})
+			.catch((error) => {
+				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+			})
 	})
 }
 
