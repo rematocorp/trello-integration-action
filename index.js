@@ -178,36 +178,40 @@ async function getCardInfo(cardId) {
 
 	const url = `https://api.trello.com/1/cards/${cardId}`
 
-	try {
-		const response = await axios.get(url, {
+	await axios
+		.get(url, {
 			params: {
 				key: trelloApiKey,
 				token: trelloAuthToken,
 			},
 		})
-		console.log('Card info', JSON.stringify(cardInfo))
-		return response.data
-	} catch (error) {
-		console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
-	}
+		.then((response) => {
+			console.log('Card info', JSON.stringify(cardInfo))
+			return response.data
+		})
+		.catch((error) => {
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+		})
 }
 
 async function getBoardLabels(boardId) {
 	const url = `https://api.trello.com/1/boards/${boardId}/labels`
 
-	try {
-		const response = await axios.get(url, {
+	await axios
+		.get(url, {
 			params: {
 				key: trelloApiKey,
 				token: trelloAuthToken,
 				fields: 'idBoard',
 			},
 		})
-		console.log('Board labels', reponse.data)
-		return response.data
-	} catch (error) {
-		console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
-	}
+		.then((response) => {
+			console.log('Board labels', reponse.data)
+			return response.data
+		})
+		.catch((error) => {
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+		})
 }
 
 function getBranchLabel(branchName) {
