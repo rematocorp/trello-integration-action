@@ -9158,18 +9158,22 @@ async function getCardInfo(cardId) {
 			return response.data
 		})
 		.catch((error) => {
-			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+			if (error.response) {
+				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+			}
+			console.error('Error', error.message, url)
 		})
 }
 
 async function getBoardLabels(boardId) {
+	console.log('Getting board labels')
+
 	const url = `https://api.trello.com/1/boards/${boardId}/labels`
 
 	return await axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
 			params: {
 				key: trelloApiKey,
 				token: trelloAuthToken,
-				fields: 'idBoard',
 			},
 		})
 		.then((response) => {
