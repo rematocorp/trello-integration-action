@@ -8984,6 +8984,7 @@ const trelloListIdPrOpen = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('
 const trelloListIdPrClosed = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-list-id-pr-closed')
 
 async function run(pr) {
+	console.log('Running labels feature')
 	const url = pr.html_url || pr.url
 
 	try {
@@ -8994,11 +8995,20 @@ async function run(pr) {
 			console.log('Found card ids', cardIds)
 
 			await addAttachmentToCards(cardIds, url)
+			await addLabelToCards(cardIds, pr.head?.ref)
 
 			if (pr.state === 'open' && pr.mergeable_state !== 'draft' && trelloListIdPrOpen) {
 				await moveCardsToList(cardIds, trelloListIdPrOpen)
 			} else if (pr.state === 'closed' && trelloListIdPrClosed) {
 				await moveCardsToList(cardIds, trelloListIdPrClosed)
+			} else {
+				console.log(
+					'Skipping moving the cards',
+					pr.state,
+					pr.mergeable_state,
+					trelloListIdPrOpen,
+					trelloListIdPrClosed,
+				)
 			}
 		}
 	} catch (error) {
@@ -9090,19 +9100,115 @@ function moveCardsToList(cardIds, listId) {
 	cardIds.forEach((cardId) => {
 		console.log('Moving card to a list', cardId, listId)
 
-		if (listId && listId.length > 0) {
-			const url = `https://api.trello.com/1/cards/${cardId}`
+		const url = `https://api.trello.com/1/cards/${cardId}`
 
-			axios__WEBPACK_IMPORTED_MODULE_0__.put(url, {
-					key: trelloApiKey,
-					token: trelloAuthToken,
-					idList: listId,
-				})
-				.catch((error) => {
-					console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
-				})
+		axios__WEBPACK_IMPORTED_MODULE_0__.put(url, {
+				key: trelloApiKey,
+				token: trelloAuthToken,
+				idList: listId,
+			})
+			.catch((error) => {
+				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+			})
+	})
+}
+
+async function addLabelToCards(cardIds, branchName) {
+	console.log('Starting to add label to cards')
+
+	if (!branchName) {
+		console.warn('Skipping label adding to cards because PR branchName is missing')
+	}
+	cardIds.forEach(async (cardId) => {
+		const cardInfo = await getCardInfo(cardId)
+
+		if (cardInfo.idLabels.length) {
+			console.log('Skipping label adding to a card because card already has labels')
+			return
+		}
+		const boardLabels = await getBoardLabels(cardInfo.idBoard)
+		const branchLabel = getBranchLabel(branchName)
+		const matchingLabel = findMatchingLabel(branchLabel, boardLabels)
+
+		if (matchingLabel) {
+			await addLabelToCard(cardId, matchingLabel.id)
+		} else {
+			console.log(
+				'Skipping label adding to a card because could not find a matching label from the board',
+				branchLabel,
+				boardLabels,
+			)
 		}
 	})
+}
+
+async function getCardInfo(cardId) {
+	console.log('Getting card info')
+
+	const url = `https://api.trello.com/1/cards/${cardId}`
+
+	try {
+		const response = await axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
+			params: {
+				key: trelloApiKey,
+				token: trelloAuthToken,
+			},
+		})
+		console.log('Card info', JSON.stringify(cardInfo))
+		return response.data
+	} catch (error) {
+		console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+	}
+}
+
+async function getBoardLabels(boardId) {
+	const url = `https://api.trello.com/1/boards/${boardId}/labels`
+
+	try {
+		const response = await axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
+			params: {
+				key: trelloApiKey,
+				token: trelloAuthToken,
+				fields: 'idBoard',
+			},
+		})
+		console.log('Board labels', reponse.data)
+		return response.data
+	} catch (error) {
+		console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+	}
+}
+
+function getBranchLabel(branchName) {
+	const matches = branchName.match(/^([^\/]*)\//)
+
+	if (matches) {
+		return matches[1]
+	} else {
+		console.log('Did not found branch label', branchName)
+	}
+}
+
+function findMatchingLabel(branchLabel, boardLabels) {
+	if (!branchLabel) {
+		return
+	}
+	return boardLabels.find((label) => label.name === branchLabel)
+}
+
+async function addLabelToCard(cardId, labelId) {
+	console.log('Adding label to a card', cardId, labelId)
+
+	const url = `https://api.trello.com/1/cards/${cardId}/idLabels`
+
+	axios__WEBPACK_IMPORTED_MODULE_0__.post(url, {
+			key: trelloApiKey,
+			token: trelloAuthToken,
+			value: labelId,
+		})
+		.catch((error) => {
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+		})
 }
 
 run(payload.pull_request || payload.issue)
