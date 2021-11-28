@@ -9178,7 +9178,10 @@ async function getBoardLabels(boardId) {
 			return response.data
 		})
 		.catch((error) => {
-			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+			if (error.reponse) {
+				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+			}
+			console.error('Error', error.message, url)
 		})
 }
 
