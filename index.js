@@ -12,6 +12,7 @@ const trelloListIdPrOpen = core.getInput('trello-list-id-pr-open')
 const trelloListIdPrClosed = core.getInput('trello-list-id-pr-closed')
 
 async function run(pr) {
+	console.log('Running labels feature')
 	const url = pr.html_url || pr.url
 
 	try {
