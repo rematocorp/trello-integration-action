@@ -23,7 +23,7 @@ async function run(pr) {
 			console.log('Found card ids', cardIds)
 
 			await addAttachmentToCards(cardIds, url)
-			await addLabelToCards(cardIds, pr.head?.ref)
+			await addLabelToCards(cardIds, pr.head && pr.head.ref)
 
 			if (pr.state === 'open' && pr.mergeable_state !== 'draft' && trelloListIdPrOpen) {
 				await moveCardsToList(cardIds, trelloListIdPrOpen)
