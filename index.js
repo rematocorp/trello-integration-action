@@ -207,14 +207,11 @@ async function getBoardLabels(boardId) {
 			},
 		})
 		.then((response) => {
-			console.log('Board labels', reponse.data)
+			console.log('Board labels', response.data)
 			return response.data
 		})
 		.catch((error) => {
-			if (error.reponse) {
-				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
-			}
-			console.error('Error', error.message, url)
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
 		})
 }
 
