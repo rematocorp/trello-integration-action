@@ -3,9 +3,10 @@
 Connects GitHub PRs and Trello cards:
 
 -   attaches PR link to a Trello card ([works best with GitHub Power-up](https://trello.com/power-ups/55a5d916446f517774210004/github)),
--   moves Trello card when PR is opened or closed.
+-   moves Trello card when PR is opened or closed,
+-   adds an appropriate board label to a Trello card when branch name is categorised (e.g. `feature/foo`) and Trello card already doesn't have a label.
 
-The action looks for Trello card URL within the Pull Request description and comments. If found, it will add the Pull Request URL as an attachment to the Trello card. When PR is opened or closed, it will move the card to a defined list.
+The action looks for Trello card URL within the Pull Request description and comments. If found, it will integrate the two worlds.
 
 ```yaml
 name: Trello integration
