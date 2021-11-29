@@ -8977,7 +8977,7 @@ __nccwpck_require__.r(__webpack_exports__);
 const { context = {} } = _actions_github__WEBPACK_IMPORTED_MODULE_2__
 const payload = context.payload
 
-console.log('Debug context', JSON.stringify(context))
+console.log('Debug github', JSON.stringify(_actions_github__WEBPACK_IMPORTED_MODULE_2__))
 
 const githubToken = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('github-token', { required: true })
 const trelloApiKey = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-api-key', { required: true })
