@@ -8984,7 +8984,6 @@ const trelloListIdPrOpen = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('
 const trelloListIdPrClosed = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-list-id-pr-closed')
 
 async function run(pr) {
-	console.log('Running labels feature')
 	const url = pr.html_url || pr.url
 
 	try {
