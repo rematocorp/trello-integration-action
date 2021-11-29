@@ -9179,7 +9179,7 @@ async function getBoardLabels(boardId) {
 }
 
 async function getBranchLabel(head) {
-	const branchName = await getBranchName(pr)
+	const branchName = await getBranchName(head)
 	const matches = branchName.match(/^([^\/]*)\//)
 
 	if (matches) {
