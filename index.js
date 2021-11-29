@@ -150,6 +150,7 @@ async function addLabelToCards(cardIds, branchName) {
 
 	if (!branchName) {
 		console.warn('Skipping label adding to cards because PR branchName is missing')
+		return
 	}
 
 	cardIds.forEach(async (cardId) => {
