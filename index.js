@@ -11,6 +11,10 @@ const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
 const trelloListIdPrOpen = core.getInput('trello-list-id-pr-open')
 const trelloListIdPrClosed = core.getInput('trello-list-id-pr-closed')
 
+const octokit = github.getOctokit(githubToken)
+const repoOwner = (payload.organization || payload.repository.owner).login
+const issueNumber = (payload.pull_request || payload.issue).number
+
 async function run(pr) {
 	const url = pr.html_url || pr.url
 
@@ -22,7 +26,7 @@ async function run(pr) {
 			console.log('Found card ids', cardIds)
 
 			await addAttachmentToCards(cardIds, url)
-			await addLabelToCards(cardIds, pr.head && pr.head.ref)
+			await addLabelToCards(cardIds, pr.head)
 
 			if (pr.state === 'open' && pr.mergeable_state !== 'draft' && trelloListIdPrOpen) {
 				await moveCardsToList(cardIds, trelloListIdPrOpen)
@@ -71,14 +75,11 @@ function matchCardIds(text) {
 }
 
 async function getPullRequestComments() {
-	const octokit = github.getOctokit(githubToken)
-
 	const response = await octokit.rest.issues.listComments({
-		owner: (payload.organization || payload.repository.owner).login,
+		owner: repoOwner,
 		repo: payload.repository.name,
-		issue_number: (payload.pull_request || payload.issue).number,
+		issue_number: issueNumber,
 	})
-
 	return response.data
 }
 
@@ -145,11 +146,13 @@ function moveCardsToList(cardIds, listId) {
 	})
 }
 
-async function addLabelToCards(cardIds, branchName) {
+async function addLabelToCards(cardIds, head) {
 	console.log('Starting to add label to cards')
 
-	if (!branchName) {
-		console.warn('Skipping label adding to cards because PR branchName is missing')
+	const branchLabel = await getBranchLabel(head)
+
+	if (!branchLabel) {
+		console.log('Could not find branch label')
 		return
 	}
 
@@ -162,17 +165,12 @@ async function addLabelToCards(cardIds, branchName) {
 		}
 
 		const boardLabels = await getBoardLabels(cardInfo.idBoard)
-		const branchLabel = getBranchLabel(branchName)
 		const matchingLabel = findMatchingLabel(branchLabel, boardLabels)
 
 		if (matchingLabel) {
 			await addLabelToCard(cardId, matchingLabel.id)
 		} else {
-			console.log(
-				'Skipping label adding to a card because could not find a matching label from the board',
-				branchLabel,
-				boardLabels,
-			)
+			console.log('Could not find a matching label from the board', branchLabel, boardLabels)
 		}
 	})
 }
@@ -213,7 +211,8 @@ async function getBoardLabels(boardId) {
 		})
 }
 
-function getBranchLabel(branchName) {
+async function getBranchLabel(head) {
+	const branchName = await getBranchName(pr)
 	const matches = branchName.match(/^([^\/]*)\//)
 
 	if (matches) {
@@ -221,6 +220,20 @@ function getBranchLabel(branchName) {
 	} else {
 		console.log('Did not found branch label', branchName)
 	}
+}
+
+async function getBranchName(head) {
+	if (head && head.ref) {
+		return head.ref
+	}
+	console.log('Requesting pull request head ref')
+
+	const response = await octokit.rest.pulls.get({
+		owner: repoOwner,
+		repo: payload.repository.name,
+		pull_number: issueNumber,
+	})
+	return response.data.head.ref
 }
 
 function findMatchingLabel(branchLabel, boardLabels) {
