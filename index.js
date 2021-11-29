@@ -5,6 +5,8 @@ import * as github from '@actions/github'
 const { context = {} } = github
 const payload = context.payload
 
+console.log('Debug payload', JSON.stringify(payload))
+
 const githubToken = core.getInput('github-token', { required: true })
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
