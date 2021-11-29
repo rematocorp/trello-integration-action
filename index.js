@@ -37,6 +37,8 @@ async function run(pr) {
 					trelloListIdPrClosed,
 				)
 			}
+		} else {
+			console.log('Could not find card IDs')
 		}
 	} catch (error) {
 		core.setFailed(error)

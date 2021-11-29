@@ -9009,6 +9009,8 @@ async function run(pr) {
 					trelloListIdPrClosed,
 				)
 			}
+		} else {
+			console.log('Could not find card IDs')
 		}
 	} catch (error) {
 		_actions_core__WEBPACK_IMPORTED_MODULE_1__.setFailed(error)
