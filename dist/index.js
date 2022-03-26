@@ -8993,12 +8993,23 @@ async function run(pr) {
 	try {
 		const comments = await getPullRequestComments()
 		const cardIds = await getCardIds(pr.body, comments)
+		var ghAssignee = null
+		var memberId = null
+
+		if(pr.assignee) {
+			console.log("PR assignee found")
+			ghAssignee = pr.assignee.login
+			memberId = await getMemberId(ghAssignee)
+		} else {
+			console.log("No PR assignee found")
+		}
 
 		if (cardIds.length) {
 			console.log('Found card ids', cardIds)
 
 			await addAttachmentToCards(cardIds, url)
 			await addLabelToCards(cardIds, pr.head)
+			await addExclusiveMemberToCards(cardIds, memberId)
 
 			if (pr.state === 'open' && pr.mergeable_state !== 'draft' && trelloListIdPrOpen) {
 				await moveCardsToList(cardIds, trelloListIdPrOpen)
@@ -9144,6 +9155,29 @@ async function addLabelToCards(cardIds, head) {
 	})
 }
 
+// adds user to card members and removes anyone else assigned to it
+async function addExclusiveMemberToCards(cardIds, memberId) {
+	console.log('Starting to add exclusive member to cards')
+
+	cardIds.forEach(async (cardId) => {
+		const cardInfo = await getCardInfo(cardId)
+		const unwantedMembers = cardInfo.idMembers.filter(checkedId => checkedId !== memberId);
+
+		if (unwantedMembers.length) {
+			console.log('Removing all unwanted card members')
+
+			unwantedMembers.forEach(unwantedMemberId => {
+				removeMemberFromCard(cardId, unwantedMemberId)
+			});
+		}
+
+		// add card member if any and if not already member
+		if(memberId && !cardInfo.idMembers.includes(memberId)) {
+			addMemberToCard(cardId, memberId)
+		}
+	})
+}
+
 async function getCardInfo(cardId) {
 	console.log('Getting card info', cardId)
 
@@ -9230,6 +9264,62 @@ async function addLabelToCard(cardId, labelId) {
 		.catch((error) => {
 			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
 		})
+}
+
+// adds Trello user to card members
+async function addMemberToCard(cardId, memberId) {
+	console.log('Adding member to a card', cardId, memberId)
+
+	const url = `https://api.trello.com/1/cards/${cardId}/idMembers`
+
+	axios__WEBPACK_IMPORTED_MODULE_0__.post(url, {
+		key: trelloApiKey,
+		token: trelloAuthToken,
+		value: memberId,
+	})
+	.catch((error) => {
+		console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+	})
+}
+
+// removes Trello user from card
+async function removeMemberFromCard(cardId, memberId) {
+	console.log('Removing card member', cardId, memberId)
+
+	const url = `https://api.trello.com/1/cards/${cardId}/idMembers/${memberId}`
+
+	await axios__WEBPACK_IMPORTED_MODULE_0__.delete(url, {
+		params: {
+			key: trelloApiKey,
+			token: trelloAuthToken,
+		}
+	})
+	.catch((error) => {
+		console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+	})
+}
+
+// returns Trello member identifier based on the user's GitHub name
+async function getMemberId(githubUserName) {
+	const trelloName = githubUserName.replace('-', '_')
+	const url = `https://api.trello.com/1/members/${trelloName}`
+
+	console.log('Searching member id by name', trelloName)
+
+	return await axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
+		params: {
+			key: trelloApiKey,
+			token: trelloAuthToken,
+		},
+	})
+	.then((response) => {
+		const memberId = response.data.id
+		console.log('Found member id by name', memberId, trelloName)
+		return memberId
+	})
+	.catch((error) => {
+		console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+	})
 }
 
 run(payload.pull_request || payload.issue)
