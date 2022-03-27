@@ -8999,6 +8999,7 @@ async function run(pr) {
 
 			await addAttachmentToCards(cardIds, url)
 			await addLabelToCards(cardIds, pr.head)
+			await updateCardMembers(cardIds, pr.assignees)
 
 			if (pr.state === 'open' && pr.mergeable_state !== 'draft' && trelloListIdPrOpen) {
 				await moveCardsToList(cardIds, trelloListIdPrOpen)
@@ -9144,23 +9145,6 @@ async function addLabelToCards(cardIds, head) {
 	})
 }
 
-async function getCardInfo(cardId) {
-	console.log('Getting card info', cardId)
-
-	const url = `https://api.trello.com/1/cards/${cardId}`
-
-	return await axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
-			params: {
-				key: trelloApiKey,
-				token: trelloAuthToken,
-			},
-		})
-		.then((response) => response.data)
-		.catch((error) => {
-			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
-		})
-}
-
 async function getBoardLabels(boardId) {
 	console.log('Getting board labels', boardId)
 
@@ -9227,6 +9211,112 @@ async function addLabelToCard(cardId, labelId) {
 			token: trelloAuthToken,
 			value: labelId,
 		})
+		.catch((error) => {
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+		})
+}
+
+function updateCardMembers(cardIds, assignees) {
+	console.log('Starting to update card members')
+
+	if (!assignees || !assignees.length) {
+		console.log('No PR assignees found')
+		return
+	}
+	const memberIds = assignees.map(async (assignee) => await getTrelloMemberId(assignee.login))
+
+	if (!memberIds.length) {
+		console.log('No Trello members found based on PR assignees')
+	}
+	cardIds.forEach(async (cardId) => {
+		const cardInfo = await getCardInfo(cardId)
+
+		removeUnrelatedMembers(cardInfo, memberIds)
+		addNewMembers(cardInfo, memberIds)
+	})
+}
+
+async function getTrelloMemberId(githubUserName) {
+	console.log('Searching Trello member id by Github username', githubUserName)
+
+	const url = `https://api.trello.com/1/members/${githubUserName}`
+
+	return await axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
+			params: {
+				key: trelloApiKey,
+				token: trelloAuthToken,
+			},
+		})
+		.then((response) => {
+			const memberId = response.data.id
+			console.log('Found member id by name', memberId, githubUserName)
+
+			return memberId
+		})
+		.catch((error) => {
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+		})
+}
+
+function removeUnrelatedMembers(cardInfo, memberIds) {
+	console.log('Removing all unrelated card members', cardInfo.id)
+
+	cardInfo.idMembers
+		.filter((id) => !memberIds.includes(id))
+		.forEach((unrelatedMemberId) => removeMemberFromCard(cardInfo.id, unrelatedMemberId))
+}
+
+function addNewMembers(cardInfo, memberIds) {
+	console.log('Adding new members to a card', cardInfo.id)
+
+	memberIds
+		.filter((id) => !cardInfo.idMembers.includes(id))
+		.forEach((memberId) => addMemberToCard(cardInfo.id, memberId))
+}
+
+function removeMemberFromCard(cardId, memberId) {
+	console.log('Removing card member', cardId, memberId)
+
+	const url = `https://api.trello.com/1/cards/${cardId}/idMembers/${memberId}`
+
+	axios__WEBPACK_IMPORTED_MODULE_0__.delete(url, {
+			params: {
+				key: trelloApiKey,
+				token: trelloAuthToken,
+			},
+		})
+		.catch((error) => {
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+		})
+}
+
+function addMemberToCard(cardId, memberId) {
+	console.log('Adding member to a card', cardId, memberId)
+
+	const url = `https://api.trello.com/1/cards/${cardId}/idMembers`
+
+	axios__WEBPACK_IMPORTED_MODULE_0__.post(url, {
+			key: trelloApiKey,
+			token: trelloAuthToken,
+			value: memberId,
+		})
+		.catch((error) => {
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+		})
+}
+
+async function getCardInfo(cardId) {
+	console.log('Getting card info', cardId)
+
+	const url = `https://api.trello.com/1/cards/${cardId}`
+
+	return await axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
+			params: {
+				key: trelloApiKey,
+				token: trelloAuthToken,
+			},
+		})
+		.then((response) => response.data)
 		.catch((error) => {
 			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
 		})
