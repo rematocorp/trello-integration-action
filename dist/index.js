@@ -9251,9 +9251,11 @@ async function updateCardMembers(cardIds, assignees) {
 }
 
 function getTrelloMemberId(githubUserName) {
-	console.log('Searching Trello member id by Github username', githubUserName)
+	const username = githubUserName.replace('-', '_')
 
-	const url = `https://api.trello.com/1/members/${githubUserName}`
+	console.log('Searching Trello member id by username', username)
+
+	const url = `https://api.trello.com/1/members/${username}`
 
 	return axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
 			params: {
@@ -9263,7 +9265,7 @@ function getTrelloMemberId(githubUserName) {
 		})
 		.then((response) => {
 			const memberId = response.data.id
-			console.log('Found member id by name', memberId, githubUserName)
+			console.log('Found member id by name', memberId, username)
 
 			return memberId
 		})
