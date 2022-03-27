@@ -9273,16 +9273,12 @@ function getTrelloMemberId(githubUserName) {
 }
 
 function removeUnrelatedMembers(cardInfo, memberIds) {
-	console.log('Removing all unrelated card members', cardInfo.id)
-
 	cardInfo.idMembers
 		.filter((id) => !memberIds.includes(id))
 		.forEach((unrelatedMemberId) => removeMemberFromCard(cardInfo.id, unrelatedMemberId))
 }
 
 function addNewMembers(cardInfo, memberIds) {
-	console.log('Adding new members to a card', cardInfo.id)
-
 	memberIds
 		.filter((id) => !cardInfo.idMembers.includes(id))
 		.forEach((memberId) => addMemberToCard(cardInfo.id, memberId))

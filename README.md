@@ -5,7 +5,7 @@ Connects GitHub PRs and Trello cards:
 -   attaches PR link to a Trello card ([works best with GitHub Power-up](https://trello.com/power-ups/55a5d916446f517774210004/github)),
 -   moves Trello card when PR is opened or closed,
 -   adds an appropriate board label to a Trello card when branch name is categorised (e.g. `feature/foo`) and Trello card already doesn't have a label,
--   exclusively assigns the PR owner and fellow assignees to the Trello card when they own the same usernames in Github and Trello.
+-   exclusively assigns the PR author and fellow assignees to the Trello card when they own the same usernames in Github and Trello.
 
 The action looks for Trello card URL within the PR description and comments. If found, it will integrate the two worlds.
 
