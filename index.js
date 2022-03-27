@@ -95,8 +95,7 @@ async function getPullRequestAssignees() {
 		repo: payload.repository.name,
 		issue_number: issueNumber,
 	})
-	console.log('Received', response.data)
-	return response.data.assignees
+	return [...response.data.assignees, response.data.user]
 }
 
 async function addAttachmentToCards(cardIds, link) {
@@ -267,7 +266,7 @@ async function addLabelToCard(cardId, labelId) {
 function updateCardMembers(cardIds, assignees) {
 	console.log('Starting to update card members')
 
-	if (!assignees || !assignees.length) {
+	if (!assignees.length) {
 		console.log('No PR assignees found')
 		return
 	}
