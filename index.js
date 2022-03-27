@@ -270,8 +270,10 @@ function updateCardMembers(cardIds, assignees) {
 		console.log('No PR assignees found')
 		return
 	}
-	const memberIds = assignees.map(async (assignee) => await getTrelloMemberId(assignee.login))
-
+	const memberIds = assignees.map(async (assignee) => {
+		const memberId = await getTrelloMemberId(assignee.login)
+		return memberId
+	})
 	if (!memberIds.length) {
 		console.log('No Trello members found based on PR assignees')
 	}
