@@ -9067,6 +9067,7 @@ async function getPullRequestAssignees() {
 		repo: payload.repository.name,
 		issue_number: issueNumber,
 	})
+	console.log('Received', response.data)
 	return response.data.assignees
 }
 
