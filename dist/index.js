@@ -9237,7 +9237,8 @@ async function updateCardMembers(cardIds, assignees) {
 		console.log('No PR assignees found')
 		return
 	}
-	const memberIds = await Promise.all(assignees.map((assignee) => getTrelloMemberId(assignee.login)))
+	const result = await Promise.all(assignees.map((assignee) => getTrelloMemberId(assignee.login)))
+	const memberIds = result.filter((id) => id)
 
 	if (!memberIds.length) {
 		console.log('No Trello members found based on PR assignees')
@@ -9276,13 +9277,13 @@ function getTrelloMemberId(githubUserName) {
 
 function removeUnrelatedMembers(cardInfo, memberIds) {
 	cardInfo.idMembers
-		.filter((id) => id && !memberIds.includes(id))
+		.filter((id) => !memberIds.includes(id))
 		.forEach((unrelatedMemberId) => removeMemberFromCard(cardInfo.id, unrelatedMemberId))
 }
 
 function addNewMembers(cardInfo, memberIds) {
 	memberIds
-		.filter((id) => id && !cardInfo.idMembers.includes(id))
+		.filter((id) => !cardInfo.idMembers.includes(id))
 		.forEach((memberId) => addMemberToCard(cardInfo.id, memberId))
 }
 
