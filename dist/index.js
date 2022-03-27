@@ -8992,14 +8992,15 @@ async function run(pr) {
 
 	try {
 		const comments = await getPullRequestComments()
+		const assignees = await getPullRequestAssignees()
 		const cardIds = await getCardIds(pr.body, comments)
 
 		if (cardIds.length) {
 			console.log('Found card ids', cardIds)
 
 			await addAttachmentToCards(cardIds, url)
+			await updateCardMembers(cardIds, assignees)
 			await addLabelToCards(cardIds, pr.head)
-			await updateCardMembers(cardIds, pr.assignees)
 
 			if (pr.state === 'open' && pr.mergeable_state !== 'draft' && trelloListIdPrOpen) {
 				await moveCardsToList(cardIds, trelloListIdPrOpen)
@@ -9048,12 +9049,25 @@ function matchCardIds(text) {
 }
 
 async function getPullRequestComments() {
+	console.log('Requesting pull request comments')
+
 	const response = await octokit.rest.issues.listComments({
 		owner: repoOwner,
 		repo: payload.repository.name,
 		issue_number: issueNumber,
 	})
 	return response.data
+}
+
+async function getPullRequestAssignees() {
+	console.log('Requesting pull request assignees')
+
+	const response = await octokit.rest.issues.get({
+		owner: repoOwner,
+		repo: payload.repository.name,
+		issue_number: issueNumber,
+	})
+	return response.data.assignees
 }
 
 async function addAttachmentToCards(cardIds, link) {
