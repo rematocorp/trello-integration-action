@@ -9230,17 +9230,15 @@ async function addLabelToCard(cardId, labelId) {
 		})
 }
 
-function updateCardMembers(cardIds, assignees) {
+async function updateCardMembers(cardIds, assignees) {
 	console.log('Starting to update card members')
 
 	if (!assignees.length) {
 		console.log('No PR assignees found')
 		return
 	}
-	const memberIds = assignees.map(async (assignee) => {
-		const memberId = await getTrelloMemberId(assignee.login)
-		return memberId
-	})
+	const memberIds = await Promise.all(assignees.map((assignee) => getTrelloMemberId(assignee.login)))
+
 	if (!memberIds.length) {
 		console.log('No Trello members found based on PR assignees')
 	}
@@ -9252,12 +9250,12 @@ function updateCardMembers(cardIds, assignees) {
 	})
 }
 
-async function getTrelloMemberId(githubUserName) {
+function getTrelloMemberId(githubUserName) {
 	console.log('Searching Trello member id by Github username', githubUserName)
 
 	const url = `https://api.trello.com/1/members/${githubUserName}`
 
-	return await axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
+	return axios__WEBPACK_IMPORTED_MODULE_0__.get(url, {
 			params: {
 				key: trelloApiKey,
 				token: trelloAuthToken,
