@@ -310,13 +310,13 @@ function getTrelloMemberId(githubUserName) {
 
 function removeUnrelatedMembers(cardInfo, memberIds) {
 	cardInfo.idMembers
-		.filter((id) => !memberIds.includes(id))
+		.filter((id) => id && !memberIds.includes(id))
 		.forEach((unrelatedMemberId) => removeMemberFromCard(cardInfo.id, unrelatedMemberId))
 }
 
 function addNewMembers(cardInfo, memberIds) {
 	memberIds
-		.filter((id) => !cardInfo.idMembers.includes(id))
+		.filter((id) => id && !cardInfo.idMembers.includes(id))
 		.forEach((memberId) => addMemberToCard(cardInfo.id, memberId))
 }
 
