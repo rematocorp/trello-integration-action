@@ -9242,6 +9242,7 @@ async function updateCardMembers(cardIds, assignees) {
 
 	if (!memberIds.length) {
 		console.log('No Trello members found based on PR assignees')
+		return
 	}
 	cardIds.forEach(async (cardId) => {
 		const cardInfo = await getCardInfo(cardId)

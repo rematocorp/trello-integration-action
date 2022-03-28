@@ -1,3 +1,3 @@
-- Write your changes to `index.ts` and not `dist/index.js`
-- Make sure your changes are [prettified](https://prettier.io/)
-- Run `yarn build` before commiting your changes
+-   Write your changes to `index.js` and not `dist/index.js`
+-   Make sure your changes are [prettified](https://prettier.io/)
+-   Run `yarn build` before commiting your changes
