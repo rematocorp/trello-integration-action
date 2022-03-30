@@ -9270,9 +9270,11 @@ function getTrelloMemberId(githubUserName) {
 		.then((response) => {
 			const memberId = response.data.id
 			console.log('Found member id by name', memberId, username)
+			console.log(trelloOrganizationName)
+			console.log(response.data.organizations)
 
 			if (trelloOrganizationName) {
-				const hasAccess = response.organizations?.some((org) => org.name === trelloOrganizationName)
+				const hasAccess = response.data.organizations?.some((org) => org.name === trelloOrganizationName)
 
 				if (!hasAccess) {
 					console.log('...but the member has no access to the org')
