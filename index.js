@@ -8,6 +8,7 @@ const payload = context.payload
 const githubToken = core.getInput('github-token', { required: true })
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
+const trelloOrganizationName = core.getInput('trello-organization-name')
 const trelloListIdPrOpen = core.getInput('trello-list-id-pr-open')
 const trelloListIdPrClosed = core.getInput('trello-list-id-pr-closed')
 
@@ -301,10 +302,17 @@ function getTrelloMemberId(githubUserName) {
 			},
 		})
 		.then((response) => {
-			console.log(response.data)
 			const memberId = response.data.id
 			console.log('Found member id by name', memberId, username)
 
+			if (trelloOrganizationName) {
+				const hasAccess = response.organizations?.some((org) => org.name === trelloOrganizationName)
+
+				if (!hasAccess) {
+					console.log('...but the member has no access to the org')
+					return
+				}
+			}
 			return memberId
 		})
 		.catch((error) => {

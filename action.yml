@@ -14,6 +14,9 @@ inputs:
     trello-auth-token:
         description: Trello auth token, visit https://trello.com/app-key then click generate a token
         required: true
+    trello-organization-name:
+        description: Your organization name to avoid assigning cards to outside members, edit your workspace details and look for the short name
+        required: false
     trello-list-id-pr-open:
         description: Trello list ID for open pull request, visit a board then append .json to url to find id
         required: false

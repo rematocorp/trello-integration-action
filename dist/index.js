@@ -8980,6 +8980,7 @@ const payload = context.payload
 const githubToken = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('github-token', { required: true })
 const trelloApiKey = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-api-key', { required: true })
 const trelloAuthToken = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-auth-token', { required: true })
+const trelloOrganizationName = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-organization-name')
 const trelloListIdPrOpen = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-list-id-pr-open')
 const trelloListIdPrClosed = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-list-id-pr-closed')
 
@@ -9267,10 +9268,17 @@ function getTrelloMemberId(githubUserName) {
 			},
 		})
 		.then((response) => {
-			console.log(response.data)
 			const memberId = response.data.id
 			console.log('Found member id by name', memberId, username)
 
+			if (trelloOrganizationName) {
+				const hasAccess = response.organizations?.some((org) => org.name === trelloOrganizationName)
+
+				if (!hasAccess) {
+					console.log('...but the member has no access to the org')
+					return
+				}
+			}
 			return memberId
 		})
 		.catch((error) => {
