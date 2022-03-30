@@ -297,9 +297,11 @@ function getTrelloMemberId(githubUserName) {
 			params: {
 				key: trelloApiKey,
 				token: trelloAuthToken,
+				organizations: 'members',
 			},
 		})
 		.then((response) => {
+			console.log(response.data)
 			const memberId = response.data.id
 			console.log('Found member id by name', memberId, username)
 
