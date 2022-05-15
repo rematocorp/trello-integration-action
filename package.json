@@ -10,7 +10,7 @@
 	"dependencies": {
 		"@actions/core": "^1.8.0",
 		"@actions/github": "^5.0.1",
-		"axios": "^0.26.1"
+		"axios": "^0.27.2"
 	},
 	"devDependencies": {
 		"@remato/prettier-config": "^1.0.0",
