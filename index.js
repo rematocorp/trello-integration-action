@@ -321,15 +321,23 @@ function getTrelloMemberId(githubUserName) {
 }
 
 function removeUnrelatedMembers(cardInfo, memberIds) {
-	cardInfo.idMembers
-		.filter((id) => !memberIds.includes(id))
-		.forEach((unrelatedMemberId) => removeMemberFromCard(cardInfo.id, unrelatedMemberId))
+	const filtered = cardInfo.idMembers.filter((id) => !memberIds.includes(id))
+
+	if (!filtered.length) {
+		console.log('Did not find any unrelated members')
+		return
+	}
+	filtered.forEach((unrelatedMemberId) => removeMemberFromCard(cardInfo.id, unrelatedMemberId))
 }
 
 function addNewMembers(cardInfo, memberIds) {
-	memberIds
-		.filter((id) => !cardInfo.idMembers.includes(id))
-		.forEach((memberId) => addMemberToCard(cardInfo.id, memberId))
+	const filtered = memberIds.filter((id) => !cardInfo.idMembers.includes(id))
+
+	if (!filtered.length) {
+		console.log('All members are already assigned to the card')
+		return
+	}
+	filtered.forEach((memberId) => addMemberToCard(cardInfo.id, memberId))
 }
 
 function removeMemberFromCard(cardId, memberId) {
