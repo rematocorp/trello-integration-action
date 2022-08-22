@@ -9118,7 +9118,7 @@ async function getCardAttachments(cardId) {
 
 function moveCardsToList(cardIds, listId) {
 	return Promise.all(
-		cardIds.forEach((cardId) => {
+		cardIds.map((cardId) => {
 			console.log('Moving card to a list', cardId, listId)
 
 			const url = `https://api.trello.com/1/cards/${cardId}`
