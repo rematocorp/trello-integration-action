@@ -9,6 +9,7 @@ const githubToken = core.getInput('github-token', { required: true })
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
 const trelloOrganizationName = core.getInput('trello-organization-name')
+const trelloBoardId = core.getInput('trello-board-id')
 const trelloListIdPrOpen = core.getInput('trello-list-id-pr-open')
 const trelloListIdPrClosed = core.getInput('trello-list-id-pr-closed')
 
@@ -155,6 +156,7 @@ function moveCardsToList(cardIds, listId) {
 				key: trelloApiKey,
 				token: trelloAuthToken,
 				idList: listId,
+				...(trelloBoardId && { idBoard: trelloBoardId }),
 			})
 			.catch((error) => {
 				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
