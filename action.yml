@@ -18,7 +18,7 @@ inputs:
         description: Your organization name to avoid assigning cards to outside members, edit your workspace details and look for the short name
         required: false
     trello-board-id:
-        description: Trello board ID where to move the card, visit a board then append .json to url to find id
+        description: Trello board ID where to move the cards, visit a board then append .json to url to find id
         required: false
     trello-list-id-pr-open:
         description: Trello list ID for open pull request, visit a board then append .json to url to find id

@@ -26,7 +26,7 @@ jobs:
                   trello-api-key: ${{ secrets.TRELLO_API_KEY }} # https://trello.com/app-key
                   trello-auth-token: ${{ secrets.TRELLO_AUTH_TOKEN }} # https://trello.com/app-key then click generate a token
                   trello-organization-name: remato # Your organization name to avoid assigning cards to outside members, edit your workspace details and look for the short name
-                  trello-board-id: ${{ secrets.TRELLO_BOARD_ID }} # Trello board ID where to move the card, visit a board then append .json to url to find id
+                  trello-board-id: ${{ secrets.TRELLO_BOARD_ID }} # Trello board ID where to move the cards, visit a board then append .json to url to find id
                   trello-list-id-pr-open: ${{ secrets.TRELLO_PR_OPEN_LIST_ID }} # Trello list ID for open pull request, visit a board then append .json to url to find id
                   trello-list-id-pr-closed: ${{ secrets.TRELLO_PR_CLOSED_LIST_ID }} # Trello list ID for closed pull request, visit a board then append .json to url to find id
 ```

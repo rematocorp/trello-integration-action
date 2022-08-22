@@ -9000,10 +9000,6 @@ async function run(pr) {
 		if (cardIds.length) {
 			console.log('Found card ids', cardIds)
 
-			await addAttachmentToCards(cardIds, url)
-			await updateCardMembers(cardIds, assignees)
-			await addLabelToCards(cardIds, pr.head)
-
 			if (pr.state === 'open' && pr.mergeable_state !== 'draft' && trelloListIdPrOpen) {
 				await moveCardsToList(cardIds, trelloListIdPrOpen)
 			} else if (pr.state === 'closed' && trelloListIdPrClosed) {
@@ -9017,6 +9013,9 @@ async function run(pr) {
 					trelloListIdPrClosed,
 				)
 			}
+			await addAttachmentToCards(cardIds, url)
+			await updateCardMembers(cardIds, assignees)
+			await addLabelToCards(cardIds, pr.head)
 		} else {
 			console.log('Could not find card IDs')
 		}
