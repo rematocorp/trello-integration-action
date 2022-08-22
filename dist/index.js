@@ -9002,8 +9002,10 @@ async function run(pr) {
 
 			if (pr.state === 'open' && pr.mergeable_state !== 'draft' && trelloListIdPrOpen) {
 				await moveCardsToList(cardIds, trelloListIdPrOpen)
+				console.log('Moved cards to opened PR list')
 			} else if (pr.state === 'closed' && trelloListIdPrClosed) {
 				await moveCardsToList(cardIds, trelloListIdPrClosed)
+				console.log('Moved cards to closed PR list')
 			} else {
 				console.log(
 					'Skipping moving the cards',
@@ -9115,21 +9117,23 @@ async function getCardAttachments(cardId) {
 }
 
 function moveCardsToList(cardIds, listId) {
-	cardIds.forEach((cardId) => {
-		console.log('Moving card to a list', cardId, listId)
+	return Promise.all(
+		cardIds.forEach((cardId) => {
+			console.log('Moving card to a list', cardId, listId)
 
-		const url = `https://api.trello.com/1/cards/${cardId}`
+			const url = `https://api.trello.com/1/cards/${cardId}`
 
-		axios__WEBPACK_IMPORTED_MODULE_0__.put(url, {
-				key: trelloApiKey,
-				token: trelloAuthToken,
-				idList: listId,
-				...(trelloBoardId && { idBoard: trelloBoardId }),
-			})
-			.catch((error) => {
-				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
-			})
-	})
+			return axios__WEBPACK_IMPORTED_MODULE_0__.put(url, {
+					key: trelloApiKey,
+					token: trelloAuthToken,
+					idList: listId,
+					...(trelloBoardId && { idBoard: trelloBoardId }),
+				})
+				.catch((error) => {
+					console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+				})
+		}),
+	)
 }
 
 async function addLabelToCards(cardIds, head) {
