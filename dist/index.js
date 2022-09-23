@@ -9074,26 +9074,28 @@ async function getPullRequestAssignees() {
 }
 
 async function addAttachmentToCards(cardIds, link) {
-	cardIds.forEach(async (cardId) => {
-		const extantAttachments = await getCardAttachments(cardId)
+	return Promise.all(
+		cardIds.map(async (cardId) => {
+			const extantAttachments = await getCardAttachments(cardId)
 
-		if (extantAttachments && extantAttachments.some((it) => it.url.includes(link))) {
-			console.log('Found existing attachment, skipping adding attachment', cardId, link)
-			return
-		}
-		console.log('Adding attachment to the card', cardId, link)
+			if (extantAttachments && extantAttachments.some((it) => it.url.includes(link))) {
+				console.log('Found existing attachment, skipping adding attachment', cardId, link)
+				return
+			}
+			console.log('Adding attachment to the card', cardId, link)
 
-		const url = `https://api.trello.com/1/cards/${cardId}/attachments`
+			const url = `https://api.trello.com/1/cards/${cardId}/attachments`
 
-		axios__WEBPACK_IMPORTED_MODULE_0__.post(url, {
-				key: trelloApiKey,
-				token: trelloAuthToken,
-				url: link,
-			})
-			.catch((error) => {
-				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
-			})
-	})
+			return axios__WEBPACK_IMPORTED_MODULE_0__.post(url, {
+					key: trelloApiKey,
+					token: trelloAuthToken,
+					url: link,
+				})
+				.catch((error) => {
+					console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+				})
+		}),
+	)
 }
 
 async function getCardAttachments(cardId) {
