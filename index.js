@@ -183,7 +183,7 @@ async function addLabelToCards(cardIds, head) {
 		const cardInfo = await getCardInfo(cardId)
 
 		if (cardInfo.idLabels.length) {
-			console.log('Skipping label adding to a card because card already has labels')
+			console.log('Skipping label adding to a card because card already has labels', cardInfo.idLabels)
 			return
 		}
 
