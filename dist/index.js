@@ -8985,7 +8985,7 @@ const trelloBoardId = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trell
 const trelloListIdPrOpen = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-list-id-pr-open')
 const trelloListIdPrClosed = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-list-id-pr-closed')
 const trelloConflictingLabels = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-conflicting-labels')?.split(';')
-const trelloLabelsToKeep = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-keep-labels')?.split(';')
+const trelloLabelsToKeep = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('trello-labels-to-keep')?.split(';')
 
 const octokit = _actions_github__WEBPACK_IMPORTED_MODULE_2__.getOctokit(githubToken)
 const repoOwner = (payload.organization || payload.repository.owner).login

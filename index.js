@@ -13,7 +13,7 @@ const trelloBoardId = core.getInput('trello-board-id')
 const trelloListIdPrOpen = core.getInput('trello-list-id-pr-open')
 const trelloListIdPrClosed = core.getInput('trello-list-id-pr-closed')
 const trelloConflictingLabels = core.getInput('trello-conflicting-labels')?.split(';')
-const trelloLabelsToKeep = core.getInput('trello-keep-labels')?.split(';')
+const trelloLabelsToKeep = core.getInput('trello-labels-to-keep')?.split(';')
 
 const octokit = github.getOctokit(githubToken)
 const repoOwner = (payload.organization || payload.repository.owner).login
