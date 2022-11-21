@@ -20,7 +20,7 @@ jobs:
     build:
         runs-on: ubuntu-latest
         steps:
-            - uses: rematocorp/trello-integration-action@v5
+            - uses: rematocorp/trello-integration-action@v6
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
                   trello-api-key: ${{ secrets.TRELLO_API_KEY }} # https://trello.com/app-key
