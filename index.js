@@ -12,6 +12,8 @@ const trelloOrganizationName = core.getInput('trello-organization-name')
 const trelloBoardId = core.getInput('trello-board-id')
 const trelloListIdPrOpen = core.getInput('trello-list-id-pr-open')
 const trelloListIdPrClosed = core.getInput('trello-list-id-pr-closed')
+const trelloConflictingLabels = core.getInput('trello-conflicting-labels')?.split(';')
+const trelloLabelsToKeep = core.getInput('trello-keep-labels')?.split(';')
 
 const octokit = github.getOctokit(githubToken)
 const repoOwner = (payload.organization || payload.repository.owner).login
@@ -25,30 +27,26 @@ async function run(pr) {
 		const assignees = await getPullRequestAssignees()
 		const cardIds = await getCardIds(pr.body, comments)
 
-		if (cardIds.length) {
-			console.log('Found card ids', cardIds)
-
-			if (pr.state === 'open' && pr.mergeable_state !== 'draft' && trelloListIdPrOpen) {
-				await moveCardsToList(cardIds, trelloListIdPrOpen)
-				console.log('Moved cards to opened PR list')
-			} else if (pr.state === 'closed' && trelloListIdPrClosed) {
-				await moveCardsToList(cardIds, trelloListIdPrClosed)
-				console.log('Moved cards to closed PR list')
-			} else {
-				console.log(
-					'Skipping moving the cards',
-					pr.state,
-					pr.mergeable_state,
-					trelloListIdPrOpen,
-					trelloListIdPrClosed,
-				)
-			}
-			await addAttachmentToCards(cardIds, url)
-			await updateCardMembers(cardIds, assignees)
-			await addLabelToCards(cardIds, pr.head)
-		} else {
+		if (!cardIds.length) {
 			console.log('Could not find card IDs')
+			return
 		}
+		console.log('Found card IDs', cardIds)
+
+		const existingLabels = await getCardsLabels(cardIds)
+
+		if (pr.state === 'open' && pr.mergeable_state !== 'draft' && trelloListIdPrOpen) {
+			await moveCardsToList(cardIds, trelloListIdPrOpen)
+			console.log('Moved cards to opened PR list')
+		} else if (pr.state === 'closed' && trelloListIdPrClosed) {
+			await moveCardsToList(cardIds, trelloListIdPrClosed)
+			console.log('Moved cards to closed PR list')
+		} else {
+			console.log('Skipping moving the cards', pr.state, pr.mergeable_state)
+		}
+		await addAttachmentToCards(cardIds, url)
+		await updateCardMembers(cardIds, assignees)
+		await addLabelToCards(cardIds, pr.head, existingLabels)
 	} catch (error) {
 		core.setFailed(error)
 	}
@@ -101,6 +99,40 @@ async function getPullRequestAssignees() {
 	return [...response.data.assignees, response.data.user]
 }
 
+async function getCardsLabels(cardIds) {
+	return Promise.all(
+		cardIds.reduce(async (acc, cardId) => {
+			const cardInfo = await getCardInfo(cardId)
+
+			return {
+				...acc,
+				[cardId]: cardInfo.labels.map((label) => label.name),
+			}
+		}, {}),
+	)
+}
+
+function moveCardsToList(cardIds, listId) {
+	return Promise.all(
+		cardIds.map((cardId) => {
+			console.log('Moving card to a list', cardId, listId)
+
+			const url = `https://api.trello.com/1/cards/${cardId}`
+
+			return axios
+				.put(url, {
+					key: trelloApiKey,
+					token: trelloAuthToken,
+					idList: listId,
+					...(trelloBoardId && { idBoard: trelloBoardId }),
+				})
+				.catch((error) => {
+					console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+				})
+		}),
+	)
+}
+
 async function addAttachmentToCards(cardIds, link) {
 	return Promise.all(
 		cardIds.map(async (cardId) => {
@@ -145,129 +177,6 @@ async function getCardAttachments(cardId) {
 		.catch((error) => {
 			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
 			return null
-		})
-}
-
-function moveCardsToList(cardIds, listId) {
-	return Promise.all(
-		cardIds.map((cardId) => {
-			console.log('Moving card to a list', cardId, listId)
-
-			const url = `https://api.trello.com/1/cards/${cardId}`
-
-			return axios
-				.put(url, {
-					key: trelloApiKey,
-					token: trelloAuthToken,
-					idList: listId,
-					...(trelloBoardId && { idBoard: trelloBoardId }),
-				})
-				.catch((error) => {
-					console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
-				})
-		}),
-	)
-}
-
-async function addLabelToCards(cardIds, head) {
-	console.log('Starting to add label to cards')
-
-	const branchLabel = await getBranchLabel(head)
-
-	if (!branchLabel) {
-		console.log('Could not find branch label')
-		return
-	}
-
-	cardIds.forEach(async (cardId) => {
-		const cardInfo = await getCardInfo(cardId)
-
-		if (cardInfo.idLabels.length) {
-			console.log('Skipping label adding to a card because card already has labels', cardInfo.idLabels)
-			return
-		}
-
-		const boardLabels = await getBoardLabels(cardInfo.idBoard)
-		const matchingLabel = findMatchingLabel(branchLabel, boardLabels)
-
-		if (matchingLabel) {
-			await addLabelToCard(cardId, matchingLabel.id)
-		} else {
-			console.log('Could not find a matching label from the board', branchLabel, boardLabels)
-		}
-	})
-}
-
-async function getBoardLabels(boardId) {
-	console.log('Getting board labels', boardId)
-
-	const url = `https://api.trello.com/1/boards/${boardId}/labels`
-
-	return await axios
-		.get(url, {
-			params: {
-				key: trelloApiKey,
-				token: trelloAuthToken,
-			},
-		})
-		.then((response) => response.data)
-		.catch((error) => {
-			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
-		})
-}
-
-async function getBranchLabel(head) {
-	const branchName = await getBranchName(head)
-	const matches = branchName.match(/^([^\/]*)\//)
-
-	if (matches) {
-		return matches[1]
-	} else {
-		console.log('Did not found branch label', branchName)
-	}
-}
-
-async function getBranchName(head) {
-	if (head && head.ref) {
-		return head.ref
-	}
-	console.log('Requesting pull request head ref')
-
-	const response = await octokit.rest.pulls.get({
-		owner: repoOwner,
-		repo: payload.repository.name,
-		pull_number: issueNumber,
-	})
-	return response.data.head.ref
-}
-
-function findMatchingLabel(branchLabel, boardLabels) {
-	if (!branchLabel) {
-		return
-	}
-	const match = boardLabels.find((label) => label.name === branchLabel)
-
-	if (match) {
-		return match
-	}
-	console.log('Could not match the exact label name, trying to find partially matching label')
-
-	return boardLabels.find((label) => branchLabel.startsWith(label.name))
-}
-
-async function addLabelToCard(cardId, labelId) {
-	console.log('Adding label to a card', cardId, labelId)
-
-	const url = `https://api.trello.com/1/cards/${cardId}/idLabels`
-
-	axios
-		.post(url, {
-			key: trelloApiKey,
-			token: trelloAuthToken,
-			value: labelId,
-		})
-		.catch((error) => {
-			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
 		})
 }
 
@@ -374,6 +283,123 @@ function addMemberToCard(cardId, memberId) {
 			key: trelloApiKey,
 			token: trelloAuthToken,
 			value: memberId,
+		})
+		.catch((error) => {
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+		})
+}
+
+async function addLabelToCards(cardIds, head, existingLabels) {
+	console.log('Starting to add label to cards')
+
+	const branchLabel = await getBranchLabel(head)
+
+	if (!branchLabel) {
+		console.log('Could not find branch label')
+		return
+	}
+
+	cardIds.forEach(async (cardId) => {
+		const cardInfo = await getCardInfo(cardId)
+		const hasConflictingLabel = cardInfo.labels.find((label) => trelloConflictingLabels.includes(label.name))
+
+		if (hasConflictingLabel) {
+			console.log('Skipping label adding to a card because it has a conflicting label', cardInfo.labels)
+			return
+		}
+		const boardLabels = await getBoardLabels(cardInfo.idBoard)
+		const matchingLabel = findMatchingLabel(branchLabel, boardLabels)
+
+		if (matchingLabel) {
+			await addLabelToCard(cardId, matchingLabel.id)
+		} else {
+			console.log('Could not find a matching label from the board', branchLabel, boardLabels)
+		}
+		const cardLabelNames = cardInfo.labels.map((label) => label.name)
+		const labelsToKeep = trelloLabelsToKeep.filter((label) => existingLabels[cardId].includes(label))
+		const hasKeptLabels = !labelsToKeep.find((label) => cardLabelNames.includes(label))
+
+		if (hasKeptLabels) {
+			console.log('No need to return labels', labelsToKeep, cardLabelNames)
+			return
+		}
+		labelsToKeep.forEach((label) => {
+			const boardLabel = boardLabels.find((l) => l.name === label)
+
+			if (boardLabel) {
+				addLabelToCard(cardId, boardLabel.id)
+			}
+		})
+	})
+}
+
+async function getBranchLabel(head) {
+	const branchName = await getBranchName(head)
+	const matches = branchName.match(/^([^\/]*)\//)
+
+	if (matches) {
+		return matches[1]
+	} else {
+		console.log('Did not found branch label', branchName)
+	}
+}
+
+async function getBranchName(head) {
+	if (head && head.ref) {
+		return head.ref
+	}
+	console.log('Requesting pull request head ref')
+
+	const response = await octokit.rest.pulls.get({
+		owner: repoOwner,
+		repo: payload.repository.name,
+		pull_number: issueNumber,
+	})
+	return response.data.head.ref
+}
+
+async function getBoardLabels(boardId) {
+	console.log('Getting board labels', boardId)
+
+	const url = `https://api.trello.com/1/boards/${boardId}/labels`
+
+	return await axios
+		.get(url, {
+			params: {
+				key: trelloApiKey,
+				token: trelloAuthToken,
+			},
+		})
+		.then((response) => response.data)
+		.catch((error) => {
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+		})
+}
+
+function findMatchingLabel(branchLabel, boardLabels) {
+	if (!branchLabel) {
+		return
+	}
+	const match = boardLabels.find((label) => label.name === branchLabel)
+
+	if (match) {
+		return match
+	}
+	console.log('Could not match the exact label name, trying to find partially matching label')
+
+	return boardLabels.find((label) => branchLabel.startsWith(label.name))
+}
+
+async function addLabelToCard(cardId, labelId) {
+	console.log('Adding label to a card', cardId, labelId)
+
+	const url = `https://api.trello.com/1/cards/${cardId}/idLabels`
+
+	axios
+		.post(url, {
+			key: trelloApiKey,
+			token: trelloAuthToken,
+			value: labelId,
 		})
 		.catch((error) => {
 			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)

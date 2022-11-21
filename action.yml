@@ -26,6 +26,12 @@ inputs:
     trello-list-id-pr-closed:
         description: Trello list ID for closed pull request, visit a board then append .json to url to find id
         required: false
+    trello-conflicting-labels:
+        description: When a card has one of these labels then branch category label is not assigned
+        required: false
+    trello-labels-to-keep:
+        description: Labels that would need to be returned to the card when moving from one board to another (in case of custom automation that removes labels)
+        required: false
 runs:
     using: node16
     main: 'dist/index.js'
