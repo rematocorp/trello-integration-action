@@ -321,11 +321,11 @@ async function addLabelToCards(cardIds, head, existingLabels) {
 			console.log('No need to return labels', trelloLabelsToKeep, labelsToKeep, cardLabelNames)
 			return
 		}
-		labelsToKeep.forEach((label) => {
+		labelsToKeep.forEach(async (label) => {
 			const boardLabel = boardLabels.find((l) => l.name === label)
 
 			if (boardLabel) {
-				addLabelToCard(cardId, boardLabel.id)
+				await addLabelToCard(cardId, boardLabel.id)
 			}
 		})
 	})
