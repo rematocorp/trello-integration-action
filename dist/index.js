@@ -9256,6 +9256,8 @@ function addMemberToCard(cardId, memberId) {
 async function addLabelToCards(cardIds, head, existingLabels) {
 	console.log('Starting to add labels to cards')
 
+	await new Promise((resolve) => setTimeout(resolve, 5000))
+
 	const branchLabel = await getBranchLabel(head)
 
 	if (!branchLabel) {
