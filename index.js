@@ -100,17 +100,14 @@ async function getPullRequestAssignees() {
 }
 
 async function getCardsLabels(cardIds) {
-	console.log('Getting existing card labels before move')
-	return Promise.all(
-		cardIds.reduce(async (acc, cardId) => {
+	const labels = await Promise.all(
+		cardIds.map(async (cardId) => {
 			const cardInfo = await getCardInfo(cardId)
 
-			return {
-				...acc,
-				[cardId]: cardInfo.labels.map((label) => label.name),
-			}
-		}, {}),
+			return cardInfo.labels.map((label) => label.name)
+		}),
 	)
+	return cardIds.reduce((acc, id, i) => ({ ...acc, [id]: labels[i] }), {})
 }
 
 function moveCardsToList(cardIds, listId) {
