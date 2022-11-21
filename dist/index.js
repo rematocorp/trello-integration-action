@@ -9364,7 +9364,7 @@ async function addLabelToCard(cardId, labelId) {
 			value: labelId,
 		})
 		.catch((error) => {
-			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url, error)
 		})
 }
 
