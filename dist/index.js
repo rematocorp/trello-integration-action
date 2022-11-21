@@ -9280,10 +9280,11 @@ async function addLabelToCards(cardIds, head, existingLabels) {
 			console.log('Could not find a matching label from the board', branchLabel, boardLabels)
 		}
 		const cardLabelNames = cardInfo.labels.map((label) => label.name)
-		const labelsToKeep = trelloLabelsToKeep.filter((label) => existingLabels[cardId].includes(label))
-		const hasKeptLabels = !labelsToKeep.find((label) => cardLabelNames.includes(label))
+		const labelsToKeep = trelloLabelsToKeep.filter(
+			(label) => existingLabels[cardId].includes(label) && !cardLabelNames.includes(label),
+		)
 
-		if (hasKeptLabels) {
+		if (!labelsToKeep.length) {
 			console.log('No need to return labels', trelloLabelsToKeep, labelsToKeep, cardLabelNames)
 			return
 		}
