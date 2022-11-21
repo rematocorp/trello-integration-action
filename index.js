@@ -110,7 +110,7 @@ async function getCardsLabels(cardIds) {
 	return cardIds.reduce((acc, id, i) => ({ ...acc, [id]: labels[i] }), {})
 }
 
-function moveCardsToList(cardIds, listId) {
+async function moveCardsToList(cardIds, listId) {
 	return Promise.all(
 		cardIds.map((cardId) => {
 			console.log('Moving card to a list', cardId, listId)
@@ -288,13 +288,13 @@ function addMemberToCard(cardId, memberId) {
 }
 
 async function addLabelToCards(cardIds, head, existingLabels) {
-	console.log('Starting to add label to cards')
+	console.log('Starting to add labels to cards')
 
 	const branchLabel = await getBranchLabel(head)
 
 	if (!branchLabel) {
 		console.log('Could not find branch label')
-		return
+		return // TODO FIX
 	}
 
 	cardIds.forEach(async (cardId) => {
@@ -321,6 +321,7 @@ async function addLabelToCards(cardIds, head, existingLabels) {
 			console.log('No need to return labels', trelloLabelsToKeep, labelsToKeep, cardLabelNames)
 			return
 		}
+		console.log('Returning labels', labelsToKeep, cardLabelNames)
 		labelsToKeep.forEach(async (label) => {
 			const boardLabel = boardLabels.find((l) => l.name === label)
 
