@@ -9284,7 +9284,7 @@ async function addLabelToCards(cardIds, head, existingLabels) {
 		const hasKeptLabels = !labelsToKeep.find((label) => cardLabelNames.includes(label))
 
 		if (hasKeptLabels) {
-			console.log('No need to return labels', labelsToKeep, cardLabelNames)
+			console.log('No need to return labels', trelloLabelsToKeep, labelsToKeep, cardLabelNames)
 			return
 		}
 		labelsToKeep.forEach((label) => {
