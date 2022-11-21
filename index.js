@@ -100,6 +100,7 @@ async function getPullRequestAssignees() {
 }
 
 async function getCardsLabels(cardIds) {
+	console.log('Getting existing card labels before move')
 	return Promise.all(
 		cardIds.reduce(async (acc, cardId) => {
 			const cardInfo = await getCardInfo(cardId)
@@ -305,7 +306,7 @@ async function addLabelToCards(cardIds, head, existingLabels) {
 
 		if (hasConflictingLabel) {
 			console.log('Skipping label adding to a card because it has a conflicting label', cardInfo.labels)
-			return
+			return // TODO FIX
 		}
 		const boardLabels = await getBoardLabels(cardInfo.idBoard)
 		const matchingLabel = findMatchingLabel(branchLabel, boardLabels)
