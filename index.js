@@ -13,7 +13,6 @@ const trelloBoardId = core.getInput('trello-board-id')
 const trelloListIdPrOpen = core.getInput('trello-list-id-pr-open')
 const trelloListIdPrClosed = core.getInput('trello-list-id-pr-closed')
 const trelloConflictingLabels = core.getInput('trello-conflicting-labels')?.split(';')
-const trelloLabelsToKeep = core.getInput('trello-labels-to-keep')?.split(';')
 
 const octokit = github.getOctokit(githubToken)
 const repoOwner = (payload.organization || payload.repository.owner).login
@@ -33,8 +32,6 @@ async function run(pr) {
 		}
 		console.log('Found card IDs', cardIds)
 
-		const existingLabels = await getCardsLabels(cardIds)
-
 		if (pr.state === 'open' && pr.mergeable_state !== 'draft' && trelloListIdPrOpen) {
 			await moveCardsToList(cardIds, trelloListIdPrOpen)
 			console.log('Moved cards to opened PR list')
@@ -46,7 +43,7 @@ async function run(pr) {
 		}
 		await addAttachmentToCards(cardIds, url)
 		await updateCardMembers(cardIds, assignees)
-		await addLabelToCards(cardIds, pr.head, existingLabels)
+		await addLabelToCards(cardIds, pr.head)
 	} catch (error) {
 		core.setFailed(error)
 	}
@@ -97,17 +94,6 @@ async function getPullRequestAssignees() {
 		issue_number: issueNumber,
 	})
 	return [...response.data.assignees, response.data.user]
-}
-
-async function getCardsLabels(cardIds) {
-	const labels = await Promise.all(
-		cardIds.map(async (cardId) => {
-			const cardInfo = await getCardInfo(cardId)
-
-			return cardInfo.labels.map((label) => label.name)
-		}),
-	)
-	return cardIds.reduce((acc, id, i) => ({ ...acc, [id]: labels[i] }), {})
 }
 
 async function moveCardsToList(cardIds, listId) {
@@ -287,25 +273,24 @@ function addMemberToCard(cardId, memberId) {
 		})
 }
 
-async function addLabelToCards(cardIds, head, existingLabels) {
+async function addLabelToCards(cardIds, head) {
 	console.log('Starting to add labels to cards')
-
-	await new Promise((resolve) => setTimeout(resolve, 5000))
 
 	const branchLabel = await getBranchLabel(head)
 
 	if (!branchLabel) {
 		console.log('Could not find branch label')
-		return // TODO FIX
+		return
 	}
-
 	cardIds.forEach(async (cardId) => {
 		const cardInfo = await getCardInfo(cardId)
-		const hasConflictingLabel = cardInfo.labels.find((label) => trelloConflictingLabels.includes(label.name))
+		const hasConflictingLabel = cardInfo.labels.find(
+			(label) => trelloConflictingLabels.includes(label.name) || label.name === branchLabel,
+		)
 
 		if (hasConflictingLabel) {
 			console.log('Skipping label adding to a card because it has a conflicting label', cardInfo.labels)
-			return // TODO FIX
+			return
 		}
 		const boardLabels = await getBoardLabels(cardInfo.idBoard)
 		const matchingLabel = findMatchingLabel(branchLabel, boardLabels)
@@ -315,23 +300,6 @@ async function addLabelToCards(cardIds, head, existingLabels) {
 		} else {
 			console.log('Could not find a matching label from the board', branchLabel, boardLabels)
 		}
-		const cardLabelNames = cardInfo.labels.map((label) => label.name)
-		const labelsToKeep = trelloLabelsToKeep.filter(
-			(label) => existingLabels[cardId].includes(label) && !cardLabelNames.includes(label),
-		)
-
-		if (!labelsToKeep.length) {
-			console.log('No need to return labels', trelloLabelsToKeep, labelsToKeep, cardLabelNames)
-			return
-		}
-		console.log('Returning labels', labelsToKeep, cardLabelNames)
-		labelsToKeep.forEach(async (label) => {
-			const boardLabel = boardLabels.find((l) => l.name === label)
-
-			if (boardLabel) {
-				await addLabelToCard(cardId, boardLabel.id)
-			}
-		})
 	})
 }
 

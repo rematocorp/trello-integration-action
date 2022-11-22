@@ -29,9 +29,6 @@ inputs:
     trello-conflicting-labels:
         description: When a card has one of these labels then branch category label is not assigned
         required: false
-    trello-labels-to-keep:
-        description: Labels that would need to be returned to the card when moving from one board to another (in case of custom automation that removes labels)
-        required: false
 runs:
     using: node16
     main: 'dist/index.js'
