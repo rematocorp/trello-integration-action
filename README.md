@@ -13,7 +13,7 @@ The action looks for Trello card URL within the PR description and comments. If 
 name: Trello integration
 on:
     pull_request:
-        types: [opened, edited, closed]
+        types: [opened, edited, closed, ready_for_review, converted_to_draft]
     issue_comment:
         types: [created, edited]
 jobs:
