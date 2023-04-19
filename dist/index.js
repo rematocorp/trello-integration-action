@@ -9029,7 +9029,7 @@ async function getCardIds(prBody, comments) {
 	for (const comment of comments) {
 		cardIds = [...cardIds, ...matchCardIds(comment.body)]
 	}
-	return cardIds
+	return [...new Set(cardIds)]
 }
 
 function matchCardIds(text) {
