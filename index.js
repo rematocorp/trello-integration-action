@@ -198,7 +198,7 @@ function getTrelloMemberId(githubUserName) {
 			params: {
 				key: trelloApiKey,
 				token: trelloAuthToken,
-				organizations: 'members',
+				organizations: 'all',
 			},
 		})
 		.then((response) => {
