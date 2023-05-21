@@ -32,14 +32,14 @@ async function run(pr) {
 		}
 		console.log('Found card IDs', cardIds)
 
-		if (pr.state === 'open' && pr.mergeable_state !== 'draft' && trelloListIdPrOpen) {
+		if (pr.state === 'open' && pr.draft !== true && trelloListIdPrOpen) {
 			await moveCardsToList(cardIds, trelloListIdPrOpen)
 			console.log('Moved cards to opened PR list')
 		} else if (pr.state === 'closed' && trelloListIdPrClosed) {
 			await moveCardsToList(cardIds, trelloListIdPrClosed)
 			console.log('Moved cards to closed PR list')
 		} else {
-			console.log('Skipping moving the cards', pr.state, pr.mergeable_state)
+			console.log('Skipping moving the cards', pr.state, pr.draft ? 'draft' : 'not draft')
 		}
 		await addAttachmentToCards(cardIds, url)
 		await updateCardMembers(cardIds, assignees)
