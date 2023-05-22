@@ -16647,6 +16647,7 @@ const { context = {} } = github
 const payload = context.payload
 
 const githubToken = core.getInput('github-token', { required: true })
+const githubRequireKeywordPrefix = core.getInput('github-require-keyword-prefix')
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
 const trelloOrganizationName = core.getInput('trello-organization-name')
@@ -16714,17 +16715,25 @@ async function getCardIds(prBody, comments) {
 }
 
 function matchCardIds(text) {
-	const matches = text.match(/(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)/g) || []
+	const keywords = ['close', 'closes', 'closed', 'fix', 'fixes', 'fixed', 'resolve', 'resolves', 'resolved']
+	const keywordsRegExp = githubRequireKeywordPrefix ? '(?:' + keywords.join('|') + ')\\s+' : ''
+	const urlRegExp = 'https://trello\\.com/c/(\\w+)(?:/[^\\s,]*)?'
+	const closesRegExp = `${keywordsRegExp}${urlRegExp}(?:\\s*,\\s*${urlRegExp})*`
 
-	return matches
-		.map((match) => {
-			const result = /(https\:\/\/trello\.com\/c\/(\w+)(\/\S*)?)/.exec(match)
+	// Find all “Closes URL, URL…”
+	const matches = text.match(new RegExp(closesRegExp, 'gi')) || []
 
-			if (result && result[2]) {
-				return result[2]
-			}
-		})
-		.filter((cardId, index, self) => cardId && self.indexOf(cardId) === index)
+	return Array.from(
+		new Set(
+			matches.flatMap((match) => {
+				// Find URLs
+				const urlMatches = match.match(new RegExp(urlRegExp, 'g'))
+				// Find cardId in the URL (only capture group in urlRegexp)
+				const cardIds = urlMatches.map((url) => url.match(new RegExp(urlRegExp))[1])
+				return cardIds
+			}),
+		),
+	)
 }
 
 async function getPullRequestComments() {
