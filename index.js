@@ -1,4 +1,4 @@
-import * as axios from 'axios'
+import axios from 'axios'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 
@@ -33,14 +33,26 @@ async function run(pr) {
 		}
 		console.log('Found card IDs', cardIds)
 
-		if (pr.state === 'open' && pr.mergeable_state !== 'draft' && trelloListIdPrOpen) {
+		// Treat PRs with “draft” or “wip” in brackets at the start or
+		// end of the titles like drafts. Useful for orgs on unpaid
+		// plans which doesn’t support PR drafts.
+		const titleDraftRegExp = /^(?:\s*[\[(](?:wip|draft)[\])]\s+)|(?:\s+[\[(](?:wip|draft)[\])]\s*)$/i
+		const isRealDraft = pr.draft === true
+		const isFauxDraft = Boolean(pr.title.match(titleDraftRegExp))
+		const isDraft = isRealDraft || isFauxDraft
+
+		if (pr.state === 'open' && !isDraft && trelloListIdPrOpen) {
 			await moveCardsToList(cardIds, trelloListIdPrOpen)
 			console.log('Moved cards to opened PR list')
 		} else if (pr.state === 'closed' && trelloListIdPrClosed) {
 			await moveCardsToList(cardIds, trelloListIdPrClosed)
 			console.log('Moved cards to closed PR list')
 		} else {
-			console.log('Skipping moving the cards', pr.state, pr.mergeable_state)
+			console.log(
+				'Skipping moving the cards',
+				pr.state,
+				pr.draft ? 'draft' : isFauxDraft ? 'faux draft' : 'not draft',
+			)
 		}
 		await addAttachmentToCards(cardIds, url)
 		await updateCardMembers(cardIds, assignees)
