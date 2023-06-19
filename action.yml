@@ -32,6 +32,8 @@ inputs:
     trello-conflicting-labels:
         description: When a card has one of these labels then branch category label is not assigned
         required: false
+    pr-require-trello-card:
+        description: Throw an error if no Trello cards can be found in the PR description
 runs:
     using: node16
     main: 'dist/index.js'
