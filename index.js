@@ -7,6 +7,7 @@ const payload = context.payload
 
 const githubToken = core.getInput('github-token', { required: true })
 const githubRequireKeywordPrefix = core.getInput('github-require-keyword-prefix')
+const githubRequireTrelloCard = core.getBooleanInput('github-require-trello-card')
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
 const trelloOrganizationName = core.getInput('trello-organization-name')
@@ -14,7 +15,6 @@ const trelloBoardId = core.getInput('trello-board-id')
 const trelloListIdPrOpen = core.getInput('trello-list-id-pr-open')
 const trelloListIdPrClosed = core.getInput('trello-list-id-pr-closed')
 const trelloConflictingLabels = core.getInput('trello-conflicting-labels')?.split(';')
-const prRequireTrelloCard = core.getBooleanInput('pr-require-trello-card')
 
 const octokit = github.getOctokit(githubToken)
 const repoOwner = (payload.organization || payload.repository.owner).login
@@ -29,10 +29,11 @@ async function run(pr) {
 		const cardIds = await getCardIds(pr.body, comments)
 
 		if (!cardIds.length) {
-			if (prRequireTrelloCard) {
+			console.log('Could not find card IDs')
+
+			if (githubRequireTrelloCard) {
 				core.setFailed('The PR does not contain a link to a Trello card')
 			}
-			console.log('Could not find card IDs')
 			return
 		}
 		console.log('Found card IDs', cardIds)
