@@ -10,8 +10,10 @@ inputs:
         required: true
     github-require-keyword-prefix:
         description: When true match only URLs prefixed with “Closes” etc just like https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword
+        default: false
     github-require-trello-card:
         description: Throw an error if no Trello cards can be found in the PR description
+        default: false
     trello-api-key:
         description: Trello API key, visit https://trello.com/app-key for key
         required: true

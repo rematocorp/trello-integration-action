@@ -6,7 +6,7 @@ const { context = {} } = github
 const payload = context.payload
 
 const githubToken = core.getInput('github-token', { required: true })
-const githubRequireKeywordPrefix = core.getInput('github-require-keyword-prefix')
+const githubRequireKeywordPrefix = core.getBooleanInput('github-require-keyword-prefix')
 const githubRequireTrelloCard = core.getBooleanInput('github-require-trello-card')
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
