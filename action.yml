@@ -23,11 +23,13 @@ inputs:
     trello-organization-name:
         description: Your organization name to avoid assigning cards to outside members, edit your workspace details and look for the short name
     trello-board-id:
-        description: Trello board ID where to move the cards, visit a board then append .json to url to find id
+        description: Trello board ID where to move the cards
+    trello-list-id-pr-draft:
+        description: Trello list ID for draft pull request
     trello-list-id-pr-open:
-        description: Trello list ID for open pull request, visit a board then append .json to url to find id
+        description: Trello list ID for open pull request
     trello-list-id-pr-closed:
-        description: Trello list ID for closed pull request, visit a board then append .json to url to find id
+        description: Trello list ID for closed pull request
     trello-conflicting-labels:
         description: When a card has one of these labels then branch category label is not assigned
 runs:

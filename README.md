@@ -28,10 +28,13 @@ jobs:
                   trello-api-key: ${{ secrets.TRELLO_API_KEY }} # https://trello.com/app-key
                   trello-auth-token: ${{ secrets.TRELLO_AUTH_TOKEN }} # https://trello.com/app-key then click generate a token
                   trello-organization-name: remato # Your organization name to avoid assigning cards to outside members, edit your workspace details and look for the short name
-                  trello-board-id: ${{ secrets.TRELLO_BOARD_ID }} # Trello board ID where to move the cards, visit a board then append .json to url to find id
-                  trello-list-id-pr-open: ${{ secrets.TRELLO_PR_OPEN_LIST_ID }} # Trello list ID for open pull request, visit a board then append .json to url to find id
-                  trello-list-id-pr-closed: ${{ secrets.TRELLO_PR_CLOSED_LIST_ID }} # Trello list ID for closed pull request, visit a board then append .json to url to find id
+                  trello-board-id: xxx # Trello board ID where to move the cards
+                  trello-list-id-pr-draft: xxx # Trello list ID for draft pull request (useful when you want to move the card back to In progress when ready PR is converted to draft)
+                  trello-list-id-pr-open: xxx # Trello list ID for open pull request
+                  trello-list-id-pr-closed: xxx # Trello list ID for closed pull request
                   trello-conflicting-labels: 'feature;bug;chore' # When a card has one of these labels then branch category label is not assigned
 ```
+
+[Here is how you can find out your board and list IDs](https://stackoverflow.com/a/50908600/2311110).
 
 Inspired by [dalezak/github-commit-to-trello-card](https://github.com/dalezak/github-commit-to-trello-card) and [delivered/attach-to-trello-card-action](https://github.com/delivered/attach-to-trello-card-action).

@@ -12,6 +12,7 @@ const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
 const trelloOrganizationName = core.getInput('trello-organization-name')
 const trelloBoardId = core.getInput('trello-board-id')
+const trelloListIdPrDraft = core.getInput('trello-list-id-pr-draft')
 const trelloListIdPrOpen = core.getInput('trello-list-id-pr-open')
 const trelloListIdPrClosed = core.getInput('trello-list-id-pr-closed')
 const trelloConflictingLabels = core.getInput('trello-conflicting-labels')?.split(';')
@@ -38,26 +39,19 @@ async function run(pr) {
 		}
 		console.log('Found card IDs', cardIds)
 
-		// Treat PRs with “draft” or “wip” in brackets at the start or
-		// end of the titles like drafts. Useful for orgs on unpaid
-		// plans which doesn’t support PR drafts.
-		const titleDraftRegExp = /^(?:\s*[\[(](?:wip|draft)[\])]\s+)|(?:\s+[\[(](?:wip|draft)[\])]\s*)$/i
-		const isRealDraft = pr.draft === true
-		const isFauxDraft = Boolean(pr.title.match(titleDraftRegExp))
-		const isDraft = isRealDraft || isFauxDraft
+		const isDraft = isPrDraft(pr)
 
-		if (pr.state === 'open' && !isDraft && trelloListIdPrOpen) {
+		if (pr.state === 'open' && isDraft && trelloListIdPrDraft) {
+			await moveCardsToList(cardIds, trelloListIdPrDraft)
+			console.log('Moved cards to draft PR list')
+		} else if (pr.state === 'open' && !isDraft && trelloListIdPrOpen) {
 			await moveCardsToList(cardIds, trelloListIdPrOpen)
-			console.log('Moved cards to opened PR list')
+			console.log('Moved cards to open PR list')
 		} else if (pr.state === 'closed' && trelloListIdPrClosed) {
 			await moveCardsToList(cardIds, trelloListIdPrClosed)
 			console.log('Moved cards to closed PR list')
 		} else {
-			console.log(
-				'Skipping moving the cards',
-				pr.state,
-				pr.draft ? 'draft' : isFauxDraft ? 'faux draft' : 'not draft',
-			)
+			console.log('Skipping moving the cards', pr.state, isDraft ? 'draft' : 'not draft')
 		}
 		await addAttachmentToCards(cardIds, url)
 		await updateCardMembers(cardIds, assignees)
@@ -120,6 +114,21 @@ async function getPullRequestAssignees() {
 		issue_number: issueNumber,
 	})
 	return [...response.data.assignees, response.data.user]
+}
+
+function isPrDraft(pr) {
+	// Treat PRs with “draft” or “wip” in brackets at the start or
+	// end of the titles like drafts. Useful for orgs on unpaid
+	// plans which doesn’t support PR drafts.
+	const titleDraftRegExp = /^(?:\s*[\[(](?:wip|draft)[\])]\s+)|(?:\s+[\[(](?:wip|draft)[\])]\s*)$/i
+	const isRealDraft = pr.draft === true
+	const isFauxDraft = Boolean(pr.title.match(titleDraftRegExp))
+
+	if (isFauxDraft) {
+		console.log('This PR is in faux draft')
+	}
+
+	return isRealDraft || isFauxDraft
 }
 
 async function moveCardsToList(cardIds, listId) {
