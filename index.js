@@ -375,7 +375,11 @@ async function getBoardLabels(boardId) {
 				token: trelloAuthToken,
 			},
 		})
-		.then((response) => response.data)
+		.then((response) => {
+			// Filters out board labels that have no name to avoid assigning them to every PR
+			// because 'foo'.startsWith('') is true (partially matching label logic)
+			return response.data?.filter((label) => label.name)
+		})
 		.catch((error) => {
 			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
 		})
