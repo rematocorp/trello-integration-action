@@ -107,7 +107,7 @@ async function getCardIdFromBranch(prHead) {
 				console.log('Query results', response?.data)
 
 				if (response?.data?.cards?.length) {
-					return response.data.cards[0].id
+					return [response.data.cards[0].id]
 				}
 				return
 			})
