@@ -8,6 +8,7 @@ const payload = context.payload
 const githubToken = core.getInput('github-token', { required: true })
 const githubRequireKeywordPrefix = core.getBooleanInput('github-require-keyword-prefix')
 const githubRequireTrelloCard = core.getBooleanInput('github-require-trello-card')
+const githubCardIdInBranchName = core.getBooleanInput('github-card-id-in-branch-name')
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
 const trelloOrganizationName = core.getInput('trello-organization-name')
@@ -27,7 +28,7 @@ async function run(pr) {
 	try {
 		const comments = await getPullRequestComments()
 		const assignees = await getPullRequestAssignees()
-		const cardIds = await getCardIds(pr.body, comments)
+		const cardIds = await getCardIds(pr.head, pr.body, comments)
 
 		if (!cardIds.length) {
 			console.log('Could not find card IDs')
@@ -39,7 +40,7 @@ async function run(pr) {
 		}
 		console.log('Found card IDs', cardIds)
 
-		const isDraft = isPrDraft(pr)
+		const isDraft = isDraftPr(pr)
 
 		if (pr.state === 'open' && isDraft && trelloListIdPrDraft) {
 			await moveCardsToList(cardIds, trelloListIdPrDraft)
@@ -51,17 +52,18 @@ async function run(pr) {
 			await moveCardsToList(cardIds, trelloListIdPrClosed)
 			console.log('Moved cards to closed PR list')
 		} else {
-			console.log('Skipping moving the cards', pr.state, isDraft ? 'draft' : 'not draft')
+			console.log('Skipping moving the cards', pr.state, isDraft)
 		}
 		await addAttachmentToCards(cardIds, url)
 		await updateCardMembers(cardIds, assignees)
 		await addLabelToCards(cardIds, pr.head)
+		await commentCardLink(cardIds, pr.body, comments)
 	} catch (error) {
 		core.setFailed(error)
 	}
 }
 
-async function getCardIds(prBody, comments) {
+async function getCardIds(prHead, prBody, comments) {
 	console.log('Searching for card ids')
 
 	let cardIds = matchCardIds(prBody || '')
@@ -69,7 +71,22 @@ async function getCardIds(prBody, comments) {
 	for (const comment of comments) {
 		cardIds = [...cardIds, ...matchCardIds(comment.body)]
 	}
-	return [...new Set(cardIds)]
+	if (cardIds.length) {
+		return [...new Set(cardIds)]
+	}
+
+	if (githubCardIdInBranchName) {
+		console.log('Searching card id from branch name')
+
+		const branchName = await getBranchName(prHead)
+		const matches = branchName.match(/(\d+)-\S+/i)
+
+		if (matches) {
+			return [matches[1]]
+		}
+	}
+
+	return []
 }
 
 function matchCardIds(text) {
@@ -116,7 +133,7 @@ async function getPullRequestAssignees() {
 	return [...response.data.assignees, response.data.user]
 }
 
-function isPrDraft(pr) {
+function isDraftPr(pr) {
 	// Treat PRs with “draft” or “wip” in brackets at the start or
 	// end of the titles like drafts. Useful for orgs on unpaid
 	// plans which doesn’t support PR drafts.
@@ -413,6 +430,34 @@ async function addLabelToCard(cardId, labelId) {
 		.catch((error) => {
 			console.error(`Error ${error.response.status} ${error.response.statusText}`, url, error)
 		})
+}
+
+async function commentCardLink(cardIds, prBody, comments) {
+	if (!githubCardIdInBranchName) {
+		return
+	}
+
+	if (matchCardIds(prBody || '')?.length) {
+		console.log('Card is already linked in the PR description')
+		return
+	}
+
+	for (const comment of comments) {
+		if (matchCardIds(comment.body)?.length) {
+			console.log('Card is already linked in the comment')
+			return
+		}
+	}
+	console.log('Commenting Trello card URL to PR', cardIds[0])
+
+	const cardInfo = await getCardInfo(cardIds[0])
+
+	await octokit.rest.issues.createComment({
+		owner: repoOwner,
+		repo: payload.repository.name,
+		issue_number: issueNumber,
+		body: cardInfo.shortUrl,
+	})
 }
 
 async function getCardInfo(cardId) {

@@ -3,6 +3,7 @@
 Connects GitHub PRs and Trello cards:
 
 -   attaches PR link to a Trello card ([works best with GitHub Power-up](https://trello.com/power-ups/55a5d916446f517774210004/github)),
+-   adds PR comment with Trello card URL when using Trello card ID in the branch name,
 -   moves Trello card when PR is opened or closed,
 -   adds an appropriate board label to a Trello card when branch name is categorised (e.g. `feature/foo`),
 -   exclusively assigns the PR author and fellow assignees to the Trello card (but only when they own the same usernames in Github and Trello).
@@ -25,6 +26,7 @@ jobs:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
                   github-require-keyword-prefix: false # When true match only URLs prefixed with “Closes” etc just like https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword
                   github-require-trello-card: false # Throw an error if no Trello cards can be found in the PR description
+                  github-card-id-in-branch-name: false # When true search for card id (e.g. "1234-card-title") from the branch name if card URL is not found in PR description or comments. If card id is found from branch then adds a comment with the card URL.
                   trello-api-key: ${{ secrets.TRELLO_API_KEY }} # https://trello.com/app-key
                   trello-auth-token: ${{ secrets.TRELLO_AUTH_TOKEN }} # https://trello.com/app-key then click generate a token
                   trello-organization-name: remato # Your organization name to avoid assigning cards to outside members, edit your workspace details and look for the short name
