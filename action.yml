@@ -14,9 +14,6 @@ inputs:
     github-require-trello-card:
         description: Throw an error if no Trello cards can be found in the PR description
         default: false
-    github-card-id-in-branch-name:
-        description: When true search for card id (e.g. "1234-card-title") from the branch name if card URL is not found in PR description or comments. If card id is found from branch then adds a comment with the card URL.
-        default: false
     trello-api-key:
         description: Trello API key, visit https://trello.com/app-key for key
         required: true
@@ -35,6 +32,9 @@ inputs:
         description: Trello list ID for closed pull request
     trello-conflicting-labels:
         description: When a card has one of these labels then branch category label is not assigned
+    trello-card-in-branch-name:
+        description: When true search for card name (e.g. "1234-card-title") in the branch name if card URL is not found in PR description or comments. If card id is found from branch then adds a comment with the card URL.
+        default: false
 runs:
     using: node16
     main: 'dist/index.js'

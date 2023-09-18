@@ -8,7 +8,6 @@ const payload = context.payload
 const githubToken = core.getInput('github-token', { required: true })
 const githubRequireKeywordPrefix = core.getBooleanInput('github-require-keyword-prefix')
 const githubRequireTrelloCard = core.getBooleanInput('github-require-trello-card')
-const githubCardIdInBranchName = core.getBooleanInput('github-card-id-in-branch-name')
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
 const trelloOrganizationName = core.getInput('trello-organization-name')
@@ -17,6 +16,7 @@ const trelloListIdPrDraft = core.getInput('trello-list-id-pr-draft')
 const trelloListIdPrOpen = core.getInput('trello-list-id-pr-open')
 const trelloListIdPrClosed = core.getInput('trello-list-id-pr-closed')
 const trelloConflictingLabels = core.getInput('trello-conflicting-labels')?.split(';')
+const trelloCardInBranchName = core.getBooleanInput('trello-card-in-branch-name')
 
 const octokit = github.getOctokit(githubToken)
 const repoOwner = (payload.organization || payload.repository.owner).login
@@ -71,22 +71,48 @@ async function getCardIds(prHead, prBody, comments) {
 	for (const comment of comments) {
 		cardIds = [...cardIds, ...matchCardIds(comment.body)]
 	}
+
 	if (cardIds.length) {
 		return [...new Set(cardIds)]
 	}
 
-	if (githubCardIdInBranchName) {
-		console.log('Searching card id from branch name')
-
-		const branchName = await getBranchName(prHead)
-		const matches = branchName.match(/(\d+)-\S+/i)
-
-		if (matches) {
-			return [matches[1]]
-		}
+	if (trelloCardInBranchName) {
+		return getCardIdFromBranch(prHead)
 	}
 
 	return []
+}
+
+async function getCardIdFromBranch(prHead) {
+	console.log('Searching card from branch name')
+
+	const branchName = await getBranchName(prHead)
+	const matches = branchName.match(/\d+-\S+/i)
+
+	if (matches) {
+		console.log('Querying card id based on branch name', matches[0])
+
+		const url = `https://api.trello.com/1/search`
+
+		return axios
+			.get(url, {
+				params: {
+					key: trelloApiKey,
+					token: trelloAuthToken,
+					modelTypes: 'cards',
+					query: matches[0],
+				},
+			})
+			.then((response) => {
+				if (response.data.length) {
+					return response.data[0].id
+				}
+				return
+			})
+			.catch((error) => {
+				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+			})
+	}
 }
 
 function matchCardIds(text) {
@@ -433,7 +459,7 @@ async function addLabelToCard(cardId, labelId) {
 }
 
 async function commentCardLink(cardIds, prBody, comments) {
-	if (!githubCardIdInBranchName) {
+	if (!trelloCardInBranchName) {
 		return
 	}
 
