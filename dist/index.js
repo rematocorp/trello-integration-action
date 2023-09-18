@@ -16675,7 +16675,11 @@ async function getCardIds(prHead, prBody, comments) {
 	}
 
 	if (trelloCardInBranchName) {
-		return getCardIdFromBranch(prHead)
+		const cardId = getCardIdFromBranch(prHead)
+
+		if (cardId) {
+			return [cardId]
+		}
 	}
 
 	return []
@@ -16685,11 +16689,12 @@ async function getCardIdFromBranch(prHead) {
 	console.log('Searching card from branch name')
 
 	const branchName = await getBranchName(prHead)
-	const matches = branchName.match(/\d+-\S+/i)
+	const matches = branchName.match(/(\d+)-\S+/i)
 
 	if (matches) {
-		console.log('Querying card id based on branch name', matches[0])
+		console.log('Querying card id based on branch name', matches)
 
+		const cardNumber = matches[1]
 		const url = `https://api.trello.com/1/search`
 
 		return lib_axios.get(url, {
@@ -16697,16 +16702,13 @@ async function getCardIdFromBranch(prHead) {
 					key: trelloApiKey,
 					token: trelloAuthToken,
 					modelTypes: 'cards',
-					query: matches[0],
+					query: `${cardNumber}-`,
 				},
 			})
 			.then((response) => {
 				console.log('Query results', response?.data)
 
-				if (response?.data?.cards?.length) {
-					return [response.data.cards[0].id]
-				}
-				return
+				return response?.data?.cards?.find((card) => card.idShort === cardNumber)?.id
 			})
 			.catch((error) => {
 				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
