@@ -111,7 +111,7 @@ async function getCardIdFromBranch(prHead) {
 			.then((response) => {
 				console.log('Query results', response?.data)
 
-				return response?.data?.cards?.find((card) => card.idShort === cardNumber)?.id
+				return response?.data?.cards?.find((card) => card.idShort === parseInt(cardNumber))?.id
 			})
 			.catch((error) => {
 				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
