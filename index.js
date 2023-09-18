@@ -77,7 +77,7 @@ async function getCardIds(prHead, prBody, comments) {
 	}
 
 	if (trelloCardInBranchName) {
-		const cardId = getCardIdFromBranch(prHead)
+		const cardId = await getCardIdFromBranch(prHead)
 
 		if (cardId) {
 			return [cardId]
