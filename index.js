@@ -124,6 +124,8 @@ async function getCardIdFromBranch(prHead) {
 			return cardsWithExactMatch[0].id
 		}
 
+		console.log('Could not find Trello card with branch name, trying only with card number')
+
 		const cardNumber = matches[1]
 		const cardsWithNumberMatch = await searchTrelloCards(cardNumber)
 
