@@ -36,5 +36,5 @@ inputs:
         description: When true search for card name (e.g. "1234-card-title") in the branch name if card URL is not found in PR description or comments. If card id is found from branch then adds a comment with the card URL.
         default: false
 runs:
-    using: node16
+    using: node20
     main: 'dist/index.js'

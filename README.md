@@ -21,7 +21,7 @@ jobs:
     build:
         runs-on: ubuntu-latest
         steps:
-            - uses: rematocorp/trello-integration-action@v6
+            - uses: rematocorp/trello-integration-action@v7
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
                   github-require-keyword-prefix: false # When true match only URLs prefixed with “Closes” etc just like https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword
