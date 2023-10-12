@@ -16747,6 +16747,8 @@ async function getCardIds(prHead, prBody, comments) {
 		return [...new Set(cardIds)]
 	}
 
+	console.log('Could not find card ids from PR body nor comments', prBody, comments)
+
 	if (trelloCardInBranchName) {
 		const cardId = await getCardIdFromBranch(prHead)
 
@@ -16756,37 +16758,6 @@ async function getCardIds(prHead, prBody, comments) {
 	}
 
 	return []
-}
-
-async function getCardIdFromBranch(prHead) {
-	console.log('Searching card from branch name')
-
-	const branchName = await getBranchName(prHead)
-	const matches = branchName.match(/(\d+)-\S+/i)
-
-	if (matches) {
-		console.log('Querying card id based on branch name', matches)
-
-		const cardNumber = matches[1]
-		const url = `https://api.trello.com/1/search`
-
-		return lib_axios.get(url, {
-				params: {
-					key: trelloApiKey,
-					token: trelloAuthToken,
-					modelTypes: 'cards',
-					query: `${cardNumber}-`,
-				},
-			})
-			.then((response) => {
-				console.log('Query results', response?.data)
-
-				return response?.data?.cards?.find((card) => card.idShort === parseInt(cardNumber))?.id
-			})
-			.catch((error) => {
-				console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
-			})
-	}
 }
 
 function matchCardIds(text) {
@@ -16809,6 +16780,47 @@ function matchCardIds(text) {
 			}),
 		),
 	)
+}
+
+async function getCardIdFromBranch(prHead) {
+	console.log('Searching card from branch name')
+
+	const branchName = await getBranchName(prHead)
+	const matches = branchName.match(/(\d+)-\S+/i)
+
+	if (matches) {
+		const cardsWithExactMatch = await searchTrelloCards(matches[0])
+
+		if (cardsWithExactMatch?.length) {
+			return cardsWithExactMatch[0].id
+		}
+
+		const cardNumber = matches[1]
+		const cardsWithNumberMatch = await searchTrelloCards(cardNumber)
+
+		return cardsWithNumberMatch
+			.sort((a, b) => new Date(b.dateLastActivity) - new Date(a.dateLastActivity))
+			.find((card) => card.idShort === parseInt(cardNumber))?.id
+	}
+}
+
+async function searchTrelloCards(query) {
+	const url = `https://api.trello.com/1/search`
+
+	return lib_axios.get(url, {
+			params: {
+				key: trelloApiKey,
+				token: trelloAuthToken,
+				modelTypes: 'cards',
+				query,
+			},
+		})
+		.then((response) => {
+			return response?.data?.cards || []
+		})
+		.catch((error) => {
+			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
+		})
 }
 
 async function getPullRequestComments() {
