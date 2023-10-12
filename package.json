@@ -15,5 +15,8 @@
 	"devDependencies": {
 		"@remato/prettier-config": "^1.0.0",
 		"@vercel/ncc": "^0.38.0"
+	},
+	"engines": {
+		"node": ">=20.0.0"
 	}
 }
