@@ -16747,8 +16747,6 @@ async function getCardIds(prHead, prBody, comments) {
 		return [...new Set(cardIds)]
 	}
 
-	console.log('Could not find card ids from PR body nor comments', prBody, comments)
-
 	if (trelloCardInBranchName) {
 		const cardId = await getCardIdFromBranch(prHead)
 
