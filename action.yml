@@ -40,7 +40,15 @@ inputs:
     trello-add-labels-to-cards:
         description: Enable or disable the automatic addition of labels to cards
         default: true
-
+    trello-remove-unrelated-members:
+        description: Enable or disable the removal of unrelated users on trello cards
+        default: true
+    map-github-users-to-trello:
+        description: |-
+          Newline-separated list of mapping between Github username and Trello username. Example:
+          map-github-users-to-trello: |-
+            GithubUser1:TrelloUser1
+            GithubUser2:TrelloUser2
 runs:
     using: node20
     main: 'dist/index.js'

@@ -36868,6 +36868,8 @@ const trelloConflictingLabels = core.getInput('trello-conflicting-labels')?.spli
 const trelloCardInBranchName = core.getBooleanInput('trello-card-in-branch-name')
 const trelloCardPosition = core.getInput('trello-card-position')
 const trelloAddLabelsToCards = core.getBooleanInput('trello-add-labels-to-cards')
+const trelloRemoveUnrelatedMembers = core.getBooleanInput('trello-remove-unrelated-members')
+const mapGithubUsersToTrello = core.getInput('map-github-users-to-trello')
 
 const octokit = github.getOctokit(githubToken)
 const repoOwner = (payload.organization || payload.repository.owner).login
@@ -37126,13 +37128,18 @@ async function updateCardMembers(cardIds, assignees) {
 	cardIds.forEach(async (cardId) => {
 		const cardInfo = await getCardInfo(cardId)
 
-		removeUnrelatedMembers(cardInfo, memberIds)
+		if (trelloRemoveUnrelatedMembers) {
+			removeUnrelatedMembers(cardInfo, memberIds)
+		}
 		addNewMembers(cardInfo, memberIds)
 	})
 }
 
 function getTrelloMemberId(githubUserName) {
-	const username = githubUserName.replace('-', '_')
+	let username = githubUserName.replace('-', '_')
+	if (mapGithubUsersToTrello.trim() !== '') {
+		username = getTrelloUsernameFromInputMap(githubUserName) || username
+	}
 
 	console.log('Searching Trello member id by username', username)
 
@@ -37162,6 +37169,22 @@ function getTrelloMemberId(githubUserName) {
 		.catch((error) => {
 			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
 		})
+}
+
+function getTrelloUsernameFromInputMap(githubUserName) {
+	for (const line of mapGithubUsersToTrello.split(/[\r\n]/)) {
+		const parts = line.trim().split(':')
+		if (parts.length < 2) {
+			console.error(
+				'Error : Mapping of Github user to Trello does not contains 2 username separated by ":"',
+				line,
+			)
+			continue
+		}
+		if (parts[0].trim() === githubUserName && parts[1].trim() !== '') {
+			return parts[1].trim()
+		}
+	}
 }
 
 function removeUnrelatedMembers(cardInfo, memberIds) {
