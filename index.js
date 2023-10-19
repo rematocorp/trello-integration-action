@@ -17,6 +17,7 @@ const trelloListIdPrOpen = core.getInput('trello-list-id-pr-open')
 const trelloListIdPrClosed = core.getInput('trello-list-id-pr-closed')
 const trelloConflictingLabels = core.getInput('trello-conflicting-labels')?.split(';')
 const trelloCardInBranchName = core.getBooleanInput('trello-card-in-branch-name')
+const trelloCardPosition = core.getInput('trello-card-position')
 
 const octokit = github.getOctokit(githubToken)
 const repoOwner = (payload.organization || payload.repository.owner).login
@@ -41,15 +42,16 @@ async function run(pr) {
 		console.log('Found card IDs', cardIds)
 
 		const isDraft = isDraftPr(pr)
+		const cardPosition = trelloCardPosition === 'bottom' ? 'bottom' : 'top'
 
 		if (pr.state === 'open' && isDraft && trelloListIdPrDraft) {
-			await moveCardsToList(cardIds, trelloListIdPrDraft)
+			await moveCardsToList(cardIds, trelloListIdPrDraft, cardPosition)
 			console.log('Moved cards to draft PR list')
 		} else if (pr.state === 'open' && !isDraft && trelloListIdPrOpen) {
-			await moveCardsToList(cardIds, trelloListIdPrOpen)
+			await moveCardsToList(cardIds, trelloListIdPrOpen, cardPosition)
 			console.log('Moved cards to open PR list')
 		} else if (pr.state === 'closed' && trelloListIdPrClosed) {
-			await moveCardsToList(cardIds, trelloListIdPrClosed)
+			await moveCardsToList(cardIds, trelloListIdPrClosed, cardPosition)
 			console.log('Moved cards to closed PR list')
 		} else {
 			console.log('Skipping moving the cards', pr.state, isDraft)
@@ -190,7 +192,7 @@ function isDraftPr(pr) {
 	return isRealDraft || isFauxDraft
 }
 
-async function moveCardsToList(cardIds, listId) {
+async function moveCardsToList(cardIds, listId, cardPosition) {
 	return Promise.all(
 		cardIds.map((cardId) => {
 			console.log('Moving card to a list', cardId, listId)
@@ -202,6 +204,7 @@ async function moveCardsToList(cardIds, listId) {
 					key: trelloApiKey,
 					token: trelloAuthToken,
 					idList: listId,
+					pos: cardPosition,
 					...(trelloBoardId && { idBoard: trelloBoardId }),
 				})
 				.catch((error) => {
