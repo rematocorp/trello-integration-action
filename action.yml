@@ -35,6 +35,9 @@ inputs:
     trello-card-in-branch-name:
         description: When true search for card name (e.g. "1234-card-title") in the branch name if card URL is not found in PR description or comments. If card id is found from branch then adds a comment with the card URL.
         default: false
+    trello-card-position:
+        description: Position of the card after being moved to a list (can be "top" or "bottom")
+
 runs:
     using: node20
     main: 'dist/index.js'
