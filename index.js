@@ -18,6 +18,7 @@ const trelloListIdPrClosed = core.getInput('trello-list-id-pr-closed')
 const trelloConflictingLabels = core.getInput('trello-conflicting-labels')?.split(';')
 const trelloCardInBranchName = core.getBooleanInput('trello-card-in-branch-name')
 const trelloCardPosition = core.getInput('trello-card-position')
+const trelloAddLabelsToCards = core.getBooleanInput('trello-add-labels-to-cards')
 
 const octokit = github.getOctokit(githubToken)
 const repoOwner = (payload.organization || payload.repository.owner).login
@@ -58,7 +59,9 @@ async function run(pr) {
 		}
 		await addAttachmentToCards(cardIds, url)
 		await updateCardMembers(cardIds, assignees)
-		await addLabelToCards(cardIds, pr.head)
+		if (trelloAddLabelsToCards) {
+			await addLabelToCards(cardIds, pr.head)
+		}
 		await commentCardLink(cardIds, pr.body, comments)
 	} catch (error) {
 		core.setFailed(error)
