@@ -37,6 +37,9 @@ inputs:
         default: false
     trello-card-position:
         description: Position of the card after being moved to a list (can be "top" or "bottom")
+    trello-add-labels-to-cards:
+        description: Enable or disable the automatic addition of labels to cards
+        default: true
 
 runs:
     using: node20

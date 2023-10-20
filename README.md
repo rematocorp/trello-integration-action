@@ -36,6 +36,7 @@ jobs:
                   trello-conflicting-labels: 'feature;bug;chore' # When a card has one of these labels then branch category label is not assigned
                   trello-card-in-branch-name: false # When true search for card name (e.g. "1234-card-title") in the branch name if card URL is not found in PR description or comments. If card id is found from branch then adds a comment with the card URL.
                   trello-card-position: "top" # Position of the card after being moved to a list (can be "top" or "bottom", default to "top")
+                  trello-add-labels-to-cards: true # Enable or disable the automatic addition of labels to cards (default to "true")
 ```
 
 [Here is how you can find out your board and list IDs](https://stackoverflow.com/a/50908600/2311110).
