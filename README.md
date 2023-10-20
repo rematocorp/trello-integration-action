@@ -1,14 +1,12 @@
 # Trello integration action
 
-Integrate GitHub PRs with Trello cards seamlessly with the following features:
+The action scans PR description, comments and branch name for Trello cards. When found, it integrates GitHub with Trello seamlessly:
 
 -   Links a PR to a Trello card and vice versa ([works best with GitHub Power-up](https://trello.com/power-ups/55a5d916446f517774210004/github)).
 -   Moves the Trello card when a PR is opened or closed.
 -   Applies an appropriate board label to a Trello card based on the branch name categorization (e.g., feature/foo).
 -   Assigns the PR author and fellow assignees to the Trello card.
 -   And more...
-
-This action scans the PR description and comments for Trello card URLs. When found, it bridges the gap between GitHub and Trello.
 
 ```yaml
 name: Trello integration
@@ -40,7 +38,7 @@ jobs:
                   trello-auth-token: ${{ secrets.TRELLO_AUTH_TOKEN }}
                   # Your organization name to avoid assigning cards to outside members, edit your workspace details and look for the short name.
                   trello-organization-name: remato
-                  # Trello board ID where to move the cards
+                  # Trello board ID where to move the cards.
                   trello-board-id: xxx
                   # Trello list ID for draft pull request (useful when you want to move the card back to In progress when ready PR is converted to draft).
                   trello-list-id-pr-draft: xxx
@@ -60,6 +58,4 @@ jobs:
                   trello-remove-unrelated-members: true
 ```
 
-[Here is how you can find out your board and list IDs](https://stackoverflow.com/a/50908600/2311110).
-
-Inspired by [dalezak/github-commit-to-trello-card](https://github.com/dalezak/github-commit-to-trello-card) and [delivered/attach-to-trello-card-action](https://github.com/delivered/attach-to-trello-card-action).
+[How do find board and list IDs](https://stackoverflow.com/a/50908600/2311110).
