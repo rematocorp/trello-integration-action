@@ -58,4 +58,4 @@ jobs:
                   trello-remove-unrelated-members: true
 ```
 
-[How do find board and list IDs](https://stackoverflow.com/a/50908600/2311110).
+[How to find board and list IDs](https://stackoverflow.com/a/50908600/2311110).
