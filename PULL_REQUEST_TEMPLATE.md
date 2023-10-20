@@ -1,4 +1,4 @@
 ##### Checklist
 
 -   [ ] Used prettier
--   [ ] Ran `yarn build`
+-   [ ] Ran `yarn build` with Node v20

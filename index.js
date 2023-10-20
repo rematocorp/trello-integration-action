@@ -8,6 +8,7 @@ const payload = context.payload
 const githubToken = core.getInput('github-token', { required: true })
 const githubRequireKeywordPrefix = core.getBooleanInput('github-require-keyword-prefix')
 const githubRequireTrelloCard = core.getBooleanInput('github-require-trello-card')
+const githubUsersToTrelloUsers = core.getInput('github-users-to-trello-users')
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
 const trelloOrganizationName = core.getInput('trello-organization-name')
@@ -20,7 +21,6 @@ const trelloCardInBranchName = core.getBooleanInput('trello-card-in-branch-name'
 const trelloCardPosition = core.getInput('trello-card-position')
 const trelloAddLabelsToCards = core.getBooleanInput('trello-add-labels-to-cards')
 const trelloRemoveUnrelatedMembers = core.getBooleanInput('trello-remove-unrelated-members')
-const mapGithubUsersToTrello = core.getInput('map-github-users-to-trello')
 
 const octokit = github.getOctokit(githubToken)
 const repoOwner = (payload.organization || payload.repository.owner).login
@@ -45,25 +45,22 @@ async function run(pr) {
 		console.log('Found card IDs', cardIds)
 
 		const isDraft = isDraftPr(pr)
-		const cardPosition = trelloCardPosition === 'bottom' ? 'bottom' : 'top'
 
 		if (pr.state === 'open' && isDraft && trelloListIdPrDraft) {
-			await moveCardsToList(cardIds, trelloListIdPrDraft, cardPosition)
+			await moveCardsToList(cardIds, trelloListIdPrDraft)
 			console.log('Moved cards to draft PR list')
 		} else if (pr.state === 'open' && !isDraft && trelloListIdPrOpen) {
-			await moveCardsToList(cardIds, trelloListIdPrOpen, cardPosition)
+			await moveCardsToList(cardIds, trelloListIdPrOpen)
 			console.log('Moved cards to open PR list')
 		} else if (pr.state === 'closed' && trelloListIdPrClosed) {
-			await moveCardsToList(cardIds, trelloListIdPrClosed, cardPosition)
+			await moveCardsToList(cardIds, trelloListIdPrClosed)
 			console.log('Moved cards to closed PR list')
 		} else {
 			console.log('Skipping moving the cards', pr.state, isDraft)
 		}
 		await addAttachmentToCards(cardIds, url)
 		await updateCardMembers(cardIds, assignees)
-		if (trelloAddLabelsToCards) {
-			await addLabelToCards(cardIds, pr.head)
-		}
+		await addLabelToCards(cardIds, pr.head)
 		await commentCardLink(cardIds, pr.body, comments)
 	} catch (error) {
 		core.setFailed(error)
@@ -197,7 +194,7 @@ function isDraftPr(pr) {
 	return isRealDraft || isFauxDraft
 }
 
-async function moveCardsToList(cardIds, listId, cardPosition) {
+async function moveCardsToList(cardIds, listId) {
 	return Promise.all(
 		cardIds.map((cardId) => {
 			console.log('Moving card to a list', cardId, listId)
@@ -208,8 +205,8 @@ async function moveCardsToList(cardIds, listId, cardPosition) {
 				.put(url, {
 					key: trelloApiKey,
 					token: trelloAuthToken,
+					pos: trelloCardPosition,
 					idList: listId,
-					pos: cardPosition,
 					...(trelloBoardId && { idBoard: trelloBoardId }),
 				})
 				.catch((error) => {
@@ -292,7 +289,7 @@ async function updateCardMembers(cardIds, assignees) {
 
 function getTrelloMemberId(githubUserName) {
 	let username = githubUserName.replace('-', '_')
-	if (mapGithubUsersToTrello.trim() !== '') {
+	if (githubUsersToTrelloUsers.trim() !== '') {
 		username = getTrelloUsernameFromInputMap(githubUserName) || username
 	}
 
@@ -328,13 +325,12 @@ function getTrelloMemberId(githubUserName) {
 }
 
 function getTrelloUsernameFromInputMap(githubUserName) {
-	for (const line of mapGithubUsersToTrello.split(/[\r\n]/)) {
+	console.log('Mapping Github users to Trello users')
+
+	for (const line of githubUsersToTrelloUsers.split(/[\r\n]/)) {
 		const parts = line.trim().split(':')
 		if (parts.length < 2) {
-			console.error(
-				'Error : Mapping of Github user to Trello does not contains 2 username separated by ":"',
-				line,
-			)
+			console.error('Mapping of Github user to Trello does not contain 2 usernames separated by ":"', line)
 			continue
 		}
 		if (parts[0].trim() === githubUserName && parts[1].trim() !== '') {
@@ -397,6 +393,10 @@ function addMemberToCard(cardId, memberId) {
 }
 
 async function addLabelToCards(cardIds, head) {
+	if (!trelloAddLabelsToCards) {
+		console.log('Skipping label adding')
+		return
+	}
 	console.log('Starting to add labels to cards')
 
 	const branchLabel = await getBranchLabel(head)
