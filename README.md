@@ -37,6 +37,13 @@ jobs:
                   trello-card-in-branch-name: false # When true search for card name (e.g. "1234-card-title") in the branch name if card URL is not found in PR description or comments. If card id is found from branch then adds a comment with the card URL.
                   trello-card-position: "top" # Position of the card after being moved to a list (can be "top" or "bottom", default to "top")
                   trello-add-labels-to-cards: true # Enable or disable the automatic addition of labels to cards (default to "true")
+                  trello-remove-unrelated-members: true # Enable or disable the removal of unrelated users on trello cards (default to "true")
+                  # Newline-separated list of mapping between Github username and Trello username. 
+                  # If the current username is not in the list, we still try to find a Trello user with that username
+                  # Example:
+                  map-github-users-to-trello: |-
+                    GithubUser1:TrelloUser1
+                    GithubUser2:TrelloUser2
 ```
 
 [Here is how you can find out your board and list IDs](https://stackoverflow.com/a/50908600/2311110).
