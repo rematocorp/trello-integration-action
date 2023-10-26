@@ -26,12 +26,10 @@ jobs:
 
                   # When set to true, match only URLs prefixed with “Closes” etc. 
                   # Just like https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword.
-                  #
                   # Default: false
                   github-require-keyword-prefix: false
 
                   # Throw an error if no Trello cards can be found in the PR description.
-                  #
                   # Default: false
                   github-require-trello-card: false
 
@@ -52,28 +50,23 @@ jobs:
                   trello-organization-name: remato
 
                   # Trello board ID where to move the cards.
-                  #
                   # How to find board ID: https://stackoverflow.com/a/50908600/2311110
                   trello-board-id: xxx
 
-                  # Trello list ID for draft pull request
+                  # Trello list ID for draft pull request.
                   # Useful when you want to move the card back to In progress when ready PR is converted to draft.
-                  #
                   # How to find list ID: https://stackoverflow.com/a/50908600/2311110
                   trello-list-id-pr-draft: xxx
 
                   # Trello list ID for open pull request.
-                  #
                   # How to find list ID: https://stackoverflow.com/a/50908600/2311110
                   trello-list-id-pr-open: xxx
 
                   # Trello list ID for closed pull request.
-                  #
                   # How to find list ID: https://stackoverflow.com/a/50908600/2311110
                   trello-list-id-pr-closed: xxx
 
                   # Enable or disable the automatic addition of labels to cards.
-                  #
                   # Default: true
                   trello-add-labels-to-cards: true
 
@@ -82,18 +75,15 @@ jobs:
 
                   # When set to true, search for card also within the branch name (e.g. "1234-card-title"). 
                   # If card id is found, comments card URL.
-                  #
                   # Default: false
                   trello-card-in-branch-name: false
 
-                  # Position of the card after being moved to a list
-                  #
+                  # Position of the card after being moved to a list.
                   # Options: "top" or "bottom"
                   # Default: "top"
                   trello-card-position: 'top'
 
                   # Enable or disable the removal of unrelated users on Trello cards.
-                  #
                   # Default: true
                   trello-remove-unrelated-members: true
 ```
