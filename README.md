@@ -34,6 +34,7 @@ jobs:
                   github-require-trello-card: false
 
                   # Newline-separated list of mapping between Github username and Trello username.
+                  # Use it for people who have different usernames in Github and Trello.
                   # If the current username is not in the list, we still try to find a Trello user with that username.
                   github-users-to-trello-users: |-
                       GithubUser1:TrelloUser1
