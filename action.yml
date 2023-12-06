@@ -20,6 +20,9 @@ inputs:
             map-github-users-to-trello: |-
               GithubUser1:TrelloUser1
               GithubUser2:TrelloUser2
+    github-include-pr-comments:
+        description: Include PR comments when searching for Trello cards.
+        default: true
     trello-api-key:
         description: Trello API key, visit https://trello.com/app-key for key.
         required: true

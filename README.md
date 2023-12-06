@@ -40,6 +40,10 @@ jobs:
                       GithubUser1:TrelloUser1
                       GithubUser2:TrelloUser2
 
+                  # When set to false, any Trello card listed in PR comments will be ignored for the automation.
+                  # Default: true
+                  github-include-pr-comments: true
+
                   # REQUIRED: Trello API key, visit https://trello.com/app-key for key.
                   trello-api-key: ${{ secrets.TRELLO_API_KEY }}
 
