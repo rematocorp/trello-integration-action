@@ -9,6 +9,7 @@ const githubToken = core.getInput('github-token', { required: true })
 const githubRequireKeywordPrefix = core.getBooleanInput('github-require-keyword-prefix')
 const githubRequireTrelloCard = core.getBooleanInput('github-require-trello-card')
 const githubUsersToTrelloUsers = core.getInput('github-users-to-trello-users')
+const githubIncludePrComments = core.getBooleanInput('github-include-pr-comments')
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
 const trelloOrganizationName = core.getInput('trello-organization-name')
@@ -158,6 +159,11 @@ async function searchTrelloCards(query) {
 }
 
 async function getPullRequestComments() {
+	if (!githubIncludePrComments) {
+		console.log('Skipping PR comments')
+		return []
+	}
+
 	console.log('Requesting pull request comments')
 
 	const response = await octokit.rest.issues.listComments({
