@@ -24,7 +24,7 @@ jobs:
                   # REQUIRED
                   github-token: ${{ secrets.GITHUB_TOKEN }}
 
-                  # When set to true, match only URLs prefixed with “Closes” etc. 
+                  # When set to true, match only URLs prefixed with “Closes” etc.
                   # Just like https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword.
                   # Default: false
                   github-require-keyword-prefix: false
@@ -33,6 +33,15 @@ jobs:
                   # Default: false
                   github-require-trello-card: false
 
+                  # When set to false, any Trello card listed in PR comments will be ignored for the automation.
+                  # Default: true
+                  github-include-pr-comments: true
+
+                  # When set to true, the integration uses the branch name to find card id (e.g. "1234-card-title").
+                  # If card ID is found, it automatically comments card URL to the PR.
+                  # Default: false
+                  github-include-pr-branch-name: false
+
                   # Newline-separated list of mapping between Github username and Trello username.
                   # Use it for people who have different usernames in Github and Trello.
                   # If the current username is not in the list, we still try to find a Trello user with that username.
@@ -40,17 +49,13 @@ jobs:
                       GithubUser1:TrelloUser1
                       GithubUser2:TrelloUser2
 
-                  # When set to false, any Trello card listed in PR comments will be ignored for the automation.
-                  # Default: true
-                  github-include-pr-comments: true
-
                   # REQUIRED: Trello API key, visit https://trello.com/app-key for key.
                   trello-api-key: ${{ secrets.TRELLO_API_KEY }}
 
                   # REQUIRED: Trello auth token, visit https://trello.com/app-key then click generate a token.
                   trello-auth-token: ${{ secrets.TRELLO_AUTH_TOKEN }}
 
-                  # Your organization name to avoid assigning cards to outside members, 
+                  # Your organization name to avoid assigning cards to outside members,
                   # edit your workspace details and look for the short name.
                   trello-organization-name: remato
 
@@ -77,11 +82,6 @@ jobs:
 
                   # When a card has one of these labels then branch category label is not assigned.
                   trello-conflicting-labels: 'feature;bug;chore'
-
-                  # When set to true, search for card also within the branch name (e.g. "1234-card-title"). 
-                  # If card id is found, comments card URL.
-                  # Default: false
-                  trello-card-in-branch-name: false
 
                   # Position of the card after being moved to a list.
                   # Options: "top" or "bottom"

@@ -8,8 +8,9 @@ const payload = context.payload
 const githubToken = core.getInput('github-token', { required: true })
 const githubRequireKeywordPrefix = core.getBooleanInput('github-require-keyword-prefix')
 const githubRequireTrelloCard = core.getBooleanInput('github-require-trello-card')
-const githubUsersToTrelloUsers = core.getInput('github-users-to-trello-users')
 const githubIncludePrComments = core.getBooleanInput('github-include-pr-comments')
+const githubIncludePrBranchName = core.getBooleanInput('github-include-pr-branch-name')
+const githubUsersToTrelloUsers = core.getInput('github-users-to-trello-users')
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
 const trelloOrganizationName = core.getInput('trello-organization-name')
@@ -18,7 +19,6 @@ const trelloListIdPrDraft = core.getInput('trello-list-id-pr-draft')
 const trelloListIdPrOpen = core.getInput('trello-list-id-pr-open')
 const trelloListIdPrClosed = core.getInput('trello-list-id-pr-closed')
 const trelloConflictingLabels = core.getInput('trello-conflicting-labels')?.split(';')
-const trelloCardInBranchName = core.getBooleanInput('trello-card-in-branch-name')
 const trelloCardPosition = core.getInput('trello-card-position')
 const trelloAddLabelsToCards = core.getBooleanInput('trello-add-labels-to-cards')
 const trelloRemoveUnrelatedMembers = core.getBooleanInput('trello-remove-unrelated-members')
@@ -68,20 +68,44 @@ async function run(pr) {
 	}
 }
 
+async function getPullRequestComments() {
+	console.log('Requesting pull request comments')
+
+	const response = await octokit.rest.issues.listComments({
+		owner: repoOwner,
+		repo: payload.repository.name,
+		issue_number: issueNumber,
+	})
+	return response.data
+}
+
+async function getPullRequestAssignees() {
+	console.log('Requesting pull request assignees')
+
+	const response = await octokit.rest.issues.get({
+		owner: repoOwner,
+		repo: payload.repository.name,
+		issue_number: issueNumber,
+	})
+	return [...response.data.assignees, response.data.user]
+}
+
 async function getCardIds(prHead, prBody, comments) {
 	console.log('Searching for card ids')
 
 	let cardIds = matchCardIds(prBody || '')
 
-	for (const comment of comments) {
-		cardIds = [...cardIds, ...matchCardIds(comment.body)]
+	if (githubIncludePrComments) {
+		for (const comment of comments) {
+			cardIds = [...cardIds, ...matchCardIds(comment.body)]
+		}
 	}
 
 	if (cardIds.length) {
 		return [...new Set(cardIds)]
 	}
 
-	if (trelloCardInBranchName) {
+	if (githubIncludePrBranchName) {
 		const cardId = await getCardIdFromBranch(prHead)
 
 		if (cardId) {
@@ -156,33 +180,6 @@ async function searchTrelloCards(query) {
 		.catch((error) => {
 			console.error(`Error ${error.response.status} ${error.response.statusText}`, url)
 		})
-}
-
-async function getPullRequestComments() {
-	if (!githubIncludePrComments) {
-		console.log('Skipping PR comments')
-		return []
-	}
-
-	console.log('Requesting pull request comments')
-
-	const response = await octokit.rest.issues.listComments({
-		owner: repoOwner,
-		repo: payload.repository.name,
-		issue_number: issueNumber,
-	})
-	return response.data
-}
-
-async function getPullRequestAssignees() {
-	console.log('Requesting pull request assignees')
-
-	const response = await octokit.rest.issues.get({
-		owner: repoOwner,
-		repo: payload.repository.name,
-		issue_number: issueNumber,
-	})
-	return [...response.data.assignees, response.data.user]
 }
 
 function isDraftPr(pr) {
@@ -510,7 +507,7 @@ async function addLabelToCard(cardId, labelId) {
 }
 
 async function commentCardLink(cardIds, prBody, comments) {
-	if (!trelloCardInBranchName) {
+	if (!githubIncludePrBranchName) {
 		return
 	}
 

@@ -14,15 +14,18 @@ inputs:
     github-require-trello-card:
         description: Throw an error if no Trello cards can be found in the PR description.
         default: false
+    github-include-pr-comments:
+        description: Include PR comments when searching for Trello cards.
+        default: true
+    github-include-pr-branch-name:
+        description: Include PR branch name when searching for Trello cards (e.g. "1234-card-title"). If card idID is found, it automatically comments card URL to the PR.
+        default: false
     github-users-to-trello-users:
         description: |-
             Newline-separated list of mapping between Github username and Trello username. Example:
             map-github-users-to-trello: |-
               GithubUser1:TrelloUser1
               GithubUser2:TrelloUser2
-    github-include-pr-comments:
-        description: Include PR comments when searching for Trello cards.
-        default: true
     trello-api-key:
         description: Trello API key, visit https://trello.com/app-key for key.
         required: true
@@ -44,9 +47,6 @@ inputs:
         default: true
     trello-conflicting-labels:
         description: When a card has one of these labels, branch category label is not assigned.
-    trello-card-in-branch-name:
-        description: When set to true, search for card also within the branch name (e.g. "1234-card-title"). If card id is found, comments card URL.
-        default: false
     trello-card-position:
         description: Position of the card after being moved to a list. Can be "top" or "bottom".
         default: 'top'
