@@ -19,7 +19,7 @@ jobs:
     build:
         runs-on: ubuntu-latest
         steps:
-            - uses: rematocorp/trello-integration-action@v7
+            - uses: rematocorp/trello-integration-action@v8
               with:
                   # REQUIRED
                   github-token: ${{ secrets.GITHUB_TOKEN }}
