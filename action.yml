@@ -1,9 +1,9 @@
 author: Remato
 name: trello-integration
-description: GitHub Action to integrate Github pull requests with Trello cards
+description: Integrate Github pull requests with Trello cards
 branding:
-    color: yellow
-    icon: anchor
+    color: blue
+    icon: trello
 inputs:
     github-token:
         description: Github token, https://docs.github.com/en/actions/reference/authentication-in-a-workflow.
