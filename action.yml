@@ -3,7 +3,7 @@ name: trello-integration
 description: Integrate Github pull requests with Trello cards
 branding:
     color: blue
-    icon: trello
+    icon: link
 inputs:
     github-token:
         description: Github token, https://docs.github.com/en/actions/reference/authentication-in-a-workflow.
