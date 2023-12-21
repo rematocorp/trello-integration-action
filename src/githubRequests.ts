@@ -2,14 +2,13 @@ import { getInput } from '@actions/core'
 import { getOctokit, context } from '@actions/github'
 
 const githubToken = getInput('github-token', { required: true })
+
 const octokit = getOctokit(githubToken)
 const payload = context.payload
 const repoOwner = (payload.organization || payload.repository?.owner)?.login
 const issueNumber = (payload.pull_request || payload.issue)?.number
 
 export async function getPullRequestComments() {
-	console.log('Requesting pull request comments')
-
 	const response = await octokit.rest.issues.listComments({
 		owner: repoOwner,
 		repo: payload.repository!.name,
@@ -20,8 +19,6 @@ export async function getPullRequestComments() {
 }
 
 export async function getPullRequestAssignees() {
-	console.log('Requesting pull request assignees')
-
 	const response = await octokit.rest.issues.get({
 		owner: repoOwner,
 		repo: payload.repository!.name,
@@ -32,8 +29,6 @@ export async function getPullRequestAssignees() {
 }
 
 export async function getBranchName() {
-	console.log('Requesting pull request head ref')
-
 	const response = await octokit.rest.pulls.get({
 		owner: repoOwner,
 		repo: payload.repository!.name,

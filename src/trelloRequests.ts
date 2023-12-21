@@ -9,8 +9,6 @@ const trelloCardPosition = core.getInput('trello-card-position')
 export async function searchTrelloCards(
 	query: string,
 ): Promise<{ dateLastActivity: string; id: string; idShort: number }[]> {
-	console.log('Searching for cards', query)
-
 	const response = await makeRequest('get', `https://api.trello.com/1/search`, {
 		modelTypes: 'cards',
 		query,
@@ -22,16 +20,12 @@ export async function searchTrelloCards(
 export async function getCardInfo(
 	cardId: string,
 ): Promise<{ id: string; idBoard: string; labels: BoardLabel[]; shortUrl: string; idMembers: string[] }> {
-	console.log('Getting card info', cardId)
-
 	const response = await makeRequest('get', `https://api.trello.com/1/cards/${cardId}`)
 
 	return response?.data
 }
 
 export async function getCardAttachments(cardId: string): Promise<{ url: string }[]> {
-	console.log('Checking existing attachments', cardId)
-
 	const response = await makeRequest('get', `https://api.trello.com/1/cards/${cardId}/attachments`)
 
 	return response?.data || null
@@ -52,8 +46,6 @@ export async function addMemberToCard(cardId: string, memberId: string) {
 }
 
 export async function getBoardLabels(boardId: string): Promise<BoardLabel[]> {
-	console.log('Getting board labels', boardId)
-
 	const response = await makeRequest('get', `https://api.trello.com/1/boards/${boardId}/labels`)
 
 	// Filters out board labels that have no name to avoid assigning them to every PR
@@ -86,8 +78,6 @@ export async function moveCardToList(cardId: string, listId: string, boardId?: s
 }
 
 export async function getMemberInfo(username?: string): Promise<{ id: string; organizations: { name: string }[] }> {
-	console.log('Getting Trello member id by username', username)
-
 	const response = await makeRequest('get', `https://api.trello.com/1/members/${username}`, {
 		organizations: 'all',
 	})

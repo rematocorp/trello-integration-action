@@ -336,7 +336,6 @@ async function getBranchLabel(prHead?: PRHead) {
 	const branchName = prHead?.ref || (await getBranchName())
 	const matches = branchName.match(/^([^\/]*)\//)
 
-	console.log(branchName, matches)
 	if (matches) {
 		return matches[1]
 	} else {
