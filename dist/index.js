@@ -33642,13 +33642,17 @@ async function getMemberInfo(username) {
 }
 exports.getMemberInfo = getMemberInfo;
 async function makeRequest(method, url, params) {
+    let response;
     try {
         if (['put', 'post'].includes(method)) {
-            return axios_1.default[method](url, { key: trelloApiKey, token: trelloAuthToken, ...params });
+            response = await axios_1.default[method](url, { key: trelloApiKey, token: trelloAuthToken, ...params });
         }
         else {
-            return axios_1.default[method](url, { params: { key: trelloApiKey, token: trelloAuthToken, ...params } });
+            response = await axios_1.default[method](url, {
+                params: { key: trelloApiKey, token: trelloAuthToken, ...params },
+            });
         }
+        return response;
     }
     catch (error) {
         console.error('Failed to make a request', url, params, error.response.status, error.response.statusText);
