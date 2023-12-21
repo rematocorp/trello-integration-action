@@ -32,42 +32,76 @@ jobs:
 
 ## All options
 
-| Option                            | Default | Description                                                                                                                                                                                                                                                                            |
-| --------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `github-token`                    |         | **REQUIRED**                                                                                                                                                                                                                                                                           |
-| `trello-api-token`                |         | **REQUIRED** Visit https://trello.com/app-key.                                                                                                                                                                                                                                         |
-| `trello-auth-token`               |         | **REQUIRED** Visit https://trello.com/app-key and click "Generate a token".                                                                                                                                                                                                            |
-| `github-include-pr-comments`      | `true`  | Scans PR comments to find Trello card URLs.                                                                                                                                                                                                                                            |
-| `github-include-pr-branch-name`   | `false` | Uses the branch name to find card id (e.g. `feature/38-card-title`). Comments card link to the PR if found.                                                                                                                                                                            |
-| `github-require-keyword-prefix`   | `false` | Only matches Trello URLs prefixed with ["Closes" etc](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword).                                                                         |
-| `github-require-trello-card`      | `false` | Throws an error if no Trello card can be found in the PR.                                                                                                                                                                                                                              |
-| `trello-list-id-pr-draft`         |         | Trello list ID for draft pull request. Useful when you want to move the card back to "In progress" when ready PR is converted to draft. [How to find list ID](https://stackoverflow.com/a/50908600/2311110).                                                                           |
-| `trello-list-id-pr-open`          |         | Trello list ID for open pull request. [How to find list ID](https://stackoverflow.com/a/50908600/2311110).                                                                                                                                                                             |
-| `trello-list-id-pr-closed`        |         | Trello list ID for closed (merged) pull request. [How to find list ID](https://stackoverflow.com/a/50908600/2311110).                                                                                                                                                                  |
-| `trello-board-id`                 |         | Trello board ID where to move the cards. Useful when you want the action to move the card out from the backlog. [How to find board ID](https://stackoverflow.com/a/50908600/2311110).                                                                                                  |
-| `trello-card-position`            | `'top'` | Position of the card after being moved to a list. Options: `'top'` or `'bottom'`.                                                                                                                                                                                                      |
-| `github-users-to-trello-users`    |         | Newline-separated list of mapping between GitHub username and Trello username. Use it for people who have different usernames in GitHub and Trello. If the current username is not in the list, we still try to find a Trello user with GitHub username. Look below to see an example. |
-| `trello-organization-name`        |         | Your organization name to avoid assigning cards to outside members, edit your workspace details and look for the short name.                                                                                                                                                           |
-| `trello-remove-unrelated-members` | `true`  | Removes card members who are not authors or assignees of the PR.                                                                                                                                                                                                                       |
-| `trello-add-labels-to-cards`      | `true`  | Assigns branch category (e.g. `feature/foo`) label to Trello card.                                                                                                                                                                                                                     |
-| `trello-conflicting-labels`       | `true`  | When a card has one of these labels then branch category label is not assigned. Separate label names with `;`.                                                                                                                                                                         |
-
-## Examples
-
-### Mapping GitHub and Trello usernames
-
-By default the action tries to use GitHub usernames to assign them to Trello card. Use this option for people who have different usernames in GitHub and Trello.
-
 ```yaml
+# REQUIRED
+github-token: ${{ secrets.GITHUB_TOKEN }}
+
+# REQUIRED: Visit https://trello.com/app-key
+trello-api-key: ${{ secrets.TRELLO_API_KEY }}
+
+# REQUIRED: Visit https://trello.com/app-key and click "Generate a token".
+trello-auth-token: ${{ secrets.TRELLO_AUTH_TOKEN }}
+
+# Scans PR comments to find Trello card URLs.
+# DEFAULT: true
+github-include-pr-comments: true
+
+# Uses the branch name to find card id (e.g. feature/38-card-title).
+# Comments card URL to the PR if found.
+# DEFAULT: false
+github-include-pr-branch-name: false
+
+# Only matches Trello URLs prefixed with "Closes" etc.
+# Just like https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword
+# DEFAULT: false
+github-require-keyword-prefix: false
+
+# Throws an error if no Trello card can be found in the PR.
+# DEFAULT: false
+github-require-trello-card: false
+
+# Trello list ID for draft pull request.
+# Useful when you want to move the card back to "In progress" when ready PR is converted to draft.
+# How to find list ID: https://stackoverflow.com/a/50908600/2311110
+trello-list-id-pr-draft: xxx
+
+# Trello list ID for open pull request.
+# How to find list ID: https://stackoverflow.com/a/50908600/2311110
+trello-list-id-pr-open: xxx
+
+# Trello list ID for closed pull request.
+# How to find list ID: https://stackoverflow.com/a/50908600/2311110
+trello-list-id-pr-closed: xxx
+
+# Trello board ID where to move the cards.
+# Useful when you want the action to move the card out from the backlog.
+# How to find board ID: https://stackoverflow.com/a/50908600/2311110
+trello-board-id: xxx
+
+# Position of the card after being moved to a list.
+# OPTIONS: 'top' or 'bottom'
+# DEFAULT: 'top'
+trello-card-position: 'top'
+
+# Newline-separated list of mapping between GitHub username and Trello username.
+# Use it for people who have different usernames in GitHub and Trello.
+# If the current username is not in the list, we still try to find a Trello user with GitHub username.
 github-users-to-trello-users: |-
-    phil:philnike
-    amy1:amy1993
-```
+    GithubUser1:TrelloUser1
+    GithubUser2:TrelloUser2
 
-### Avoiding label override
+# Your organization name to avoid assigning cards to outside members,
+# edit your workspace details and look for the short name.
+trello-organization-name: remato
 
-Avoids setting branch category label when Trello card already has one of these labels assigned.
+# Assigns branch category (e.g. feature/foo) label to Trello card.
+# DEFAULT: true
+trello-add-labels-to-cards: true
 
-```yaml
+# When a card has one of these labels then branch category label is not assigned.
 trello-conflicting-labels: 'feature;bug;chore'
+
+# Removes card members who are not authors or assignees of the PR.
+# DEFAULT: true
+trello-remove-unrelated-members: true
 ```
