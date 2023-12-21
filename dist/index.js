@@ -33642,8 +33642,8 @@ async function getMemberInfo(username) {
 }
 exports.getMemberInfo = getMemberInfo;
 async function makeRequest(method, url, params) {
-    let response;
     try {
+        let response;
         if (['put', 'post'].includes(method)) {
             response = await axios_1.default[method](url, { key: trelloApiKey, token: trelloAuthToken, ...params });
         }
