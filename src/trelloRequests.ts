@@ -92,9 +92,9 @@ export async function getMemberInfo(username?: string): Promise<{ id: string; or
 }
 
 async function makeRequest(method: 'get' | 'put' | 'post' | 'delete', url: string, params?: Record<string, any>) {
-	let response
-
 	try {
+		let response
+
 		if (['put', 'post'].includes(method)) {
 			response = await axios[method](url, { key: trelloApiKey, token: trelloAuthToken, ...params })
 		} else {
