@@ -11,6 +11,7 @@ import {
 	removeMemberFromCard,
 	getBoardLabels,
 	addLabelToCard,
+	getBoardLists,
 } from './trelloRequests'
 import { getPullRequestComments, getBranchName, createComment, getPullRequestAssignees } from './githubRequests'
 
@@ -27,6 +28,7 @@ const getBranchNameMock = getBranchName as jest.Mock
 const searchTrelloCardsMock = searchTrelloCards as jest.Mock
 const getCardAttachmentsMock = getCardAttachments as jest.Mock
 const getBoardLabelsMock = getBoardLabels as jest.Mock
+const getBoardListsMock = getBoardLists as jest.Mock
 
 const basePR = { number: 0, state: 'open', title: 'Title' }
 
@@ -56,7 +58,7 @@ describe('Finding cards', () => {
 
 	it('finds card from description', async () => {
 		await run({ ...pr, body: 'https://trello.com/c/card/title' }, conf)
-		expect(moveCardToList).toHaveBeenCalledWith('card', 'open-list-id')
+		expect(moveCardToList).toHaveBeenCalledWith('card', 'open-list-id', undefined)
 	})
 
 	it('finds card from comments', async () => {
@@ -64,7 +66,7 @@ describe('Finding cards', () => {
 
 		await run(pr, { ...conf, githubIncludePrComments: true })
 
-		expect(moveCardToList).toHaveBeenCalledWith('card', 'open-list-id')
+		expect(moveCardToList).toHaveBeenCalledWith('card', 'open-list-id', undefined)
 	})
 
 	it('finds card from branch name', async () => {
@@ -75,13 +77,13 @@ describe('Finding cards', () => {
 		await run(pr, { ...conf, githubIncludePrBranchName: true })
 
 		expect(searchTrelloCards).toHaveBeenCalledWith('1-card')
-		expect(moveCardToList).toHaveBeenCalledWith('card', 'open-list-id')
+		expect(moveCardToList).toHaveBeenCalledWith('card', 'open-list-id', undefined)
 	})
 
 	it('finds multiple cards', async () => {
 		await run({ ...pr, body: 'https://trello.com/c/card1/title, https://trello.com/c/card2/title' }, conf)
-		expect(moveCardToList).toHaveBeenCalledWith('card1', 'open-list-id')
-		expect(moveCardToList).toHaveBeenCalledWith('card2', 'open-list-id')
+		expect(moveCardToList).toHaveBeenCalledWith('card1', 'open-list-id', undefined)
+		expect(moveCardToList).toHaveBeenCalledWith('card2', 'open-list-id', undefined)
 	})
 })
 
@@ -92,13 +94,13 @@ describe('Moving cards', () => {
 
 		it('moves the card to Draft list', async () => {
 			await run({ ...pr, draft: true }, conf)
-			expect(moveCardToList).toHaveBeenCalledWith('card', 'draft-list-id')
+			expect(moveCardToList).toHaveBeenCalledWith('card', 'draft-list-id', undefined)
 
 			await run({ ...pr, title: '[DRAFT] Title' }, conf)
-			expect(moveCardToList).toHaveBeenNthCalledWith(2, 'card', 'draft-list-id')
+			expect(moveCardToList).toHaveBeenNthCalledWith(2, 'card', 'draft-list-id', undefined)
 
 			await run({ ...pr, title: '[WIP] Title' }, conf)
-			expect(moveCardToList).toHaveBeenNthCalledWith(3, 'card', 'draft-list-id')
+			expect(moveCardToList).toHaveBeenNthCalledWith(3, 'card', 'draft-list-id', undefined)
 		})
 
 		it('skips move when list not configured', async () => {
@@ -113,7 +115,7 @@ describe('Moving cards', () => {
 
 		it('moves the card to Open list', async () => {
 			await run(pr, conf)
-			expect(moveCardToList).toHaveBeenCalledWith('card', 'open-list-id')
+			expect(moveCardToList).toHaveBeenCalledWith('card', 'open-list-id', undefined)
 		})
 
 		it('skips move when list not configured', async () => {
@@ -128,12 +130,37 @@ describe('Moving cards', () => {
 
 		it('moves the card to Closed list', async () => {
 			await run(pr, conf)
-			expect(moveCardToList).toHaveBeenCalledWith('card', 'closed-list-id')
+			expect(moveCardToList).toHaveBeenCalledWith('card', 'closed-list-id', undefined)
 		})
 
 		it('skips move when list not configured', async () => {
 			await run(pr, {})
 			expect(moveCardToList).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('configured board id', () => {
+		const pr = { ...basePR, state: 'closed', body: 'https://trello.com/c/card/title' }
+		const conf = { trelloListIdPrClosed: 'closed-list-id', trelloBoardId: 'board-id' }
+
+		it('moves to the board', async () => {
+			await run(pr, conf)
+			expect(moveCardToList).toHaveBeenCalledWith('card', 'closed-list-id', 'board-id')
+		})
+	})
+
+	describe('multiple list ids', () => {
+		const pr = { ...basePR, state: 'closed', body: 'https://trello.com/c/card/title' }
+		const conf = { trelloListIdPrClosed: 'closed-list-id;another-closed-list-id' }
+
+		it('moves to the list on the board where the card is currently located', async () => {
+			getCardInfoMock.mockResolvedValueOnce({ idBoard: 'board-id' })
+			getBoardListsMock.mockResolvedValueOnce([{ id: 'another-closed-list-id' }])
+
+			await run(pr, conf)
+
+			expect(getBoardListsMock).toHaveBeenCalledWith('board-id')
+			expect(moveCardToList).toHaveBeenCalledWith('card', 'another-closed-list-id')
 		})
 	})
 })

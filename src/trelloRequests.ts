@@ -53,6 +53,12 @@ export async function getBoardLabels(boardId: string): Promise<BoardLabel[]> {
 	return response?.data?.filter((label: { name: string }) => label.name)
 }
 
+export async function getBoardLists(boardId: string): Promise<{ id: string }[]> {
+	const response = await makeRequest('get', `https://api.trello.com/1/boards/${boardId}/lists`)
+
+	return response?.data
+}
+
 export async function addLabelToCard(cardId: string, labelId: string) {
 	console.log('Adding label to a card', cardId, labelId)
 
@@ -87,11 +93,17 @@ export async function getMemberInfo(username?: string): Promise<{ id: string; or
 
 async function makeRequest(method: 'get' | 'put' | 'post' | 'delete', url: string, params?: Record<string, any>) {
 	try {
+		let response
+
 		if (['put', 'post'].includes(method)) {
-			return axios[method](url, { key: trelloApiKey, token: trelloAuthToken, ...params })
+			response = await axios[method](url, { key: trelloApiKey, token: trelloAuthToken, ...params })
 		} else {
-			return axios[method](url, { params: { key: trelloApiKey, token: trelloAuthToken, ...params } })
+			response = await axios[method](url, {
+				params: { key: trelloApiKey, token: trelloAuthToken, ...params },
+			})
 		}
+
+		return response
 	} catch (error: any) {
 		console.error('Failed to make a request', url, params, error.response.status, error.response.statusText)
 	}

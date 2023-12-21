@@ -33342,15 +33342,15 @@ async function getCardIdFromBranch(prHead) {
 async function moveCards(conf, cardIds, pr) {
     const isDraft = isDraftPr(pr);
     if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
-        await moveCardsToList(cardIds, conf.trelloListIdPrDraft);
+        await moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId);
         console.log('Moved cards to draft PR list');
     }
     else if (pr.state === 'open' && !isDraft && conf.trelloListIdPrOpen) {
-        await moveCardsToList(cardIds, conf.trelloListIdPrOpen);
+        await moveCardsToList(cardIds, conf.trelloListIdPrOpen, conf.trelloBoardId);
         console.log('Moved cards to open PR list');
     }
     else if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
-        await moveCardsToList(cardIds, conf.trelloListIdPrClosed);
+        await moveCardsToList(cardIds, conf.trelloListIdPrClosed, conf.trelloBoardId);
         console.log('Moved cards to closed PR list');
     }
     else {
@@ -33369,8 +33369,19 @@ function isDraftPr(pr) {
     }
     return isRealDraft || isFauxDraft;
 }
-async function moveCardsToList(cardIds, listId) {
-    return Promise.all(cardIds.map((cardId) => (0, trelloRequests_1.moveCardToList)(cardId, listId)));
+async function moveCardsToList(cardIds, listId, boardId) {
+    const listIds = listId.split(';');
+    return Promise.all(cardIds.map(async (cardId) => {
+        if (listIds.length > 1) {
+            const { idBoard } = await (0, trelloRequests_1.getCardInfo)(cardId);
+            const boardLists = await (0, trelloRequests_1.getBoardLists)(idBoard);
+            // Moves to the list on the board where the card is currently located
+            await (0, trelloRequests_1.moveCardToList)(cardId, listIds.find((listId) => boardLists.some((list) => list.id === listId)) || listIds[0]);
+        }
+        else {
+            await (0, trelloRequests_1.moveCardToList)(cardId, listId, boardId);
+        }
+    }));
 }
 async function addPRLinkToCards(cardIds, link) {
     return Promise.all(cardIds.map(async (cardId) => {
@@ -33554,7 +33565,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getMemberInfo = exports.moveCardToList = exports.removeMemberFromCard = exports.addLabelToCard = exports.getBoardLabels = exports.addMemberToCard = exports.addAttachmentToCard = exports.getCardAttachments = exports.getCardInfo = exports.searchTrelloCards = void 0;
+exports.getMemberInfo = exports.moveCardToList = exports.removeMemberFromCard = exports.addLabelToCard = exports.getBoardLists = exports.getBoardLabels = exports.addMemberToCard = exports.addAttachmentToCard = exports.getCardAttachments = exports.getCardInfo = exports.searchTrelloCards = void 0;
 const axios_1 = __importDefault(__nccwpck_require__(8757));
 const core = __importStar(__nccwpck_require__(2186));
 const trelloApiKey = core.getInput('trello-api-key', { required: true });
@@ -33597,6 +33608,11 @@ async function getBoardLabels(boardId) {
     return response?.data?.filter((label) => label.name);
 }
 exports.getBoardLabels = getBoardLabels;
+async function getBoardLists(boardId) {
+    const response = await makeRequest('get', `https://api.trello.com/1/boards/${boardId}/lists`);
+    return response?.data;
+}
+exports.getBoardLists = getBoardLists;
 async function addLabelToCard(cardId, labelId) {
     console.log('Adding label to a card', cardId, labelId);
     return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idLabels`, {
@@ -33627,12 +33643,16 @@ async function getMemberInfo(username) {
 exports.getMemberInfo = getMemberInfo;
 async function makeRequest(method, url, params) {
     try {
+        let response;
         if (['put', 'post'].includes(method)) {
-            return axios_1.default[method](url, { key: trelloApiKey, token: trelloAuthToken, ...params });
+            response = await axios_1.default[method](url, { key: trelloApiKey, token: trelloAuthToken, ...params });
         }
         else {
-            return axios_1.default[method](url, { params: { key: trelloApiKey, token: trelloAuthToken, ...params } });
+            response = await axios_1.default[method](url, {
+                params: { key: trelloApiKey, token: trelloAuthToken, ...params },
+            });
         }
+        return response;
     }
     catch (error) {
         console.error('Failed to make a request', url, params, error.response.status, error.response.statusText);
