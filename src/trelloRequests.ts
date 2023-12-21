@@ -93,6 +93,6 @@ async function makeRequest(method: 'get' | 'put' | 'post' | 'delete', url: strin
 			...params,
 		})
 	} catch (error: any) {
-		console.error('Failed to make a request', url, params, error.response)
+		console.error('Failed to make a request', url, params, error.response.status, error.response.statusText)
 	}
 }
