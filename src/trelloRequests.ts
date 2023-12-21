@@ -87,11 +87,11 @@ export async function getMemberInfo(username?: string): Promise<{ id: string; or
 
 async function makeRequest(method: 'get' | 'put' | 'post' | 'delete', url: string, params?: Record<string, any>) {
 	try {
-		return axios[method](url, {
-			key: trelloApiKey,
-			token: trelloAuthToken,
-			...params,
-		})
+		if (['put', 'post'].includes(method)) {
+			return axios[method](url, { key: trelloApiKey, token: trelloAuthToken, ...params })
+		} else {
+			return axios[method](url, { params: { key: trelloApiKey, token: trelloAuthToken, ...params } })
+		}
 	} catch (error: any) {
 		console.error('Failed to make a request', url, params, error.response.status, error.response.statusText)
 	}
