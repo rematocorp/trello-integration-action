@@ -1,7 +1,0 @@
-{
-	"extends": ["@remato/eslint-config/typescript"],
-	"ignorePatterns": ["dist"],
-	"rules": {
-		"no-console": 0
-	}
-}
