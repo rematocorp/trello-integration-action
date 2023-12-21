@@ -53,6 +53,12 @@ export async function getBoardLabels(boardId: string): Promise<BoardLabel[]> {
 	return response?.data?.filter((label: { name: string }) => label.name)
 }
 
+export async function getBoardLists(boardId: string): Promise<{ id: string }[]> {
+	const response = await makeRequest('get', `https://api.trello.com/1/boards/${boardId}/lists`)
+
+	return response?.data
+}
+
 export async function addLabelToCard(cardId: string, labelId: string) {
 	console.log('Adding label to a card', cardId, labelId)
 

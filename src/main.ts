@@ -5,6 +5,7 @@ import {
 	addLabelToCard,
 	addMemberToCard,
 	getBoardLabels,
+	getBoardLists,
 	getCardAttachments,
 	getCardInfo,
 	getMemberInfo,
@@ -119,13 +120,13 @@ async function moveCards(conf: Conf, cardIds: string[], pr: PR) {
 	const isDraft = isDraftPr(pr)
 
 	if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
-		await moveCardsToList(cardIds, conf.trelloListIdPrDraft)
+		await moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId)
 		console.log('Moved cards to draft PR list')
 	} else if (pr.state === 'open' && !isDraft && conf.trelloListIdPrOpen) {
-		await moveCardsToList(cardIds, conf.trelloListIdPrOpen)
+		await moveCardsToList(cardIds, conf.trelloListIdPrOpen, conf.trelloBoardId)
 		console.log('Moved cards to open PR list')
 	} else if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
-		await moveCardsToList(cardIds, conf.trelloListIdPrClosed)
+		await moveCardsToList(cardIds, conf.trelloListIdPrClosed, conf.trelloBoardId)
 		console.log('Moved cards to closed PR list')
 	} else {
 		console.log('Skipping moving the cards', pr.state, isDraft)
@@ -147,8 +148,25 @@ function isDraftPr(pr: any) {
 	return isRealDraft || isFauxDraft
 }
 
-async function moveCardsToList(cardIds: string[], listId: string) {
-	return Promise.all(cardIds.map((cardId) => moveCardToList(cardId, listId)))
+async function moveCardsToList(cardIds: string[], listId: string, boardId?: string) {
+	const listIds = listId.split(';')
+
+	return Promise.all(
+		cardIds.map(async (cardId) => {
+			if (listIds.length > 1) {
+				const { idBoard } = await getCardInfo(cardId)
+				const boardLists = await getBoardLists(idBoard)
+
+				// Moves to the list on the board where the card is currently located
+				await moveCardToList(
+					cardId,
+					listIds.find((listId) => boardLists.some((list) => list.id === listId)) || listIds[0],
+				)
+			} else {
+				await moveCardToList(cardId, listId, boardId)
+			}
+		}),
+	)
 }
 
 async function addPRLinkToCards(cardIds: string[], link: string) {
