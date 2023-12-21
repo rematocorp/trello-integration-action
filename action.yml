@@ -1,6 +1,6 @@
 author: Remato
-name: Trello Integration
-description: Integrate Github pull requests with Trello cards
+name: Trello Card & GitHub PR Integration
+description: Integrate GitHub pull requests with Trello cards
 branding:
     color: yellow
     icon: link
@@ -18,7 +18,7 @@ inputs:
         description: Include PR comments when searching for Trello cards.
         default: true
     github-include-pr-branch-name:
-        description: Include PR branch name when searching for Trello cards (e.g. "1234-card-title"). If card idID is found, it automatically comments card URL to the PR.
+        description: Include PR branch name when searching for Trello cards (e.g. "1234-card-title"). If card ID is found, it automatically comments card URL to the PR.
         default: false
     github-users-to-trello-users:
         description: |-
@@ -51,7 +51,7 @@ inputs:
         description: Position of the card after being moved to a list. Can be "top" or "bottom".
         default: 'top'
     trello-remove-unrelated-members:
-        description: Enable or disable the removal of unrelated users on trello cards.
+        description: Enable or disable the removal of unrelated users on Trello cards.
         default: true
 runs:
     using: node20
