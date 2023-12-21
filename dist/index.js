@@ -33163,7 +33163,6 @@ const payload = github_1.context.payload;
 const repoOwner = (payload.organization || payload.repository?.owner)?.login;
 const issueNumber = (payload.pull_request || payload.issue)?.number;
 async function getPullRequestComments() {
-    console.log('Requesting pull request comments');
     const response = await octokit.rest.issues.listComments({
         owner: repoOwner,
         repo: payload.repository.name,
@@ -33173,7 +33172,6 @@ async function getPullRequestComments() {
 }
 exports.getPullRequestComments = getPullRequestComments;
 async function getPullRequestAssignees() {
-    console.log('Requesting pull request assignees');
     const response = await octokit.rest.issues.get({
         owner: repoOwner,
         repo: payload.repository.name,
@@ -33183,7 +33181,6 @@ async function getPullRequestAssignees() {
 }
 exports.getPullRequestAssignees = getPullRequestAssignees;
 async function getBranchName() {
-    console.log('Requesting pull request head ref');
     const response = await octokit.rest.pulls.get({
         owner: repoOwner,
         repo: payload.repository.name,
@@ -33503,7 +33500,6 @@ async function addLabelToCards(conf, cardIds, head) {
 async function getBranchLabel(prHead) {
     const branchName = prHead?.ref || (await (0, githubRequests_1.getBranchName)());
     const matches = branchName.match(/^([^\/]*)\//);
-    console.log(branchName, matches);
     if (matches) {
         return matches[1];
     }
@@ -33565,7 +33561,6 @@ const trelloApiKey = core.getInput('trello-api-key', { required: true });
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true });
 const trelloCardPosition = core.getInput('trello-card-position');
 async function searchTrelloCards(query) {
-    console.log('Searching for cards', query);
     const response = await makeRequest('get', `https://api.trello.com/1/search`, {
         modelTypes: 'cards',
         query,
@@ -33574,13 +33569,11 @@ async function searchTrelloCards(query) {
 }
 exports.searchTrelloCards = searchTrelloCards;
 async function getCardInfo(cardId) {
-    console.log('Getting card info', cardId);
     const response = await makeRequest('get', `https://api.trello.com/1/cards/${cardId}`);
     return response?.data;
 }
 exports.getCardInfo = getCardInfo;
 async function getCardAttachments(cardId) {
-    console.log('Checking existing attachments', cardId);
     const response = await makeRequest('get', `https://api.trello.com/1/cards/${cardId}/attachments`);
     return response?.data || null;
 }
@@ -33598,7 +33591,6 @@ async function addMemberToCard(cardId, memberId) {
 }
 exports.addMemberToCard = addMemberToCard;
 async function getBoardLabels(boardId) {
-    console.log('Getting board labels', boardId);
     const response = await makeRequest('get', `https://api.trello.com/1/boards/${boardId}/labels`);
     // Filters out board labels that have no name to avoid assigning them to every PR
     // because 'foo'.startsWith('') is true (partially matching label logic)
@@ -33627,7 +33619,6 @@ async function moveCardToList(cardId, listId, boardId) {
 }
 exports.moveCardToList = moveCardToList;
 async function getMemberInfo(username) {
-    console.log('Getting Trello member id by username', username);
     const response = await makeRequest('get', `https://api.trello.com/1/members/${username}`, {
         organizations: 'all',
     });
@@ -33636,14 +33627,15 @@ async function getMemberInfo(username) {
 exports.getMemberInfo = getMemberInfo;
 async function makeRequest(method, url, params) {
     try {
-        return axios_1.default[method](url, {
-            key: trelloApiKey,
-            token: trelloAuthToken,
-            ...params,
-        });
+        if (['put', 'post'].includes(method)) {
+            return axios_1.default[method](url, { key: trelloApiKey, token: trelloAuthToken, ...params });
+        }
+        else {
+            return axios_1.default[method](url, { params: { key: trelloApiKey, token: trelloAuthToken, ...params } });
+        }
     }
     catch (error) {
-        console.error('Failed to make a request', url, params, error.response);
+        console.error('Failed to make a request', url, params, error.response.status, error.response.statusText);
     }
 }
 
