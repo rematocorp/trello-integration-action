@@ -1,5 +1,5 @@
 author: Remato
-name: trello-integration
+name: Trello Integration
 description: Integrate Github pull requests with Trello cards
 branding:
     color: yellow
