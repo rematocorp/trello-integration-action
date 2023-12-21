@@ -110,7 +110,7 @@ trello-remove-unrelated-members: true
 
 ### Multiple boards support
 
-Separate list IDs using `;` for multi-board support. The action selects a list based on the card's current board: if a list is present on the board, that list will be chosen.
+Separate different boards list IDs using `;`. The action will move the card to a list that exists on the board where the card is currently located.
 
 ```yaml
 trello-list-id-pr-closed: '6603333cf96e4419a590d9ab;66025544a40b6a11a12233de;77788894a40b6a11a12233de'
