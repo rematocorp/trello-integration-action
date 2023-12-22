@@ -17,4 +17,5 @@ run((context.payload.pull_request || context.payload.issue) as PR, {
 	trelloBoardId: core.getInput('trello-board-id'),
 	trelloAddLabelsToCards: core.getBooleanInput('trello-add-labels-to-cards'),
 	trelloRemoveUnrelatedMembers: core.getBooleanInput('trello-remove-unrelated-members'),
+	trelloEnableNewCardCommand: core.getBooleanInput('trello-enable-new-card-command'),
 })

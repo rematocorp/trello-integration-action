@@ -14,6 +14,7 @@ export interface Conf {
 	trelloConflictingLabels?: string[]
 	trelloRemoveUnrelatedMembers?: boolean
 	trelloAddLabelsToCards?: boolean
+	trelloEnableNewCardCommand?: boolean
 }
 
 export type PR = Exclude<typeof context.payload.pull_request | typeof context.payload.issue, undefined>

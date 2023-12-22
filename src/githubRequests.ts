@@ -39,10 +39,23 @@ export async function getBranchName() {
 }
 
 export async function createComment(shortUrl: string) {
+	console.log('Creating PR comment', shortUrl)
+
 	await octokit.rest.issues.createComment({
 		owner: repoOwner,
 		repo: payload.repository!.name,
 		issue_number: issueNumber!,
 		body: shortUrl,
+	})
+}
+
+export async function updatePullRequestBody(newBody: string) {
+	console.log('Updating PR body', newBody)
+
+	await octokit.rest.issues.update({
+		owner: repoOwner,
+		repo: payload.repository!.name,
+		issue_number: issueNumber!,
+		body: newBody,
 	})
 }

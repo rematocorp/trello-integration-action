@@ -1,9 +1,16 @@
 import { setFailed } from '@actions/core'
-import { createComment, getBranchName, getPullRequestAssignees, getPullRequestComments } from './githubRequests'
+import {
+	createComment,
+	getBranchName,
+	getPullRequestAssignees,
+	getPullRequestComments,
+	updatePullRequestBody,
+} from './githubRequests'
 import {
 	addAttachmentToCard,
 	addLabelToCard,
 	addMemberToCard,
+	createCard,
 	getBoardLabels,
 	getBoardLists,
 	getCardAttachments,
@@ -17,15 +24,28 @@ import { BoardLabel, Conf, PR, PRHead } from './types'
 
 export async function run(pr: PR, conf: Conf = {}) {
 	try {
+		const created = await createNewCard(conf, pr)
+		if (created) {
+			console.log('Exiting early as automatic PR body change will retrigger the action')
+
+			return
+		}
+
 		const comments = await getPullRequestComments()
 		const cardIds = await getCardIds(conf, pr.head, pr.body, comments)
 
 		if (cardIds.length) {
 			console.log('Found card IDs', cardIds)
 
+			const linked = await addCardLinkToPR(conf, cardIds, pr.body, comments)
+			if (linked) {
+				console.log('Exiting early as automatic comment will retrigger the action')
+
+				return
+			}
+
 			await moveCards(conf, cardIds, pr)
 			await addPRLinkToCards(cardIds, pr.html_url || pr.url)
-			await addCardLinkToPR(conf, cardIds, pr.body, comments)
 			await updateCardMembers(conf, cardIds)
 			await addLabelToCards(conf, cardIds, pr.head)
 		}
@@ -33,6 +53,23 @@ export async function run(pr: PR, conf: Conf = {}) {
 		setFailed(error)
 		throw error
 	}
+}
+
+async function createNewCard(conf: Conf, pr: PR) {
+	if (!conf.trelloEnableNewCardCommand) {
+		return false
+	}
+	const isDraft = isDraftPr(pr)
+	const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen
+
+	if (listId && pr.body?.includes('/new-trello-card')) {
+		const card = await createCard(listId, pr.title, pr.body)
+		await updatePullRequestBody(pr.body.replace('/new-trello-card', card.url))
+
+		return true
+	}
+
+	return false
 }
 
 async function getCardIds(conf: Conf, prHead: PRHead, prBody: string = '', comments: { body?: string }[]) {
@@ -187,20 +224,20 @@ async function addPRLinkToCards(cardIds: string[], link: string) {
 
 async function addCardLinkToPR(conf: Conf, cardIds: string[], prBody: string = '', comments: { body?: string }[] = []) {
 	if (!conf.githubIncludePrBranchName) {
-		return
+		return false
 	}
 
 	if (matchCardIds(conf, prBody || '')?.length) {
 		console.log('Card is already linked in the PR description')
 
-		return
+		return false
 	}
 
 	for (const comment of comments) {
 		if (matchCardIds(conf, comment.body)?.length) {
 			console.log('Card is already linked in the comment')
 
-			return
+			return false
 		}
 	}
 	console.log('Commenting Trello card URL to PR', cardIds[0])
@@ -208,6 +245,8 @@ async function addCardLinkToPR(conf: Conf, cardIds: string[], prBody: string = '
 	const cardInfo = await getCardInfo(cardIds[0])
 
 	await createComment(cardInfo.shortUrl)
+
+	return true
 }
 
 async function updateCardMembers(conf: Conf, cardIds: string[]) {
