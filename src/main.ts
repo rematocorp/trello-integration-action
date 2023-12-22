@@ -24,26 +24,20 @@ import { BoardLabel, Conf, PR, PRHead } from './types'
 
 export async function run(pr: PR, conf: Conf = {}) {
 	try {
-		const created = await createNewCard(conf, pr)
-		if (created) {
+		if (await createNewCard(conf, pr)) {
 			console.log('Exiting early as automatic PR body change will retrigger the action')
 
 			return
 		}
-
 		const comments = await getPullRequestComments()
 		const cardIds = await getCardIds(conf, pr.head, pr.body, comments)
 
 		if (cardIds.length) {
-			console.log('Found card IDs', cardIds)
-
-			const linked = await addCardLinkToPR(conf, cardIds, pr.body, comments)
-			if (linked) {
+			if (await addCardLinkToPR(conf, cardIds, pr.body, comments)) {
 				console.log('Exiting early as automatic comment will retrigger the action')
 
 				return
 			}
-
 			await moveCards(conf, cardIds, pr)
 			await addPRLinkToCards(cardIds, pr.html_url || pr.url)
 			await updateCardMembers(conf, cardIds)
@@ -84,6 +78,8 @@ async function getCardIds(conf: Conf, prHead: PRHead, prBody: string = '', comme
 	}
 
 	if (cardIds.length) {
+		console.log('Found card IDs', cardIds)
+
 		return [...new Set(cardIds)]
 	}
 
@@ -91,6 +87,8 @@ async function getCardIds(conf: Conf, prHead: PRHead, prBody: string = '', comme
 		const cardId = await getCardIdFromBranch(prHead)
 
 		if (cardId) {
+			console.log('Found card ID from branch name')
+
 			return [cardId]
 		}
 	}
