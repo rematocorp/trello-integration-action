@@ -33517,7 +33517,7 @@ async function getBranchLabel(prHead) {
         return matches[1];
     }
     else {
-        console.log('Did not found branch label', branchName);
+        console.log('Did not find branch label', branchName);
     }
 }
 function findMatchingLabel(branchLabel, boardLabels) {

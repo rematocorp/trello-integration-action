@@ -360,7 +360,7 @@ async function getBranchLabel(prHead?: PRHead) {
 	if (matches) {
 		return matches[1]
 	} else {
-		console.log('Did not found branch label', branchName)
+		console.log('Did not find branch label', branchName)
 	}
 }
 

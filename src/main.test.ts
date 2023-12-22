@@ -282,6 +282,15 @@ describe('Adding labels to card', () => {
 		expect(addLabelToCard).toHaveBeenCalledWith('card', 'chore-id')
 	})
 
+	it('adds partially matching branch category as a card label', async () => {
+		getCardInfoMock.mockResolvedValueOnce({ id: 'card', labels: [] })
+		getBoardLabelsMock.mockResolvedValueOnce([{ id: 'bug-id', name: 'bug' }])
+
+		await run({ ...pr, head: { ref: 'bugfix/stupid-bug' } }, conf)
+
+		expect(addLabelToCard).toHaveBeenCalledWith('card', 'bug-id')
+	})
+
 	it('skips when turned off', async () => {
 		getCardInfoMock.mockResolvedValueOnce({ id: 'card', labels: [] })
 		getBoardLabelsMock.mockResolvedValueOnce([{ id: 'chore-id', name: 'chore' }])
