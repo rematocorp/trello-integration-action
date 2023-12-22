@@ -30,8 +30,8 @@ export async function run(pr: PR, conf: Conf = {}) {
 			await addLabelToCards(conf, cardIds, pr.head)
 		}
 	} catch (error: any) {
-		console.error('Unexpected error', error)
 		setFailed(error)
+		throw error
 	}
 }
 
@@ -251,8 +251,11 @@ async function getTrelloMemberId(conf: Conf, githubUserName?: string) {
 	console.log('Searching Trello member id by username', username)
 
 	const member = await getMemberInfo(username)
-	const memberId = member.id
-	console.log('Found member id by name', memberId, username)
+
+	if (!member) {
+		return
+	}
+	console.log('Found member id by name', member.id, username)
 
 	if (conf.trelloOrganizationName) {
 		const hasAccess = member.organizations?.some((org) => org.name === conf.trelloOrganizationName)
@@ -264,7 +267,7 @@ async function getTrelloMemberId(conf: Conf, githubUserName?: string) {
 		}
 	}
 
-	return memberId
+	return member.id
 }
 
 function getTrelloUsernameFromInputMap(conf: Conf, githubUserName?: string) {

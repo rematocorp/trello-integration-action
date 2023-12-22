@@ -33277,8 +33277,8 @@ async function run(pr, conf = {}) {
         }
     }
     catch (error) {
-        console.error('Unexpected error', error);
         (0, core_1.setFailed)(error);
+        throw error;
     }
 }
 exports.run = run;
@@ -33439,8 +33439,10 @@ async function getTrelloMemberId(conf, githubUserName) {
     }
     console.log('Searching Trello member id by username', username);
     const member = await (0, trelloRequests_1.getMemberInfo)(username);
-    const memberId = member.id;
-    console.log('Found member id by name', memberId, username);
+    if (!member) {
+        return;
+    }
+    console.log('Found member id by name', member.id, username);
     if (conf.trelloOrganizationName) {
         const hasAccess = member.organizations?.some((org) => org.name === conf.trelloOrganizationName);
         if (!hasAccess) {
@@ -33448,7 +33450,7 @@ async function getTrelloMemberId(conf, githubUserName) {
             return;
         }
     }
-    return memberId;
+    return member.id;
 }
 function getTrelloUsernameFromInputMap(conf, githubUserName) {
     console.log('Mapping Github users to Trello users');

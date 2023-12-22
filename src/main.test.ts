@@ -254,6 +254,15 @@ describe('Updating card members', () => {
 
 		expect(addMemberToCard).not.toHaveBeenCalled()
 	})
+
+	it('skips adding when member not found with GitHub username', async () => {
+		getPullRequestAssigneesMock.mockResolvedValueOnce([{ login: 'phil' }])
+		getMemberInfoMock.mockResolvedValue(undefined)
+
+		await run(pr)
+
+		expect(addMemberToCard).not.toHaveBeenCalled()
+	})
 })
 
 describe('Adding labels to card', () => {
