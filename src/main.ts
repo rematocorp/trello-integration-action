@@ -2,7 +2,7 @@ import { setFailed } from '@actions/core'
 import {
 	createComment,
 	getBranchName,
-	getPullRequestAssignees,
+	getPullRequest,
 	getPullRequestComments,
 	updatePullRequestBody,
 } from './githubRequests'
@@ -30,7 +30,7 @@ export async function run(pr: PR, conf: Conf = {}) {
 		if (cardIds.length) {
 			await moveCards(conf, cardIds, pr)
 			await addPRLinkToCards(cardIds, pr.html_url || pr.url)
-			await addCardLinkToPR(conf, cardIds, pr.body, comments)
+			await addCardLinkToPR(conf, cardIds, comments)
 			await addLabelToCards(conf, cardIds, pr.head)
 			await updateCardMembers(conf, cardIds)
 		}
@@ -217,12 +217,13 @@ async function addPRLinkToCards(cardIds: string[], link: string) {
 	)
 }
 
-async function addCardLinkToPR(conf: Conf, cardIds: string[], prBody: string = '', comments: { body?: string }[] = []) {
+async function addCardLinkToPR(conf: Conf, cardIds: string[], comments: { body?: string }[] = []) {
 	if (!conf.githubIncludePrBranchName) {
 		return
 	}
+	const pr = await getPullRequest()
 
-	if (matchCardIds(conf, prBody || '')?.length) {
+	if (matchCardIds(conf, pr.body || '')?.length) {
 		console.log('Card is already linked in the PR description')
 
 		return
@@ -272,6 +273,12 @@ async function updateCardMembers(conf: Conf, cardIds: string[]) {
 			}
 		}),
 	)
+}
+
+async function getPullRequestAssignees() {
+	const pr = await getPullRequest()
+
+	return [...(pr.assignees || []), pr.user]
 }
 
 async function getTrelloMemberId(conf: Conf, githubUserName?: string) {

@@ -13,14 +13,14 @@ import {
 	addLabelToCard,
 	getBoardLists,
 } from './trelloRequests'
-import { getPullRequestComments, getBranchName, createComment, getPullRequestAssignees } from './githubRequests'
+import { getPullRequestComments, getBranchName, createComment, getPullRequest } from './githubRequests'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
 jest.mock('./githubRequests')
 jest.mock('./trelloRequests')
 
-const getPullRequestAssigneesMock = getPullRequestAssignees as jest.Mock
+const getPullRequestMock = getPullRequest as jest.Mock
 const getMemberInfoMock = getMemberInfo as jest.Mock
 const getCardInfoMock = getCardInfo as jest.Mock
 const getPullRequestCommentsMock = getPullRequestComments as jest.Mock
@@ -222,7 +222,7 @@ describe('Updating card members', () => {
 	const conf = { githubUsersToTrelloUsers: 'jack: jones\namy: amy1993', trelloRemoveUnrelatedMembers: true }
 
 	it('adds PR author and assignees to the card and removes unrelated members', async () => {
-		getPullRequestAssigneesMock.mockResolvedValueOnce([{ login: 'phil' }, { login: 'amy' }])
+		getPullRequestMock.mockResolvedValueOnce({ author: { login: 'phil' }, assignees: [{ login: 'amy' }] })
 		getMemberInfoMock.mockImplementation((username) =>
 			username === 'amy1993' ? { id: 'amy-id' } : { id: 'phil-id' },
 		)
@@ -236,7 +236,7 @@ describe('Updating card members', () => {
 	})
 
 	it('skips removing unrelated members when turned off', async () => {
-		getPullRequestAssigneesMock.mockResolvedValueOnce([{ login: 'phil' }])
+		getPullRequestMock.mockResolvedValueOnce({ author: { login: 'phil' } })
 		getMemberInfoMock.mockResolvedValueOnce({ id: 'phil-id' })
 		getCardInfoMock.mockResolvedValueOnce({ id: 'card', idMembers: ['jones-id'] })
 
@@ -246,7 +246,7 @@ describe('Updating card members', () => {
 	})
 
 	it('skips adding when all members are already assigned to the card', async () => {
-		getPullRequestAssigneesMock.mockResolvedValueOnce([{ login: 'phil' }])
+		getPullRequestMock.mockResolvedValueOnce({ author: { login: 'phil' } })
 		getMemberInfoMock.mockResolvedValueOnce({ id: 'phil-id' })
 		getCardInfoMock.mockResolvedValueOnce({ id: 'card', idMembers: ['phil-id'] })
 
@@ -256,7 +256,7 @@ describe('Updating card members', () => {
 	})
 
 	it('skips adding when member not found with GitHub username', async () => {
-		getPullRequestAssigneesMock.mockResolvedValueOnce([{ login: 'phil' }])
+		getPullRequestMock.mockResolvedValueOnce({ author: { login: 'phil' } })
 		getMemberInfoMock.mockResolvedValue(undefined)
 
 		await run(pr)

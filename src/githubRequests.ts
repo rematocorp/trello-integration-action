@@ -18,14 +18,14 @@ export async function getPullRequestComments() {
 	return response.data
 }
 
-export async function getPullRequestAssignees() {
+export async function getPullRequest() {
 	const response = await octokit.rest.issues.get({
 		owner: repoOwner,
 		repo: payload.repository!.name,
 		issue_number: issueNumber!,
 	})
 
-	return [...(response.data.assignees || []), response.data.user]
+	return response.data
 }
 
 export async function getBranchName() {
