@@ -107,15 +107,16 @@ function matchCardIds(conf: Conf, text?: string) {
 }
 
 async function createNewCard(conf: Conf, pr: PR) {
-	if (!conf.trelloEnableNewCardCommand) {
+	if (!conf.githubIncludeNewCardCommand) {
 		return
 	}
 	const isDraft = isDraftPr(pr)
 	const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen
+	const commandRegex = /(^|\s)\/new-trello-card(\s|$)/ // Avoids matching URLs
 
-	if (listId && pr.body?.includes('/new-trello-card')) {
-		const card = await createCard(listId, pr.title, pr.body.replace('/new-trello-card', ''))
-		await updatePullRequestBody(pr.body.replace('/new-trello-card', card.url))
+	if (listId && pr.body && commandRegex.test(pr.body)) {
+		const card = await createCard(listId, pr.title, pr.body.replace(commandRegex, ''))
+		await updatePullRequestBody(pr.body.replace(commandRegex, card.url))
 
 		return card.id
 	}

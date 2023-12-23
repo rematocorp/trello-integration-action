@@ -8,6 +8,8 @@ This action scans PR description and comments for Trello card URL(s) or branch n
 -   Assigns a PR author and fellow assignees to a Trello card.
 -   And more...
 
+You can also optionally create new Trello cards by adding `/new-trello-card` in the PR description.
+
 ## Basic configuration
 
 ```yaml
@@ -50,6 +52,11 @@ github-include-pr-comments: true
 # Comments card URL to the PR if found.
 # DEFAULT: false
 github-include-pr-branch-name: false
+
+# Creates a new Trello card from PR details if "/new-trello-card" is written in the PR description.
+# Replaces "/new-trello-card" with the card link.
+# DEFAULT: false
+github-include-new-card-command: false
 
 # Only matches Trello URLs prefixed with "Closes" etc.
 # Just like https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword

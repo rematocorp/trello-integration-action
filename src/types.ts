@@ -4,6 +4,7 @@ export interface Conf {
 	githubRequireTrelloCard?: boolean
 	githubIncludePrComments?: boolean
 	githubIncludePrBranchName?: boolean
+	githubIncludeNewCardCommand?: boolean
 	githubRequireKeywordPrefix?: boolean
 	githubUsersToTrelloUsers?: string
 	trelloListIdPrDraft?: string
@@ -14,7 +15,6 @@ export interface Conf {
 	trelloConflictingLabels?: string[]
 	trelloRemoveUnrelatedMembers?: boolean
 	trelloAddLabelsToCards?: boolean
-	trelloEnableNewCardCommand?: boolean
 }
 
 export type PR = Exclude<typeof context.payload.pull_request | typeof context.payload.issue, undefined>

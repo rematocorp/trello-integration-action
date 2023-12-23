@@ -8,6 +8,7 @@ run((context.payload.pull_request || context.payload.issue) as PR, {
 	githubRequireTrelloCard: core.getBooleanInput('github-require-trello-card'),
 	githubIncludePrComments: core.getBooleanInput('github-include-pr-comments'),
 	githubIncludePrBranchName: core.getBooleanInput('github-include-pr-branch-name'),
+	githubIncludeNewCardCommand: core.getBooleanInput('github-include-new-card-command'),
 	githubUsersToTrelloUsers: core.getInput('github-users-to-trello-users'),
 	trelloOrganizationName: core.getInput('trello-organization-name'),
 	trelloListIdPrDraft: core.getInput('trello-list-id-pr-draft'),
@@ -17,5 +18,4 @@ run((context.payload.pull_request || context.payload.issue) as PR, {
 	trelloBoardId: core.getInput('trello-board-id'),
 	trelloAddLabelsToCards: core.getBooleanInput('trello-add-labels-to-cards'),
 	trelloRemoveUnrelatedMembers: core.getBooleanInput('trello-remove-unrelated-members'),
-	trelloEnableNewCardCommand: core.getBooleanInput('trello-enable-new-card-command'),
 })
