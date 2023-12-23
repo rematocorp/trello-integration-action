@@ -274,7 +274,7 @@ describe('Updating card members', () => {
 	})
 
 	it('skips removing unrelated members when turned off', async () => {
-		getPullRequestMock.mockResolvedValueOnce({ author: { login: 'phil' } })
+		getPullRequestMock.mockResolvedValueOnce({ user: { login: 'phil' } })
 		getMemberInfoMock.mockResolvedValueOnce({ id: 'phil-id' })
 		getCardInfoMock.mockResolvedValueOnce({ id: 'card', idMembers: ['jones-id'] })
 
@@ -284,7 +284,7 @@ describe('Updating card members', () => {
 	})
 
 	it('skips adding when all members are already assigned to the card', async () => {
-		getPullRequestMock.mockResolvedValueOnce({ author: { login: 'phil' } })
+		getPullRequestMock.mockResolvedValueOnce({ user: { login: 'phil' } })
 		getMemberInfoMock.mockResolvedValueOnce({ id: 'phil-id' })
 		getCardInfoMock.mockResolvedValueOnce({ id: 'card', idMembers: ['phil-id'] })
 
@@ -294,7 +294,7 @@ describe('Updating card members', () => {
 	})
 
 	it('skips adding when member not found with GitHub username', async () => {
-		getPullRequestMock.mockResolvedValueOnce({ author: { login: 'phil' } })
+		getPullRequestMock.mockResolvedValueOnce({ user: { login: 'phil' } })
 		getMemberInfoMock.mockResolvedValue(undefined)
 
 		await run(pr)
