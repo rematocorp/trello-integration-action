@@ -12,15 +12,22 @@ import {
 	getBoardLabels,
 	addLabelToCard,
 	getBoardLists,
+	createCard,
 } from './trelloRequests'
-import { getPullRequestComments, getBranchName, createComment, getPullRequestAssignees } from './githubRequests'
+import {
+	getPullRequestComments,
+	getBranchName,
+	createComment,
+	getPullRequest,
+	updatePullRequestBody,
+} from './githubRequests'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
 jest.mock('./githubRequests')
 jest.mock('./trelloRequests')
 
-const getPullRequestAssigneesMock = getPullRequestAssignees as jest.Mock
+const getPullRequestMock = getPullRequest as jest.Mock
 const getMemberInfoMock = getMemberInfo as jest.Mock
 const getCardInfoMock = getCardInfo as jest.Mock
 const getPullRequestCommentsMock = getPullRequestComments as jest.Mock
@@ -29,6 +36,7 @@ const searchTrelloCardsMock = searchTrelloCards as jest.Mock
 const getCardAttachmentsMock = getCardAttachments as jest.Mock
 const getBoardLabelsMock = getBoardLabels as jest.Mock
 const getBoardListsMock = getBoardLists as jest.Mock
+const createCardMock = createCard as jest.Mock
 
 const basePR = { number: 0, state: 'open', title: 'Title' }
 
@@ -84,6 +92,36 @@ describe('Finding cards', () => {
 		await run({ ...pr, body: 'https://trello.com/c/card1/title, https://trello.com/c/card2/title' }, conf)
 		expect(moveCardToList).toHaveBeenCalledWith('card1', 'open-list-id', undefined)
 		expect(moveCardToList).toHaveBeenCalledWith('card2', 'open-list-id', undefined)
+	})
+})
+
+describe('Creating new card', () => {
+	const pr = { ...basePR, body: '/new-trello-card Description' }
+	const conf = { trelloListIdPrOpen: 'open-list-id', githubIncludeNewCardCommand: true }
+
+	it('adds new card, updates PR body and adds to card ids list', async () => {
+		createCardMock.mockResolvedValueOnce({ id: 'card-id', url: 'card-url' })
+
+		await run(pr, conf)
+
+		expect(createCard).toHaveBeenCalledWith('open-list-id', 'Title', ' Description')
+		expect(updatePullRequestBody).toHaveBeenCalledWith('card-url Description')
+		expect(moveCardToList).toHaveBeenCalledWith('card-id', 'open-list-id', undefined)
+	})
+
+	it('skips when no command found', async () => {
+		await run({ ...pr, body: '' }, conf)
+		expect(createCard).not.toHaveBeenCalled()
+	})
+
+	it('skips when list is missing', async () => {
+		await run(pr, { ...conf, trelloListIdPrOpen: '' })
+		expect(createCard).not.toHaveBeenCalled()
+	})
+
+	it('skips when turned off', async () => {
+		await run(pr, { ...conf, githubIncludeNewCardCommand: false })
+		expect(createCard).not.toHaveBeenCalled()
 	})
 })
 
@@ -222,7 +260,7 @@ describe('Updating card members', () => {
 	const conf = { githubUsersToTrelloUsers: 'jack: jones\namy: amy1993', trelloRemoveUnrelatedMembers: true }
 
 	it('adds PR author and assignees to the card and removes unrelated members', async () => {
-		getPullRequestAssigneesMock.mockResolvedValueOnce([{ login: 'phil' }, { login: 'amy' }])
+		getPullRequestMock.mockResolvedValueOnce({ user: { login: 'phil' }, assignees: [{ login: 'amy' }] })
 		getMemberInfoMock.mockImplementation((username) =>
 			username === 'amy1993' ? { id: 'amy-id' } : { id: 'phil-id' },
 		)
@@ -236,7 +274,7 @@ describe('Updating card members', () => {
 	})
 
 	it('skips removing unrelated members when turned off', async () => {
-		getPullRequestAssigneesMock.mockResolvedValueOnce([{ login: 'phil' }])
+		getPullRequestMock.mockResolvedValueOnce({ user: { login: 'phil' } })
 		getMemberInfoMock.mockResolvedValueOnce({ id: 'phil-id' })
 		getCardInfoMock.mockResolvedValueOnce({ id: 'card', idMembers: ['jones-id'] })
 
@@ -246,7 +284,7 @@ describe('Updating card members', () => {
 	})
 
 	it('skips adding when all members are already assigned to the card', async () => {
-		getPullRequestAssigneesMock.mockResolvedValueOnce([{ login: 'phil' }])
+		getPullRequestMock.mockResolvedValueOnce({ user: { login: 'phil' } })
 		getMemberInfoMock.mockResolvedValueOnce({ id: 'phil-id' })
 		getCardInfoMock.mockResolvedValueOnce({ id: 'card', idMembers: ['phil-id'] })
 
@@ -256,7 +294,7 @@ describe('Updating card members', () => {
 	})
 
 	it('skips adding when member not found with GitHub username', async () => {
-		getPullRequestAssigneesMock.mockResolvedValueOnce([{ login: 'phil' }])
+		getPullRequestMock.mockResolvedValueOnce({ user: { login: 'phil' } })
 		getMemberInfoMock.mockResolvedValue(undefined)
 
 		await run(pr)

@@ -91,6 +91,19 @@ export async function getMemberInfo(username?: string): Promise<{ id: string; or
 	return response?.data
 }
 
+export async function createCard(listId: string, title: string, body?: string): Promise<{ id: string; url: string }> {
+	console.log('Creating card based on PR info', title, body)
+
+	const response = await makeRequest('post', `https://api.trello.com/1/cards`, {
+		idList: listId,
+		name: title,
+		desc: body,
+		pos: trelloCardPosition,
+	})
+
+	return response?.data
+}
+
 async function makeRequest(method: 'get' | 'put' | 'post' | 'delete', url: string, params?: Record<string, any>) {
 	try {
 		let response

@@ -1,9 +1,16 @@
 import { setFailed } from '@actions/core'
-import { createComment, getBranchName, getPullRequestAssignees, getPullRequestComments } from './githubRequests'
+import {
+	createComment,
+	getBranchName,
+	getPullRequest,
+	getPullRequestComments,
+	updatePullRequestBody,
+} from './githubRequests'
 import {
 	addAttachmentToCard,
 	addLabelToCard,
 	addMemberToCard,
+	createCard,
 	getBoardLabels,
 	getBoardLists,
 	getCardAttachments,
@@ -18,16 +25,14 @@ import { BoardLabel, Conf, PR, PRHead } from './types'
 export async function run(pr: PR, conf: Conf = {}) {
 	try {
 		const comments = await getPullRequestComments()
-		const cardIds = await getCardIds(conf, pr.head, pr.body, comments)
+		const cardIds = await getCardIds(conf, pr, comments)
 
 		if (cardIds.length) {
-			console.log('Found card IDs', cardIds)
-
 			await moveCards(conf, cardIds, pr)
 			await addPRLinkToCards(cardIds, pr.html_url || pr.url)
-			await addCardLinkToPR(conf, cardIds, pr.body, comments)
-			await updateCardMembers(conf, cardIds)
+			await addCardLinkToPR(conf, cardIds, pr, comments)
 			await addLabelToCards(conf, cardIds, pr.head)
+			await updateCardMembers(conf, cardIds)
 		}
 	} catch (error: any) {
 		setFailed(error)
@@ -35,10 +40,10 @@ export async function run(pr: PR, conf: Conf = {}) {
 	}
 }
 
-async function getCardIds(conf: Conf, prHead: PRHead, prBody: string = '', comments: { body?: string }[]) {
+async function getCardIds(conf: Conf, pr: PR, comments: { body?: string }[]) {
 	console.log('Searching for card ids')
 
-	let cardIds = matchCardIds(conf, prBody || '')
+	let cardIds = matchCardIds(conf, pr.body || '')
 
 	if (conf.githubIncludePrComments) {
 		for (const comment of comments) {
@@ -46,14 +51,23 @@ async function getCardIds(conf: Conf, prHead: PRHead, prBody: string = '', comme
 		}
 	}
 
+	const createdCardId = await createNewCard(conf, pr)
+	if (createdCardId) {
+		cardIds = [...cardIds, createdCardId]
+	}
+
 	if (cardIds.length) {
+		console.log('Found card IDs', cardIds)
+
 		return [...new Set(cardIds)]
 	}
 
 	if (conf.githubIncludePrBranchName) {
-		const cardId = await getCardIdFromBranch(prHead)
+		const cardId = await getCardIdFromBranch(pr.head)
 
 		if (cardId) {
+			console.log('Found card ID from branch name')
+
 			return [cardId]
 		}
 	}
@@ -90,6 +104,24 @@ function matchCardIds(conf: Conf, text?: string) {
 			}),
 		),
 	)
+}
+
+async function createNewCard(conf: Conf, pr: PR) {
+	if (!conf.githubIncludeNewCardCommand) {
+		return
+	}
+	const isDraft = isDraftPr(pr)
+	const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen
+	const commandRegex = /(^|\s)\/new-trello-card(\s|$)/ // Avoids matching URLs
+
+	if (listId && pr.body && commandRegex.test(pr.body)) {
+		const card = await createCard(listId, pr.title, pr.body.replace('/new-trello-card', ''))
+		await updatePullRequestBody(pr.body.replace('/new-trello-card', card.url))
+
+		return card.id
+	}
+
+	return
 }
 
 async function getCardIdFromBranch(prHead?: PRHead) {
@@ -185,12 +217,13 @@ async function addPRLinkToCards(cardIds: string[], link: string) {
 	)
 }
 
-async function addCardLinkToPR(conf: Conf, cardIds: string[], prBody: string = '', comments: { body?: string }[] = []) {
+async function addCardLinkToPR(conf: Conf, cardIds: string[], pr: PR, comments: { body?: string }[] = []) {
 	if (!conf.githubIncludePrBranchName) {
 		return
 	}
+	const pullRequest = conf.githubIncludeNewCardCommand ? await getPullRequest() : pr
 
-	if (matchCardIds(conf, prBody || '')?.length) {
+	if (matchCardIds(conf, pullRequest.body || '')?.length) {
 		console.log('Card is already linked in the PR description')
 
 		return
@@ -233,17 +266,24 @@ async function updateCardMembers(conf: Conf, cardIds: string[]) {
 		cardIds.map(async (cardId) => {
 			const cardInfo = await getCardInfo(cardId)
 
+			await addNewMembers(cardInfo, memberIds)
+
 			if (conf.trelloRemoveUnrelatedMembers) {
 				await removeUnrelatedMembers(cardInfo, memberIds)
 			}
-
-			return addNewMembers(cardInfo, memberIds)
 		}),
 	)
 }
 
+async function getPullRequestAssignees() {
+	const pr = await getPullRequest()
+
+	return pr ? [...(pr.assignees || []), pr.user] : []
+}
+
 async function getTrelloMemberId(conf: Conf, githubUserName?: string) {
 	let username = githubUserName?.replace('-', '_')
+
 	if (conf.githubUsersToTrelloUsers?.trim()) {
 		username = getTrelloUsernameFromInputMap(conf, githubUserName) || username
 	}

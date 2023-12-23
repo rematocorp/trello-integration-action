@@ -33154,7 +33154,7 @@ function wrappy (fn, cb) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createComment = exports.getBranchName = exports.getPullRequestAssignees = exports.getPullRequestComments = void 0;
+exports.updatePullRequestBody = exports.createComment = exports.getBranchName = exports.getPullRequest = exports.getPullRequestComments = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const githubToken = (0, core_1.getInput)('github-token', { required: true });
@@ -33171,15 +33171,15 @@ async function getPullRequestComments() {
     return response.data;
 }
 exports.getPullRequestComments = getPullRequestComments;
-async function getPullRequestAssignees() {
+async function getPullRequest() {
     const response = await octokit.rest.issues.get({
         owner: repoOwner,
         repo: payload.repository.name,
         issue_number: issueNumber,
     });
-    return [...(response.data.assignees || []), response.data.user];
+    return response.data;
 }
-exports.getPullRequestAssignees = getPullRequestAssignees;
+exports.getPullRequest = getPullRequest;
 async function getBranchName() {
     const response = await octokit.rest.pulls.get({
         owner: repoOwner,
@@ -33190,6 +33190,7 @@ async function getBranchName() {
 }
 exports.getBranchName = getBranchName;
 async function createComment(shortUrl) {
+    console.log('Creating PR comment', shortUrl);
     await octokit.rest.issues.createComment({
         owner: repoOwner,
         repo: payload.repository.name,
@@ -33198,6 +33199,16 @@ async function createComment(shortUrl) {
     });
 }
 exports.createComment = createComment;
+async function updatePullRequestBody(newBody) {
+    console.log('Updating PR body', newBody);
+    await octokit.rest.issues.update({
+        owner: repoOwner,
+        repo: payload.repository.name,
+        issue_number: issueNumber,
+        body: newBody,
+    });
+}
+exports.updatePullRequestBody = updatePullRequestBody;
 
 
 /***/ }),
@@ -33239,6 +33250,7 @@ const main_1 = __nccwpck_require__(399);
     githubRequireTrelloCard: core.getBooleanInput('github-require-trello-card'),
     githubIncludePrComments: core.getBooleanInput('github-include-pr-comments'),
     githubIncludePrBranchName: core.getBooleanInput('github-include-pr-branch-name'),
+    githubIncludeNewCardCommand: core.getBooleanInput('github-include-new-card-command'),
     githubUsersToTrelloUsers: core.getInput('github-users-to-trello-users'),
     trelloOrganizationName: core.getInput('trello-organization-name'),
     trelloListIdPrDraft: core.getInput('trello-list-id-pr-draft'),
@@ -33266,14 +33278,13 @@ const trelloRequests_1 = __nccwpck_require__(777);
 async function run(pr, conf = {}) {
     try {
         const comments = await (0, githubRequests_1.getPullRequestComments)();
-        const cardIds = await getCardIds(conf, pr.head, pr.body, comments);
+        const cardIds = await getCardIds(conf, pr, comments);
         if (cardIds.length) {
-            console.log('Found card IDs', cardIds);
             await moveCards(conf, cardIds, pr);
             await addPRLinkToCards(cardIds, pr.html_url || pr.url);
-            await addCardLinkToPR(conf, cardIds, pr.body, comments);
-            await updateCardMembers(conf, cardIds);
+            await addCardLinkToPR(conf, cardIds, pr, comments);
             await addLabelToCards(conf, cardIds, pr.head);
+            await updateCardMembers(conf, cardIds);
         }
     }
     catch (error) {
@@ -33282,20 +33293,26 @@ async function run(pr, conf = {}) {
     }
 }
 exports.run = run;
-async function getCardIds(conf, prHead, prBody = '', comments) {
+async function getCardIds(conf, pr, comments) {
     console.log('Searching for card ids');
-    let cardIds = matchCardIds(conf, prBody || '');
+    let cardIds = matchCardIds(conf, pr.body || '');
     if (conf.githubIncludePrComments) {
         for (const comment of comments) {
             cardIds = [...cardIds, ...matchCardIds(conf, comment.body)];
         }
     }
+    const createdCardId = await createNewCard(conf, pr);
+    if (createdCardId) {
+        cardIds = [...cardIds, createdCardId];
+    }
     if (cardIds.length) {
+        console.log('Found card IDs', cardIds);
         return [...new Set(cardIds)];
     }
     if (conf.githubIncludePrBranchName) {
-        const cardId = await getCardIdFromBranch(prHead);
+        const cardId = await getCardIdFromBranch(pr.head);
         if (cardId) {
+            console.log('Found card ID from branch name');
             return [cardId];
         }
     }
@@ -33321,6 +33338,20 @@ function matchCardIds(conf, text) {
         const cardIds = urlMatches.map((url) => url?.match(new RegExp(urlRegExp))?.[1] || '');
         return cardIds;
     })));
+}
+async function createNewCard(conf, pr) {
+    if (!conf.githubIncludeNewCardCommand) {
+        return;
+    }
+    const isDraft = isDraftPr(pr);
+    const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen;
+    const commandRegex = /(^|\s)\/new-trello-card(\s|$)/; // Avoids matching URLs
+    if (listId && pr.body && commandRegex.test(pr.body)) {
+        const card = await (0, trelloRequests_1.createCard)(listId, pr.title, pr.body.replace('/new-trello-card', ''));
+        await (0, githubRequests_1.updatePullRequestBody)(pr.body.replace('/new-trello-card', card.url));
+        return card.id;
+    }
+    return;
 }
 async function getCardIdFromBranch(prHead) {
     console.log('Searching card from branch name');
@@ -33393,11 +33424,12 @@ async function addPRLinkToCards(cardIds, link) {
         return (0, trelloRequests_1.addAttachmentToCard)(cardId, link);
     }));
 }
-async function addCardLinkToPR(conf, cardIds, prBody = '', comments = []) {
+async function addCardLinkToPR(conf, cardIds, pr, comments = []) {
     if (!conf.githubIncludePrBranchName) {
         return;
     }
-    if (matchCardIds(conf, prBody || '')?.length) {
+    const pullRequest = conf.githubIncludeNewCardCommand ? await (0, githubRequests_1.getPullRequest)() : pr;
+    if (matchCardIds(conf, pullRequest.body || '')?.length) {
         console.log('Card is already linked in the PR description');
         return;
     }
@@ -33412,7 +33444,7 @@ async function addCardLinkToPR(conf, cardIds, prBody = '', comments = []) {
     await (0, githubRequests_1.createComment)(cardInfo.shortUrl);
 }
 async function updateCardMembers(conf, cardIds) {
-    const assignees = await (0, githubRequests_1.getPullRequestAssignees)();
+    const assignees = await getPullRequestAssignees();
     console.log('Starting to update card members');
     if (!assignees?.length) {
         console.log('No PR assignees found');
@@ -33426,11 +33458,15 @@ async function updateCardMembers(conf, cardIds) {
     }
     return Promise.all(cardIds.map(async (cardId) => {
         const cardInfo = await (0, trelloRequests_1.getCardInfo)(cardId);
+        await addNewMembers(cardInfo, memberIds);
         if (conf.trelloRemoveUnrelatedMembers) {
             await removeUnrelatedMembers(cardInfo, memberIds);
         }
-        return addNewMembers(cardInfo, memberIds);
     }));
+}
+async function getPullRequestAssignees() {
+    const pr = await (0, githubRequests_1.getPullRequest)();
+    return pr ? [...(pr.assignees || []), pr.user] : [];
 }
 async function getTrelloMemberId(conf, githubUserName) {
     let username = githubUserName?.replace('-', '_');
@@ -33567,7 +33603,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getMemberInfo = exports.moveCardToList = exports.removeMemberFromCard = exports.addLabelToCard = exports.getBoardLists = exports.getBoardLabels = exports.addMemberToCard = exports.addAttachmentToCard = exports.getCardAttachments = exports.getCardInfo = exports.searchTrelloCards = void 0;
+exports.createCard = exports.getMemberInfo = exports.moveCardToList = exports.removeMemberFromCard = exports.addLabelToCard = exports.getBoardLists = exports.getBoardLabels = exports.addMemberToCard = exports.addAttachmentToCard = exports.getCardAttachments = exports.getCardInfo = exports.searchTrelloCards = void 0;
 const axios_1 = __importDefault(__nccwpck_require__(8757));
 const core = __importStar(__nccwpck_require__(2186));
 const trelloApiKey = core.getInput('trello-api-key', { required: true });
@@ -33643,6 +33679,17 @@ async function getMemberInfo(username) {
     return response?.data;
 }
 exports.getMemberInfo = getMemberInfo;
+async function createCard(listId, title, body) {
+    console.log('Creating card based on PR info', title, body);
+    const response = await makeRequest('post', `https://api.trello.com/1/cards`, {
+        idList: listId,
+        name: title,
+        desc: body,
+        pos: trelloCardPosition,
+    });
+    return response?.data;
+}
+exports.createCard = createCard;
 async function makeRequest(method, url, params) {
     try {
         let response;
