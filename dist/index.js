@@ -33282,7 +33282,7 @@ async function run(pr, conf = {}) {
         if (cardIds.length) {
             await moveCards(conf, cardIds, pr);
             await addPRLinkToCards(cardIds, pr.html_url || pr.url);
-            await addCardLinkToPR(conf, cardIds, comments);
+            await addCardLinkToPR(conf, cardIds, pr, comments);
             await addLabelToCards(conf, cardIds, pr.head);
             await updateCardMembers(conf, cardIds);
         }
@@ -33424,12 +33424,12 @@ async function addPRLinkToCards(cardIds, link) {
         return (0, trelloRequests_1.addAttachmentToCard)(cardId, link);
     }));
 }
-async function addCardLinkToPR(conf, cardIds, comments = []) {
+async function addCardLinkToPR(conf, cardIds, pr, comments = []) {
     if (!conf.githubIncludePrBranchName) {
         return;
     }
-    const pr = await (0, githubRequests_1.getPullRequest)();
-    if (matchCardIds(conf, pr.body || '')?.length) {
+    const pullRequest = conf.githubIncludeNewCardCommand ? await (0, githubRequests_1.getPullRequest)() : pr;
+    if (matchCardIds(conf, pullRequest.body || '')?.length) {
         console.log('Card is already linked in the PR description');
         return;
     }
@@ -33466,7 +33466,7 @@ async function updateCardMembers(conf, cardIds) {
 }
 async function getPullRequestAssignees() {
     const pr = await (0, githubRequests_1.getPullRequest)();
-    return [...(pr.assignees || []), pr.user];
+    return pr ? [...(pr.assignees || []), pr.user] : [];
 }
 async function getTrelloMemberId(conf, githubUserName) {
     let username = githubUserName?.replace('-', '_');

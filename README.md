@@ -8,7 +8,7 @@ This action scans PR description and comments for Trello card URL(s) or branch n
 -   Assigns a PR author and fellow assignees to a Trello card.
 -   And more...
 
-You can also optionally create new Trello cards by adding `/new-trello-card` in the PR description.
+You can also optionally use the action to create new Trello card by adding `/new-trello-card` in the PR description.
 
 ## Basic configuration
 
