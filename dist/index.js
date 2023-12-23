@@ -33283,8 +33283,8 @@ async function run(pr, conf = {}) {
             await moveCards(conf, cardIds, pr);
             await addPRLinkToCards(cardIds, pr.html_url || pr.url);
             await addCardLinkToPR(conf, cardIds, pr.body, comments);
-            await updateCardMembers(conf, cardIds);
             await addLabelToCards(conf, cardIds, pr.head);
+            await updateCardMembers(conf, cardIds);
         }
     }
     catch (error) {
@@ -33456,10 +33456,10 @@ async function updateCardMembers(conf, cardIds) {
     }
     return Promise.all(cardIds.map(async (cardId) => {
         const cardInfo = await (0, trelloRequests_1.getCardInfo)(cardId);
+        await addNewMembers(cardInfo, memberIds);
         if (conf.trelloRemoveUnrelatedMembers) {
             await removeUnrelatedMembers(cardInfo, memberIds);
         }
-        return addNewMembers(cardInfo, memberIds);
     }));
 }
 async function getTrelloMemberId(conf, githubUserName) {

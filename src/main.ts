@@ -31,8 +31,8 @@ export async function run(pr: PR, conf: Conf = {}) {
 			await moveCards(conf, cardIds, pr)
 			await addPRLinkToCards(cardIds, pr.html_url || pr.url)
 			await addCardLinkToPR(conf, cardIds, pr.body, comments)
-			await updateCardMembers(conf, cardIds)
 			await addLabelToCards(conf, cardIds, pr.head)
+			await updateCardMembers(conf, cardIds)
 		}
 	} catch (error: any) {
 		setFailed(error)
@@ -264,11 +264,11 @@ async function updateCardMembers(conf: Conf, cardIds: string[]) {
 		cardIds.map(async (cardId) => {
 			const cardInfo = await getCardInfo(cardId)
 
+			await addNewMembers(cardInfo, memberIds)
+
 			if (conf.trelloRemoveUnrelatedMembers) {
 				await removeUnrelatedMembers(cardInfo, memberIds)
 			}
-
-			return addNewMembers(cardInfo, memberIds)
 		}),
 	)
 }
