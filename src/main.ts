@@ -115,8 +115,8 @@ async function createNewCard(conf: Conf, pr: PR) {
 	const commandRegex = /(^|\s)\/new-trello-card(\s|$)/ // Avoids matching URLs
 
 	if (listId && pr.body && commandRegex.test(pr.body)) {
-		const card = await createCard(listId, pr.title, pr.body.replace(commandRegex, ''))
-		await updatePullRequestBody(pr.body.replace(commandRegex, card.url))
+		const card = await createCard(listId, pr.title, pr.body.replace('/new-trello-card', ''))
+		await updatePullRequestBody(pr.body.replace('/new-trello-card', card.url))
 
 		return card.id
 	}

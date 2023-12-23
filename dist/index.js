@@ -33347,8 +33347,8 @@ async function createNewCard(conf, pr) {
     const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen;
     const commandRegex = /(^|\s)\/new-trello-card(\s|$)/; // Avoids matching URLs
     if (listId && pr.body && commandRegex.test(pr.body)) {
-        const card = await (0, trelloRequests_1.createCard)(listId, pr.title, pr.body.replace(commandRegex, ''));
-        await (0, githubRequests_1.updatePullRequestBody)(pr.body.replace(commandRegex, card.url));
+        const card = await (0, trelloRequests_1.createCard)(listId, pr.title, pr.body.replace('/new-trello-card', ''));
+        await (0, githubRequests_1.updatePullRequestBody)(pr.body.replace('/new-trello-card', card.url));
         return card.id;
     }
     return;
