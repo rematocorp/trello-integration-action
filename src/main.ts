@@ -24,22 +24,13 @@ import { BoardLabel, Conf, PR, PRHead } from './types'
 
 export async function run(pr: PR, conf: Conf = {}) {
 	try {
-		if (await createNewCard(conf, pr)) {
-			console.log('Exiting early as automatic PR body change will retrigger the action')
-
-			return
-		}
 		const comments = await getPullRequestComments()
-		const cardIds = await getCardIds(conf, pr.head, pr.body, comments)
+		const cardIds = await getCardIds(conf, pr, comments)
 
 		if (cardIds.length) {
-			if (await addCardLinkToPR(conf, cardIds, pr.body, comments)) {
-				console.log('Exiting early as automatic comment will retrigger the action')
-
-				return
-			}
 			await moveCards(conf, cardIds, pr)
 			await addPRLinkToCards(cardIds, pr.html_url || pr.url)
+			await addCardLinkToPR(conf, cardIds, pr.body, comments)
 			await updateCardMembers(conf, cardIds)
 			await addLabelToCards(conf, cardIds, pr.head)
 		}
@@ -49,32 +40,20 @@ export async function run(pr: PR, conf: Conf = {}) {
 	}
 }
 
-async function createNewCard(conf: Conf, pr: PR) {
-	if (!conf.trelloEnableNewCardCommand) {
-		return false
-	}
-	const isDraft = isDraftPr(pr)
-	const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen
-
-	if (listId && pr.body?.includes('/new-trello-card')) {
-		const card = await createCard(listId, pr.title, pr.body)
-		await updatePullRequestBody(pr.body.replace('/new-trello-card', card.url))
-
-		return true
-	}
-
-	return false
-}
-
-async function getCardIds(conf: Conf, prHead: PRHead, prBody: string = '', comments: { body?: string }[]) {
+async function getCardIds(conf: Conf, pr: PR, comments: { body?: string }[]) {
 	console.log('Searching for card ids')
 
-	let cardIds = matchCardIds(conf, prBody || '')
+	let cardIds = matchCardIds(conf, pr.body || '')
 
 	if (conf.githubIncludePrComments) {
 		for (const comment of comments) {
 			cardIds = [...cardIds, ...matchCardIds(conf, comment.body)]
 		}
+	}
+
+	const createdCardId = await createNewCard(conf, pr)
+	if (createdCardId) {
+		cardIds = [...cardIds, createdCardId]
 	}
 
 	if (cardIds.length) {
@@ -84,7 +63,7 @@ async function getCardIds(conf: Conf, prHead: PRHead, prBody: string = '', comme
 	}
 
 	if (conf.githubIncludePrBranchName) {
-		const cardId = await getCardIdFromBranch(prHead)
+		const cardId = await getCardIdFromBranch(pr.head)
 
 		if (cardId) {
 			console.log('Found card ID from branch name')
@@ -125,6 +104,23 @@ function matchCardIds(conf: Conf, text?: string) {
 			}),
 		),
 	)
+}
+
+async function createNewCard(conf: Conf, pr: PR) {
+	if (!conf.trelloEnableNewCardCommand) {
+		return
+	}
+	const isDraft = isDraftPr(pr)
+	const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen
+
+	if (listId && pr.body?.includes('/new-trello-card')) {
+		const card = await createCard(listId, pr.title, pr.body.replace('/new-trello-card', ''))
+		await updatePullRequestBody(pr.body.replace('/new-trello-card', card.url))
+
+		return card.id
+	}
+
+	return
 }
 
 async function getCardIdFromBranch(prHead?: PRHead) {
@@ -222,20 +218,20 @@ async function addPRLinkToCards(cardIds: string[], link: string) {
 
 async function addCardLinkToPR(conf: Conf, cardIds: string[], prBody: string = '', comments: { body?: string }[] = []) {
 	if (!conf.githubIncludePrBranchName) {
-		return false
+		return
 	}
 
 	if (matchCardIds(conf, prBody || '')?.length) {
 		console.log('Card is already linked in the PR description')
 
-		return false
+		return
 	}
 
 	for (const comment of comments) {
 		if (matchCardIds(conf, comment.body)?.length) {
 			console.log('Card is already linked in the comment')
 
-			return false
+			return
 		}
 	}
 	console.log('Commenting Trello card URL to PR', cardIds[0])
@@ -243,8 +239,6 @@ async function addCardLinkToPR(conf: Conf, cardIds: string[], prBody: string = '
 	const cardInfo = await getCardInfo(cardIds[0])
 
 	await createComment(cardInfo.shortUrl)
-
-	return true
 }
 
 async function updateCardMembers(conf: Conf, cardIds: string[]) {

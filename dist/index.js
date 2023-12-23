@@ -33277,19 +33277,12 @@ const githubRequests_1 = __nccwpck_require__(2963);
 const trelloRequests_1 = __nccwpck_require__(777);
 async function run(pr, conf = {}) {
     try {
-        if (await createNewCard(conf, pr)) {
-            console.log('Exiting early as automatic PR body change will retrigger the action');
-            return;
-        }
         const comments = await (0, githubRequests_1.getPullRequestComments)();
-        const cardIds = await getCardIds(conf, pr.head, pr.body, comments);
+        const cardIds = await getCardIds(conf, pr, comments);
         if (cardIds.length) {
-            if (await addCardLinkToPR(conf, cardIds, pr.body, comments)) {
-                console.log('Exiting early as automatic comment will retrigger the action');
-                return;
-            }
             await moveCards(conf, cardIds, pr);
             await addPRLinkToCards(cardIds, pr.html_url || pr.url);
+            await addCardLinkToPR(conf, cardIds, pr.body, comments);
             await updateCardMembers(conf, cardIds);
             await addLabelToCards(conf, cardIds, pr.head);
         }
@@ -33300,33 +33293,24 @@ async function run(pr, conf = {}) {
     }
 }
 exports.run = run;
-async function createNewCard(conf, pr) {
-    if (!conf.trelloEnableNewCardCommand) {
-        return false;
-    }
-    const isDraft = isDraftPr(pr);
-    const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen;
-    if (listId && pr.body?.includes('/new-trello-card')) {
-        const card = await (0, trelloRequests_1.createCard)(listId, pr.title, pr.body);
-        await (0, githubRequests_1.updatePullRequestBody)(pr.body.replace('/new-trello-card', card.url));
-        return true;
-    }
-    return false;
-}
-async function getCardIds(conf, prHead, prBody = '', comments) {
+async function getCardIds(conf, pr, comments) {
     console.log('Searching for card ids');
-    let cardIds = matchCardIds(conf, prBody || '');
+    let cardIds = matchCardIds(conf, pr.body || '');
     if (conf.githubIncludePrComments) {
         for (const comment of comments) {
             cardIds = [...cardIds, ...matchCardIds(conf, comment.body)];
         }
+    }
+    const createdCardId = await createNewCard(conf, pr);
+    if (createdCardId) {
+        cardIds = [...cardIds, createdCardId];
     }
     if (cardIds.length) {
         console.log('Found card IDs', cardIds);
         return [...new Set(cardIds)];
     }
     if (conf.githubIncludePrBranchName) {
-        const cardId = await getCardIdFromBranch(prHead);
+        const cardId = await getCardIdFromBranch(pr.head);
         if (cardId) {
             console.log('Found card ID from branch name');
             return [cardId];
@@ -33354,6 +33338,19 @@ function matchCardIds(conf, text) {
         const cardIds = urlMatches.map((url) => url?.match(new RegExp(urlRegExp))?.[1] || '');
         return cardIds;
     })));
+}
+async function createNewCard(conf, pr) {
+    if (!conf.trelloEnableNewCardCommand) {
+        return;
+    }
+    const isDraft = isDraftPr(pr);
+    const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen;
+    if (listId && pr.body?.includes('/new-trello-card')) {
+        const card = await (0, trelloRequests_1.createCard)(listId, pr.title, pr.body.replace('/new-trello-card', ''));
+        await (0, githubRequests_1.updatePullRequestBody)(pr.body.replace('/new-trello-card', card.url));
+        return card.id;
+    }
+    return;
 }
 async function getCardIdFromBranch(prHead) {
     console.log('Searching card from branch name');
@@ -33428,22 +33425,21 @@ async function addPRLinkToCards(cardIds, link) {
 }
 async function addCardLinkToPR(conf, cardIds, prBody = '', comments = []) {
     if (!conf.githubIncludePrBranchName) {
-        return false;
+        return;
     }
     if (matchCardIds(conf, prBody || '')?.length) {
         console.log('Card is already linked in the PR description');
-        return false;
+        return;
     }
     for (const comment of comments) {
         if (matchCardIds(conf, comment.body)?.length) {
             console.log('Card is already linked in the comment');
-            return false;
+            return;
         }
     }
     console.log('Commenting Trello card URL to PR', cardIds[0]);
     const cardInfo = await (0, trelloRequests_1.getCardInfo)(cardIds[0]);
     await (0, githubRequests_1.createComment)(cardInfo.shortUrl);
-    return true;
 }
 async function updateCardMembers(conf, cardIds) {
     const assignees = await (0, githubRequests_1.getPullRequestAssignees)();
