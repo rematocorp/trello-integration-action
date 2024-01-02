@@ -2,7 +2,7 @@ author: Remato
 name: Trello Card & GitHub PR Integration
 description: Integrate GitHub pull requests with Trello cards
 branding:
-    color: yellow
+    color: gray-dark
     icon: link
 inputs:
     github-token:
