@@ -230,9 +230,9 @@ async function addCardLinkToPR(conf: Conf, cardIds: string[], pr: PR) {
 
 		return
 	}
-	const comments = await getPullRequestComments()
+	const comments = (await getPullRequestComments()) || []
 
-	for (const comment of comments || []) {
+	for (const comment of comments) {
 		if (matchCardIds(conf, comment.body)?.length) {
 			console.log('Card is already linked in the comment')
 

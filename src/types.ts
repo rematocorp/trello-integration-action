@@ -21,7 +21,7 @@ export type PR = Omit<
 	Exclude<typeof context.payload.pull_request | typeof context.payload.issue, undefined>,
 	'body'
 > & {
-	body?: string | null
+	body?: string | null // Resolves inconsistent type from octokit and context
 }
 export type PRHead = { ref: string }
 
