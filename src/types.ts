@@ -17,7 +17,12 @@ export interface Conf {
 	trelloAddLabelsToCards?: boolean
 }
 
-export type PR = Exclude<typeof context.payload.pull_request | typeof context.payload.issue, undefined>
+export type PR = Omit<
+	Exclude<typeof context.payload.pull_request | typeof context.payload.issue, undefined>,
+	'body'
+> & {
+	body?: string | null // Resolves inconsistent type from octokit and context
+}
 export type PRHead = { ref: string }
 
 export type BoardLabel = { id: string; name: string }

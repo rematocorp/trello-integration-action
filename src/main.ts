@@ -24,13 +24,12 @@ import { BoardLabel, Conf, PR, PRHead } from './types'
 
 export async function run(pr: PR, conf: Conf = {}) {
 	try {
-		const comments = await getPullRequestComments()
-		const cardIds = await getCardIds(conf, pr, comments)
+		const cardIds = await getCardIds(conf, pr)
 
 		if (cardIds.length) {
-			await moveCards(conf, cardIds, pr)
+			await addCardLinkToPR(conf, cardIds, pr)
 			await addPRLinkToCards(cardIds, pr.html_url || pr.url)
-			await addCardLinkToPR(conf, cardIds, pr, comments)
+			await moveCards(conf, cardIds, pr)
 			await addLabelToCards(conf, cardIds, pr.head)
 			await updateCardMembers(conf, cardIds)
 		}
@@ -40,18 +39,21 @@ export async function run(pr: PR, conf: Conf = {}) {
 	}
 }
 
-async function getCardIds(conf: Conf, pr: PR, comments: { body?: string }[]) {
+async function getCardIds(conf: Conf, pr: PR) {
 	console.log('Searching for card ids')
 
-	let cardIds = matchCardIds(conf, pr.body || '')
+	const latestPRInfo = (await getPullRequest()) || pr
+	let cardIds = matchCardIds(conf, latestPRInfo.body || '')
 
 	if (conf.githubIncludePrComments) {
+		const comments = await getPullRequestComments()
+
 		for (const comment of comments) {
 			cardIds = [...cardIds, ...matchCardIds(conf, comment.body)]
 		}
 	}
 
-	const createdCardId = await createNewCard(conf, pr)
+	const createdCardId = await createNewCard(conf, latestPRInfo)
 	if (createdCardId) {
 		cardIds = [...cardIds, createdCardId]
 	}
@@ -217,7 +219,7 @@ async function addPRLinkToCards(cardIds: string[], link: string) {
 	)
 }
 
-async function addCardLinkToPR(conf: Conf, cardIds: string[], pr: PR, comments: { body?: string }[] = []) {
+async function addCardLinkToPR(conf: Conf, cardIds: string[], pr: PR) {
 	if (!conf.githubIncludePrBranchName) {
 		return
 	}
@@ -228,6 +230,7 @@ async function addCardLinkToPR(conf: Conf, cardIds: string[], pr: PR, comments: 
 
 		return
 	}
+	const comments = (await getPullRequestComments()) || []
 
 	for (const comment of comments) {
 		if (matchCardIds(conf, comment.body)?.length) {
