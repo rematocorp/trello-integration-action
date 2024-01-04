@@ -33277,12 +33277,11 @@ const githubRequests_1 = __nccwpck_require__(2963);
 const trelloRequests_1 = __nccwpck_require__(777);
 async function run(pr, conf = {}) {
     try {
-        const comments = await (0, githubRequests_1.getPullRequestComments)();
-        const cardIds = await getCardIds(conf, pr, comments);
+        const cardIds = await getCardIds(conf, pr);
         if (cardIds.length) {
-            await moveCards(conf, cardIds, pr);
+            await addCardLinkToPR(conf, cardIds, pr);
             await addPRLinkToCards(cardIds, pr.html_url || pr.url);
-            await addCardLinkToPR(conf, cardIds, pr, comments);
+            await moveCards(conf, cardIds, pr);
             await addLabelToCards(conf, cardIds, pr.head);
             await updateCardMembers(conf, cardIds);
         }
@@ -33293,10 +33292,12 @@ async function run(pr, conf = {}) {
     }
 }
 exports.run = run;
-async function getCardIds(conf, pr, comments) {
+async function getCardIds(conf, pr) {
     console.log('Searching for card ids');
-    let cardIds = matchCardIds(conf, pr.body || '');
+    const latestPRInfo = await (0, githubRequests_1.getPullRequest)();
+    let cardIds = matchCardIds(conf, (latestPRInfo || pr).body || '');
     if (conf.githubIncludePrComments) {
+        const comments = await (0, githubRequests_1.getPullRequestComments)();
         for (const comment of comments) {
             cardIds = [...cardIds, ...matchCardIds(conf, comment.body)];
         }
@@ -33424,7 +33425,7 @@ async function addPRLinkToCards(cardIds, link) {
         return (0, trelloRequests_1.addAttachmentToCard)(cardId, link);
     }));
 }
-async function addCardLinkToPR(conf, cardIds, pr, comments = []) {
+async function addCardLinkToPR(conf, cardIds, pr) {
     if (!conf.githubIncludePrBranchName) {
         return;
     }
@@ -33433,7 +33434,8 @@ async function addCardLinkToPR(conf, cardIds, pr, comments = []) {
         console.log('Card is already linked in the PR description');
         return;
     }
-    for (const comment of comments) {
+    const comments = await (0, githubRequests_1.getPullRequestComments)();
+    for (const comment of comments || []) {
         if (matchCardIds(conf, comment.body)?.length) {
             console.log('Card is already linked in the comment');
             return;
