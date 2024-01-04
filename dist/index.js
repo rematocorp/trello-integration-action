@@ -33294,15 +33294,15 @@ async function run(pr, conf = {}) {
 exports.run = run;
 async function getCardIds(conf, pr) {
     console.log('Searching for card ids');
-    const latestPRInfo = await (0, githubRequests_1.getPullRequest)();
-    let cardIds = matchCardIds(conf, (latestPRInfo || pr).body || '');
+    const latestPRInfo = (await (0, githubRequests_1.getPullRequest)()) || pr;
+    let cardIds = matchCardIds(conf, latestPRInfo.body || '');
     if (conf.githubIncludePrComments) {
         const comments = await (0, githubRequests_1.getPullRequestComments)();
         for (const comment of comments) {
             cardIds = [...cardIds, ...matchCardIds(conf, comment.body)];
         }
     }
-    const createdCardId = await createNewCard(conf, pr);
+    const createdCardId = await createNewCard(conf, latestPRInfo);
     if (createdCardId) {
         cardIds = [...cardIds, createdCardId];
     }

@@ -42,8 +42,8 @@ export async function run(pr: PR, conf: Conf = {}) {
 async function getCardIds(conf: Conf, pr: PR) {
 	console.log('Searching for card ids')
 
-	const latestPRInfo = await getPullRequest()
-	let cardIds = matchCardIds(conf, (latestPRInfo || pr).body || '')
+	const latestPRInfo = (await getPullRequest()) || pr
+	let cardIds = matchCardIds(conf, latestPRInfo.body || '')
 
 	if (conf.githubIncludePrComments) {
 		const comments = await getPullRequestComments()
@@ -53,7 +53,7 @@ async function getCardIds(conf: Conf, pr: PR) {
 		}
 	}
 
-	const createdCardId = await createNewCard(conf, pr)
+	const createdCardId = await createNewCard(conf, latestPRInfo)
 	if (createdCardId) {
 		cardIds = [...cardIds, createdCardId]
 	}
