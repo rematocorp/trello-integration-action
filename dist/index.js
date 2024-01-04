@@ -33434,8 +33434,8 @@ async function addCardLinkToPR(conf, cardIds, pr) {
         console.log('Card is already linked in the PR description');
         return;
     }
-    const comments = await (0, githubRequests_1.getPullRequestComments)();
-    for (const comment of comments || []) {
+    const comments = (await (0, githubRequests_1.getPullRequestComments)()) || [];
+    for (const comment of comments) {
         if (matchCardIds(conf, comment.body)?.length) {
             console.log('Card is already linked in the comment');
             return;
