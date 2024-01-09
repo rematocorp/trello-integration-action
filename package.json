@@ -7,7 +7,6 @@
 	"engines": {
 		"node": ">=20.0.0"
 	},
-	"prettier": "@remato/prettier-config",
 	"scripts": {
 		"build": "ncc build src/index.ts",
 		"test": "jest",
@@ -30,6 +29,7 @@
 		"ts-jest": "^29.1.1",
 		"typescript": "^5.3.3"
 	},
+	"prettier": "@remato/prettier-config",
 	"jest": {
 		"preset": "ts-jest",
 		"verbose": true,
