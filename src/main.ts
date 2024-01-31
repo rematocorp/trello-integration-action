@@ -127,10 +127,10 @@ async function createNewCard(conf: Conf, pr: PR) {
 }
 
 async function getCardIdFromBranch(prHead?: PRHead) {
-	console.log('Searching card from branch name')
-
 	const branchName = prHead?.ref || (await getBranchName())
 	const matches = branchName.match(/(\d+)-\S+/i)
+
+	console.log('Searching card from branch name', branchName, matches)
 
 	if (matches) {
 		const cardsWithExactMatch = await searchTrelloCards(matches[0])
@@ -139,7 +139,7 @@ async function getCardIdFromBranch(prHead?: PRHead) {
 			return cardsWithExactMatch[0].id
 		}
 
-		console.log('Could not find Trello card with branch name, trying only with card number')
+		console.log('Could not find Trello card with branch name, trying only with card number', matches[1])
 
 		const cardNumber = matches[1]
 		const cardsWithNumberMatch = await searchTrelloCards(cardNumber)
