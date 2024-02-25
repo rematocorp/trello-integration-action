@@ -116,7 +116,7 @@ trello-conflicting-labels: 'feature;bug;chore'
 trello-remove-unrelated-members: true
 ```
 
-## Advanced
+## Advanced use cases
 
 ### Multiple boards support
 
