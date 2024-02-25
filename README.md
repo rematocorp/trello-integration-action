@@ -23,7 +23,7 @@ on:
     issue_comment:
         types: [created, edited]
 jobs:
-    build:
+    integrate:
         runs-on: ubuntu-latest
         steps:
             - uses: rematocorp/trello-integration-action@v8
