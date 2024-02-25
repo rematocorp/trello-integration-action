@@ -1,6 +1,6 @@
 # Trello Card & GitHub PR Integration
 
-This action scans PR description and comments for Trello card URL(s) or branch name for Trello card ID. When found, it seamlessly integrates GitHub with Trello:
+This GitHub action seamlessly integrates GitHub with Trello by scanning PR description/comments for Trello card URLs (or Trello card ID from branch name) and triggering following actions:
 
 -   Links a PR to a Trello card and vice versa.
 -   Moves a Trello card when PR is opened or closed.
@@ -8,7 +8,7 @@ This action scans PR description and comments for Trello card URL(s) or branch n
 -   Assigns a PR author and fellow assignees to a Trello card.
 -   And more...
 
-You can also optionally use the action to create new Trello card by adding `/new-trello-card` in the PR description.
+You can also optionally use the action to create a new Trello card by writing `/new-trello-card` in the PR description.
 
 ## Basic configuration
 
