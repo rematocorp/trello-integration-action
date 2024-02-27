@@ -1,4 +1,4 @@
 ##### Checklist
 
--   [ ] Ran `yarn build` with Node v20
+-   [ ] Ran `npm run build` with Node v20
 -   [ ] Updated README.md and action.yml if needed
