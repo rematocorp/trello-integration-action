@@ -2,6 +2,7 @@ import { setFailed } from '@actions/core'
 import {
 	createComment,
 	getBranchName,
+	getCommits,
 	getPullRequest,
 	getPullRequestComments,
 	updatePullRequestBody,
@@ -247,20 +248,20 @@ async function addCardLinkToPR(conf: Conf, cardIds: string[], pr: PR) {
 }
 
 async function updateCardMembers(conf: Conf, cardIds: string[]) {
-	const assignees = await getPullRequestAssignees()
-
 	console.log('Starting to update card members')
 
-	if (!assignees?.length) {
-		console.log('No PR assignees found')
+	const contributors = await getPullRequestContributors()
+
+	if (!contributors.length) {
+		console.log('No PR contributors found')
 
 		return
 	}
-	const result = await Promise.all(assignees.map((assignee) => getTrelloMemberId(conf, assignee?.login)))
+	const result = await Promise.all(contributors.map((member) => getTrelloMemberId(conf, member)))
 	const memberIds = result.filter((id) => id) as string[]
 
 	if (!memberIds.length) {
-		console.log('No Trello members found based on PR assignees')
+		console.log('No Trello members found based on PR contributors')
 
 		return
 	}
@@ -278,10 +279,34 @@ async function updateCardMembers(conf: Conf, cardIds: string[]) {
 	)
 }
 
-async function getPullRequestAssignees() {
+async function getPullRequestContributors() {
 	const pr = await getPullRequest()
 
-	return pr ? [...(pr.assignees || []), pr.user] : []
+	if (!pr) {
+		return []
+	}
+	const contributors = new Set<string>()
+
+	for (const member of [...(pr.assignees || []), pr.user]) {
+		if (member) {
+			contributors.add(member.login)
+		}
+	}
+	const commits = await getCommits()
+
+	for (const commit of commits || []) {
+		const author = commit.author?.login
+		const committer = commit.committer?.login
+
+		if (author) {
+			contributors.add(author)
+		}
+		if (committer) {
+			contributors.add(committer)
+		}
+	}
+
+	return Array.from(contributors)
 }
 
 async function getTrelloMemberId(conf: Conf, githubUserName?: string) {

@@ -1,14 +1,16 @@
 # Trello Card & GitHub PR Integration
 
 This GitHub action seamlessly integrates GitHub with Trello by scanning:
-- Trello card URLs from PR description and comments,
-- Trello card ID from PR branch name,
+
+-   Trello card URLs from PR description and comments,
+-   Trello card ID from PR branch name,
 
 and triggering following actions:
+
 -   links a PR to a Trello card and vice versa,
 -   moves a Trello card when PR is opened, moved back to draft or merged/closed,
 -   adds a label to a Trello card based on the branch name (e.g. `feature/foo`),
--   assigns a PR author and fellow assignees to a Trello card,
+-   assigns a PR author and fellow contributors/assignees to a Trello card,
 -   and more...
 
 Optionally, you can create a new Trello card containing PR details by adding `/new-trello-card` to the PR description.
@@ -111,7 +113,7 @@ trello-add-labels-to-cards: true
 # When a card has one of these labels then branch category label is not assigned.
 trello-conflicting-labels: 'feature;bug;chore'
 
-# Removes card members who are not authors or assignees of the PR.
+# Removes card members who are not authors, contributors or assignees of the PR.
 # DEFAULT: true
 trello-remove-unrelated-members: true
 ```

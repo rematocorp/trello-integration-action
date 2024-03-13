@@ -19,6 +19,7 @@ import {
 	getBranchName,
 	createComment,
 	getPullRequest,
+	getCommits,
 	updatePullRequestBody,
 } from './githubRequests'
 
@@ -28,6 +29,7 @@ jest.mock('./githubRequests')
 jest.mock('./trelloRequests')
 
 const getPullRequestMock = getPullRequest as jest.Mock
+const getCommitsMock = getCommits as jest.Mock
 const getMemberInfoMock = getMemberInfo as jest.Mock
 const getCardInfoMock = getCardInfo as jest.Mock
 const getPullRequestCommentsMock = getPullRequestComments as jest.Mock
@@ -298,15 +300,23 @@ describe('Updating card members', () => {
 
 	it('adds PR author and assignees to the card and removes unrelated members', async () => {
 		getPullRequestMock.mockResolvedValue({ ...prResponse, assignees: [{ login: 'amy' }] })
-		getMemberInfoMock.mockImplementation((username) =>
-			username === 'amy1993' ? { id: 'amy-id' } : { id: 'phil-id' },
-		)
+		getCommitsMock.mockResolvedValue([{ author: { login: 'john' } }])
+		getMemberInfoMock.mockImplementation((username) => {
+			if (username === 'amy1993') {
+				return { id: 'amy-id' }
+			} else if (username === 'john') {
+				return { id: 'john-id' }
+			} else {
+				return { id: 'phil-id' }
+			}
+		})
 		getCardInfoMock.mockResolvedValueOnce({ id: 'card', idMembers: ['jones-id'] })
 
 		await run(basePR, conf)
 
 		expect(addMemberToCard).toHaveBeenCalledWith('card', 'phil-id')
 		expect(addMemberToCard).toHaveBeenCalledWith('card', 'amy-id')
+		expect(addMemberToCard).toHaveBeenCalledWith('card', 'john-id')
 		expect(removeMemberFromCard).toHaveBeenCalledWith('card', 'jones-id')
 	})
 

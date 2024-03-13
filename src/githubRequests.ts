@@ -38,6 +38,16 @@ export async function getBranchName() {
 	return response.data.head.ref
 }
 
+export async function getCommits() {
+	const response = await octokit.rest.pulls.listCommits({
+		owner: repoOwner,
+		repo: payload.repository!.name,
+		pull_number: issueNumber!,
+	})
+
+	return response.data
+}
+
 export async function createComment(shortUrl: string) {
 	console.log('Creating PR comment', shortUrl)
 
