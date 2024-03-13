@@ -1,6 +1,6 @@
 {
 	"name": "@remato/trello-integration-action",
-	"version": "8.2.2",
+	"version": "8.2.3",
 	"license": "MIT",
 	"description": "GitHub Action to integrate Github pull requests with Trello cards",
 	"main": "dist/index.js",
@@ -33,6 +33,7 @@
 	"jest": {
 		"preset": "ts-jest",
 		"verbose": true,
+		"resetMocks": true,
 		"clearMocks": true,
 		"testEnvironment": "node",
 		"moduleFileExtensions": [

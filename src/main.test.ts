@@ -85,21 +85,43 @@ describe('Finding cards', () => {
 		expect(moveCardToList).toHaveBeenCalledWith('card', 'open-list-id', undefined)
 	})
 
-	it('finds card from branch name', async () => {
-		getBranchNameMock.mockResolvedValueOnce('1-card')
-		getCardInfoMock.mockResolvedValueOnce({ shortUrl: 'short-url' })
-		searchTrelloCardsMock.mockResolvedValueOnce([{ id: 'card' }])
-
-		await run(pr, { ...conf, githubIncludePrBranchName: true })
-
-		expect(searchTrelloCards).toHaveBeenCalledWith('1-card')
-		expect(moveCardToList).toHaveBeenCalledWith('card', 'open-list-id', undefined)
-	})
-
 	it('finds multiple cards', async () => {
 		await run({ ...pr, body: 'https://trello.com/c/card1/title, https://trello.com/c/card2/title' }, conf)
 		expect(moveCardToList).toHaveBeenCalledWith('card1', 'open-list-id', undefined)
 		expect(moveCardToList).toHaveBeenCalledWith('card2', 'open-list-id', undefined)
+	})
+
+	describe('from branch name', () => {
+		it('finds basic card', async () => {
+			getBranchNameMock.mockResolvedValueOnce('1-card')
+			getCardInfoMock.mockResolvedValueOnce({ shortUrl: 'short-url' })
+			searchTrelloCardsMock.mockResolvedValueOnce([{ id: 'card' }])
+
+			await run(pr, { ...conf, githubIncludePrBranchName: true })
+
+			expect(searchTrelloCards).toHaveBeenCalledWith('1-card')
+			expect(moveCardToList).toHaveBeenCalledWith('card', 'open-list-id', undefined)
+		})
+
+		it('finds categorized card', async () => {
+			getBranchNameMock.mockResolvedValueOnce('feature/1-card')
+			getCardInfoMock.mockResolvedValueOnce({ shortUrl: 'short-url' })
+			searchTrelloCardsMock.mockResolvedValueOnce([{ id: 'card' }])
+
+			await run(pr, { ...conf, githubIncludePrBranchName: true })
+
+			expect(searchTrelloCards).toHaveBeenCalledWith('1-card')
+			expect(moveCardToList).toHaveBeenCalledWith('card', 'open-list-id', undefined)
+		})
+
+		it('ignores branch names that look similar to Trello card name', async () => {
+			getBranchNameMock.mockResolvedValueOnce('not-1-card')
+
+			await run(pr, { ...conf, githubIncludePrBranchName: true })
+
+			expect(searchTrelloCards).not.toHaveBeenCalled()
+			expect(moveCardToList).not.toHaveBeenCalled()
+		})
 	})
 })
 

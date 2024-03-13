@@ -128,7 +128,7 @@ async function createNewCard(conf: Conf, pr: PR) {
 
 async function getCardIdFromBranch(prHead?: PRHead) {
 	const branchName = prHead?.ref || (await getBranchName())
-	const matches = branchName.match(/(\d+)-\S+/i)
+	const matches = branchName.match(/(?<=^|\/)(\d+)-\S+/i)
 
 	console.log('Searching card from branch name', branchName, matches)
 
