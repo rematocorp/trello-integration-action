@@ -83,6 +83,14 @@ export async function moveCardToList(cardId: string, listId: string, boardId?: s
 	})
 }
 
+export async function archiveCard(cardId: string) {
+	console.log('Archiving card', cardId)
+
+	return makeRequest('put', `https://api.trello.com/1/cards/${cardId}`, {
+		closed: true,
+	})
+}
+
 export async function getMemberInfo(username?: string): Promise<{ id: string; organizations: { name: string }[] }> {
 	const response = await makeRequest('get', `https://api.trello.com/1/members/${username}`, {
 		organizations: 'all',

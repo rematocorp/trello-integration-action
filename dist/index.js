@@ -33205,7 +33205,7 @@ function wrappy (fn, cb) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updatePullRequestBody = exports.createComment = exports.getCommits = exports.getBranchName = exports.getPullRequest = exports.getPullRequestComments = void 0;
+exports.updatePullRequestBody = exports.createComment = exports.isPullRequestMerged = exports.getCommits = exports.getBranchName = exports.getPullRequest = exports.getPullRequestComments = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const githubToken = (0, core_1.getInput)('github-token', { required: true });
@@ -33249,6 +33249,20 @@ async function getCommits() {
     return response.data;
 }
 exports.getCommits = getCommits;
+async function isPullRequestMerged() {
+    try {
+        await octokit.rest.pulls.checkIfMerged({
+            owner: repoOwner,
+            repo: payload.repository.name,
+            pull_number: issueNumber,
+        });
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
+}
+exports.isPullRequestMerged = isPullRequestMerged;
 async function createComment(shortUrl) {
     console.log('Creating PR comment', shortUrl);
     await octokit.rest.issues.createComment({
@@ -33320,6 +33334,7 @@ const main_1 = __nccwpck_require__(399);
     trelloBoardId: core.getInput('trello-board-id'),
     trelloAddLabelsToCards: core.getBooleanInput('trello-add-labels-to-cards'),
     trelloRemoveUnrelatedMembers: core.getBooleanInput('trello-remove-unrelated-members'),
+    trelloArchiveOnMerge: core.getBooleanInput('trello-archive-on-merge'),
 });
 
 
@@ -33339,9 +33354,9 @@ async function run(pr, conf = {}) {
     try {
         const cardIds = await getCardIds(conf, pr);
         if (cardIds.length) {
-            await addCardLinkToPR(conf, cardIds, pr);
-            await addPRLinkToCards(cardIds, pr.html_url || pr.url);
-            await moveCards(conf, cardIds, pr);
+            await addCardLinkToPullRequest(conf, cardIds, pr);
+            await addPullRequestLinkToCards(cardIds, pr.html_url || pr.url);
+            await moveOrArchiveCards(conf, cardIds, pr);
             await addLabelToCards(conf, cardIds, pr.head);
             await updateCardMembers(conf, cardIds);
         }
@@ -33404,7 +33419,7 @@ async function createNewCard(conf, pr) {
     if (!conf.githubIncludeNewCardCommand) {
         return;
     }
-    const isDraft = isDraftPr(pr);
+    const isDraft = isDraftPullRequest(pr);
     const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen;
     const commandRegex = /(^|\s)\/new-trello-card(\s|$)/; // Avoids matching URLs
     if (listId && pr.body && commandRegex.test(pr.body)) {
@@ -33431,8 +33446,9 @@ async function getCardIdFromBranch(prHead) {
             .find((card) => card.idShort === parseInt(cardNumber))?.id;
     }
 }
-async function moveCards(conf, cardIds, pr) {
-    const isDraft = isDraftPr(pr);
+async function moveOrArchiveCards(conf, cardIds, pr) {
+    const isDraft = isDraftPullRequest(pr);
+    const isMerged = await (0, githubRequests_1.isPullRequestMerged)();
     if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
         await moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId);
         console.log('Moved cards to draft PR list');
@@ -33441,15 +33457,18 @@ async function moveCards(conf, cardIds, pr) {
         await moveCardsToList(cardIds, conf.trelloListIdPrOpen, conf.trelloBoardId);
         console.log('Moved cards to open PR list');
     }
+    else if (pr.state === 'closed' && isMerged && conf.trelloArchiveOnMerge) {
+        await archiveCards(cardIds);
+    }
     else if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
         await moveCardsToList(cardIds, conf.trelloListIdPrClosed, conf.trelloBoardId);
         console.log('Moved cards to closed PR list');
     }
     else {
-        console.log('Skipping moving the cards', pr.state, isDraft);
+        console.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged });
     }
 }
-function isDraftPr(pr) {
+function isDraftPullRequest(pr) {
     // Treat PRs with “draft” or “wip” in brackets at the start or
     // end of the titles like drafts. Useful for orgs on unpaid
     // plans which doesn’t support PR drafts.
@@ -33475,7 +33494,10 @@ async function moveCardsToList(cardIds, listId, boardId) {
         }
     }));
 }
-async function addPRLinkToCards(cardIds, link) {
+async function archiveCards(cardIds) {
+    return Promise.all(cardIds.map((cardId) => (0, trelloRequests_1.archiveCard)(cardId)));
+}
+async function addPullRequestLinkToCards(cardIds, link) {
     return Promise.all(cardIds.map(async (cardId) => {
         const existingAttachments = await (0, trelloRequests_1.getCardAttachments)(cardId);
         if (existingAttachments?.some((it) => it.url.includes(link))) {
@@ -33485,7 +33507,7 @@ async function addPRLinkToCards(cardIds, link) {
         return (0, trelloRequests_1.addAttachmentToCard)(cardId, link);
     }));
 }
-async function addCardLinkToPR(conf, cardIds, pr) {
+async function addCardLinkToPullRequest(conf, cardIds, pr) {
     if (!conf.githubIncludePrBranchName) {
         return;
     }
@@ -33685,7 +33707,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createCard = exports.getMemberInfo = exports.moveCardToList = exports.removeMemberFromCard = exports.addLabelToCard = exports.getBoardLists = exports.getBoardLabels = exports.addMemberToCard = exports.addAttachmentToCard = exports.getCardAttachments = exports.getCardInfo = exports.searchTrelloCards = void 0;
+exports.createCard = exports.getMemberInfo = exports.archiveCard = exports.moveCardToList = exports.removeMemberFromCard = exports.addLabelToCard = exports.getBoardLists = exports.getBoardLabels = exports.addMemberToCard = exports.addAttachmentToCard = exports.getCardAttachments = exports.getCardInfo = exports.searchTrelloCards = void 0;
 const axios_1 = __importDefault(__nccwpck_require__(8757));
 const core = __importStar(__nccwpck_require__(2186));
 const trelloApiKey = core.getInput('trello-api-key', { required: true });
@@ -33754,6 +33776,13 @@ async function moveCardToList(cardId, listId, boardId) {
     });
 }
 exports.moveCardToList = moveCardToList;
+async function archiveCard(cardId) {
+    console.log('Archiving card', cardId);
+    return makeRequest('put', `https://api.trello.com/1/cards/${cardId}`, {
+        closed: true,
+    });
+}
+exports.archiveCard = archiveCard;
 async function getMemberInfo(username) {
     const response = await makeRequest('get', `https://api.trello.com/1/members/${username}`, {
         organizations: 'all',

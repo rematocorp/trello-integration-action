@@ -5,12 +5,14 @@ import {
 	getCommits,
 	getPullRequest,
 	getPullRequestComments,
+	isPullRequestMerged,
 	updatePullRequestBody,
 } from './githubRequests'
 import {
 	addAttachmentToCard,
 	addLabelToCard,
 	addMemberToCard,
+	archiveCard,
 	createCard,
 	getBoardLabels,
 	getBoardLists,
@@ -28,9 +30,9 @@ export async function run(pr: PR, conf: Conf = {}) {
 		const cardIds = await getCardIds(conf, pr)
 
 		if (cardIds.length) {
-			await addCardLinkToPR(conf, cardIds, pr)
-			await addPRLinkToCards(cardIds, pr.html_url || pr.url)
-			await moveCards(conf, cardIds, pr)
+			await addCardLinkToPullRequest(conf, cardIds, pr)
+			await addPullRequestLinkToCards(cardIds, pr.html_url || pr.url)
+			await moveOrArchiveCards(conf, cardIds, pr)
 			await addLabelToCards(conf, cardIds, pr.head)
 			await updateCardMembers(conf, cardIds)
 		}
@@ -113,7 +115,7 @@ async function createNewCard(conf: Conf, pr: PR) {
 	if (!conf.githubIncludeNewCardCommand) {
 		return
 	}
-	const isDraft = isDraftPr(pr)
+	const isDraft = isDraftPullRequest(pr)
 	const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen
 	const commandRegex = /(^|\s)\/new-trello-card(\s|$)/ // Avoids matching URLs
 
@@ -151,8 +153,9 @@ async function getCardIdFromBranch(prHead?: PRHead) {
 	}
 }
 
-async function moveCards(conf: Conf, cardIds: string[], pr: PR) {
-	const isDraft = isDraftPr(pr)
+async function moveOrArchiveCards(conf: Conf, cardIds: string[], pr: PR) {
+	const isDraft = isDraftPullRequest(pr)
+	const isMerged = await isPullRequestMerged()
 
 	if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId)
@@ -160,15 +163,17 @@ async function moveCards(conf: Conf, cardIds: string[], pr: PR) {
 	} else if (pr.state === 'open' && !isDraft && conf.trelloListIdPrOpen) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrOpen, conf.trelloBoardId)
 		console.log('Moved cards to open PR list')
+	} else if (pr.state === 'closed' && isMerged && conf.trelloArchiveOnMerge) {
+		await archiveCards(cardIds)
 	} else if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrClosed, conf.trelloBoardId)
 		console.log('Moved cards to closed PR list')
 	} else {
-		console.log('Skipping moving the cards', pr.state, isDraft)
+		console.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged })
 	}
 }
 
-function isDraftPr(pr: any) {
+function isDraftPullRequest(pr: any) {
 	// Treat PRs with “draft” or “wip” in brackets at the start or
 	// end of the titles like drafts. Useful for orgs on unpaid
 	// plans which doesn’t support PR drafts.
@@ -204,7 +209,11 @@ async function moveCardsToList(cardIds: string[], listId: string, boardId?: stri
 	)
 }
 
-async function addPRLinkToCards(cardIds: string[], link: string) {
+async function archiveCards(cardIds: string[]) {
+	return Promise.all(cardIds.map((cardId) => archiveCard(cardId)))
+}
+
+async function addPullRequestLinkToCards(cardIds: string[], link: string) {
 	return Promise.all(
 		cardIds.map(async (cardId) => {
 			const existingAttachments = await getCardAttachments(cardId)
@@ -220,7 +229,7 @@ async function addPRLinkToCards(cardIds: string[], link: string) {
 	)
 }
 
-async function addCardLinkToPR(conf: Conf, cardIds: string[], pr: PR) {
+async function addCardLinkToPullRequest(conf: Conf, cardIds: string[], pr: PR) {
 	if (!conf.githubIncludePrBranchName) {
 		return
 	}

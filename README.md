@@ -116,6 +116,10 @@ trello-conflicting-labels: 'feature;bug;chore'
 # Removes card members who are not authors, contributors or assignees of the PR.
 # DEFAULT: true
 trello-remove-unrelated-members: true
+
+# Archives Trello cards when PR is merged
+# DEFAULT: false
+trello-archive-on-merge: false
 ```
 
 ## Advanced use cases

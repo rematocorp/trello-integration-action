@@ -13,6 +13,7 @@ import {
 	addLabelToCard,
 	getBoardLists,
 	createCard,
+	archiveCard,
 } from './trelloRequests'
 import {
 	getPullRequestComments,
@@ -21,6 +22,7 @@ import {
 	getPullRequest,
 	getCommits,
 	updatePullRequestBody,
+	isPullRequestMerged,
 } from './githubRequests'
 
 jest.mock('@actions/core')
@@ -39,6 +41,8 @@ const getCardAttachmentsMock = getCardAttachments as jest.Mock
 const getBoardLabelsMock = getBoardLabels as jest.Mock
 const getBoardListsMock = getBoardLists as jest.Mock
 const createCardMock = createCard as jest.Mock
+const archiveCardMock = archiveCard as jest.Mock
+const isPullRequestMergedMock = isPullRequestMerged as jest.Mock
 
 const basePR = { number: 0, state: 'open', title: 'Title' }
 
@@ -232,6 +236,24 @@ describe('Moving cards', () => {
 			expect(getBoardListsMock).toHaveBeenCalledWith('board-id')
 			expect(moveCardToList).toHaveBeenCalledWith('card', 'another-closed-list-id')
 		})
+	})
+})
+
+describe('Archiving cards on merge', () => {
+	const pr = { ...basePR, state: 'closed', body: 'https://trello.com/c/card/title' }
+
+	beforeEach(() => isPullRequestMergedMock.mockResolvedValueOnce(true))
+
+	it('archives cards and does not move to closed list', async () => {
+		await run(pr, { trelloListIdPrClosed: 'closed-list-id', trelloArchiveOnMerge: true })
+
+		expect(archiveCardMock).toHaveBeenCalledWith('card')
+		expect(moveCardToList).not.toHaveBeenCalled()
+	})
+
+	it('skips archiving when not configured', async () => {
+		await run(pr, {})
+		expect(archiveCardMock).not.toHaveBeenCalled()
 	})
 })
 

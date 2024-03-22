@@ -13,8 +13,9 @@ export interface Conf {
 	trelloBoardId?: string
 	trelloOrganizationName?: string
 	trelloConflictingLabels?: string[]
-	trelloRemoveUnrelatedMembers?: boolean
 	trelloAddLabelsToCards?: boolean
+	trelloRemoveUnrelatedMembers?: boolean
+	trelloArchiveOnMerge?: boolean
 }
 
 export type PR = Omit<

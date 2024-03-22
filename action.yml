@@ -56,6 +56,9 @@ inputs:
     trello-remove-unrelated-members:
         description: Removes card members who are not authors or assignees of the PR.
         default: true
+    trello-archive-on-merge:
+        description: Archives Trello cards when PR is merged.
+        default: false
 runs:
     using: node20
     main: 'dist/index.js'

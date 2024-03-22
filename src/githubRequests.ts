@@ -48,6 +48,20 @@ export async function getCommits() {
 	return response.data
 }
 
+export async function isPullRequestMerged() {
+	try {
+		await octokit.rest.pulls.checkIfMerged({
+			owner: repoOwner,
+			repo: payload.repository!.name,
+			pull_number: issueNumber!,
+		})
+
+		return true
+	} catch (e) {
+		return false
+	}
+}
+
 export async function createComment(shortUrl: string) {
 	console.log('Creating PR comment', shortUrl)
 
