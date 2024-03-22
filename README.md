@@ -58,6 +58,11 @@ github-include-pr-comments: true
 # DEFAULT: false
 github-include-pr-branch-name: false
 
+# Allows to reference multiple card short IDs in the branch name (e.g. feature/38-39-40-foo-bar).
+# Option github-include-pr-branch-name needs to be true and it is recommended to set trello-board-id to avoid moving wrong cards
+# DEFAULT: false
+github-allow-multiple-cards-in-pr-branch-name: false
+
 # Creates a new Trello card from PR details if "/new-trello-card" is written in the PR description.
 # Replaces "/new-trello-card" with the card link.
 # DEFAULT: false
@@ -117,7 +122,7 @@ trello-conflicting-labels: 'feature;bug;chore'
 # DEFAULT: true
 trello-remove-unrelated-members: true
 
-# Archives Trello cards when PR is merged
+# Archives Trello cards when PR is merged.
 # DEFAULT: false
 trello-archive-on-merge: false
 ```

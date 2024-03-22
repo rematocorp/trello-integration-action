@@ -120,6 +120,26 @@ describe('Finding cards', () => {
 			expect(moveCardToList).toHaveBeenCalledWith('card', 'open-list-id', undefined)
 		})
 
+		it('finds multiple cards', async () => {
+			getBranchNameMock.mockResolvedValueOnce('1-2-card')
+			getCardInfoMock.mockResolvedValue({ shortUrl: 'short-url' })
+			searchTrelloCardsMock
+				.mockResolvedValueOnce([{ id: '1-card', idShort: 1 }])
+				.mockResolvedValueOnce([{ id: '2-card', idShort: 2 }])
+
+			await run(pr, {
+				...conf,
+				githubIncludePrBranchName: true,
+				githubAllowMultipleCardsInPrBranchName: true,
+				trelloBoardId: 'board-id',
+			})
+
+			expect(searchTrelloCards).toHaveBeenNthCalledWith(1, '1', 'board-id')
+			expect(searchTrelloCards).toHaveBeenNthCalledWith(2, '2', 'board-id')
+			expect(moveCardToList).toHaveBeenNthCalledWith(1, '1-card', 'open-list-id', 'board-id')
+			expect(moveCardToList).toHaveBeenNthCalledWith(2, '2-card', 'open-list-id', 'board-id')
+		})
+
 		it('ignores branch names that look similar to Trello card name', async () => {
 			getBranchNameMock.mockResolvedValueOnce('not-1-card')
 

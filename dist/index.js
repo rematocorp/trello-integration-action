@@ -33324,6 +33324,7 @@ const main_1 = __nccwpck_require__(399);
     githubRequireTrelloCard: core.getBooleanInput('github-require-trello-card'),
     githubIncludePrComments: core.getBooleanInput('github-include-pr-comments'),
     githubIncludePrBranchName: core.getBooleanInput('github-include-pr-branch-name'),
+    githubAllowMultipleCardsInPrBranchName: core.getBooleanInput('github-allow-multiple-cards-in-pr-branch-name'),
     githubIncludeNewCardCommand: core.getBooleanInput('github-include-new-card-command'),
     githubUsersToTrelloUsers: core.getInput('github-users-to-trello-users'),
     trelloOrganizationName: core.getInput('trello-organization-name'),
@@ -33386,17 +33387,15 @@ async function getCardIds(conf, pr) {
         return [...new Set(cardIds)];
     }
     if (conf.githubIncludePrBranchName) {
-        const cardId = await getCardIdFromBranch(pr.head);
-        if (cardId) {
-            console.log('Found card ID from branch name');
-            return [cardId];
+        cardIds = await getCardIdsFromBranchName(conf, pr.head);
+        if (cardIds.length) {
+            console.log('Found card IDs from branch name', cardIds);
+            return cardIds;
         }
     }
-    if (!cardIds.length) {
-        console.log('Could not find card IDs');
-        if (conf.githubRequireTrelloCard) {
-            (0, core_1.setFailed)('The PR does not contain a link to a Trello card');
-        }
+    console.log('Could not find card IDs');
+    if (conf.githubRequireTrelloCard) {
+        (0, core_1.setFailed)('The PR does not contain a link to a Trello card');
     }
     return [];
 }
@@ -33429,22 +33428,40 @@ async function createNewCard(conf, pr) {
     }
     return;
 }
-async function getCardIdFromBranch(prHead) {
+async function getCardIdsFromBranchName(conf, prHead) {
     const branchName = prHead?.ref || (await (0, githubRequests_1.getBranchName)());
+    console.log('Searching cards from branch name', branchName);
+    if (conf.githubAllowMultipleCardsInPrBranchName) {
+        const shortIdMatches = branchName.match(/(?<=^|\/)\d+(?:-\d+)+/gi)?.[0].split('-');
+        if (shortIdMatches && shortIdMatches.length > 1) {
+            console.log('Matched multiple potential Trello short IDs from branch name', shortIdMatches);
+            const potentialCardIds = await Promise.all(shortIdMatches.map((shortId) => getTrelloCardByShortId(shortId, conf.trelloBoardId)));
+            const cardIds = potentialCardIds.filter((c) => c);
+            if (cardIds.length) {
+                return cardIds;
+            }
+        }
+    }
     const matches = branchName.match(/(?<=^|\/)(\d+)-\S+/i);
-    console.log('Searching card from branch name', branchName, matches);
     if (matches) {
+        console.log('Matched one potential card from branch name', matches);
         const cardsWithExactMatch = await (0, trelloRequests_1.searchTrelloCards)(matches[0]);
         if (cardsWithExactMatch?.length) {
-            return cardsWithExactMatch[0].id;
+            return [cardsWithExactMatch[0].id];
         }
-        console.log('Could not find Trello card with branch name, trying only with card number', matches[1]);
-        const cardNumber = matches[1];
-        const cardsWithNumberMatch = await (0, trelloRequests_1.searchTrelloCards)(cardNumber);
-        return cardsWithNumberMatch
-            .sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
-            .find((card) => card.idShort === parseInt(cardNumber))?.id;
+        console.log('Could not find Trello card with branch name, trying only with short ID', matches[1]);
+        const cardId = await getTrelloCardByShortId(matches[1]);
+        if (cardId) {
+            return [cardId];
+        }
     }
+    return [];
+}
+async function getTrelloCardByShortId(shortId, boardId) {
+    const cardsWithNumberMatch = await (0, trelloRequests_1.searchTrelloCards)(shortId, boardId);
+    return cardsWithNumberMatch
+        ?.sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
+        .find((card) => card.idShort === parseInt(shortId))?.id;
 }
 async function moveOrArchiveCards(conf, cardIds, pr) {
     const isDraft = isDraftPullRequest(pr);
@@ -33713,10 +33730,11 @@ const core = __importStar(__nccwpck_require__(2186));
 const trelloApiKey = core.getInput('trello-api-key', { required: true });
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true });
 const trelloCardPosition = core.getInput('trello-card-position');
-async function searchTrelloCards(query) {
+async function searchTrelloCards(query, boardId) {
     const response = await makeRequest('get', `https://api.trello.com/1/search`, {
         modelTypes: 'cards',
         query,
+        ...(boardId && { idBoard: boardId }),
     });
     return response?.data?.cards || [];
 }

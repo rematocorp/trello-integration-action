@@ -68,21 +68,18 @@ async function getCardIds(conf: Conf, pr: PR) {
 	}
 
 	if (conf.githubIncludePrBranchName) {
-		const cardId = await getCardIdFromBranch(pr.head)
+		cardIds = await getCardIdsFromBranchName(conf, pr.head)
 
-		if (cardId) {
-			console.log('Found card ID from branch name')
+		if (cardIds.length) {
+			console.log('Found card IDs from branch name', cardIds)
 
-			return [cardId]
+			return cardIds
 		}
 	}
+	console.log('Could not find card IDs')
 
-	if (!cardIds.length) {
-		console.log('Could not find card IDs')
-
-		if (conf.githubRequireTrelloCard) {
-			setFailed('The PR does not contain a link to a Trello card')
-		}
+	if (conf.githubRequireTrelloCard) {
+		setFailed('The PR does not contain a link to a Trello card')
 	}
 
 	return []
@@ -129,28 +126,56 @@ async function createNewCard(conf: Conf, pr: PR) {
 	return
 }
 
-async function getCardIdFromBranch(prHead?: PRHead) {
+async function getCardIdsFromBranchName(conf: Conf, prHead?: PRHead) {
 	const branchName = prHead?.ref || (await getBranchName())
+
+	console.log('Searching cards from branch name', branchName)
+
+	if (conf.githubAllowMultipleCardsInPrBranchName) {
+		const shortIdMatches = branchName.match(/(?<=^|\/)\d+(?:-\d+)+/gi)?.[0].split('-')
+
+		if (shortIdMatches && shortIdMatches.length > 1) {
+			console.log('Matched multiple potential Trello short IDs from branch name', shortIdMatches)
+
+			const potentialCardIds = await Promise.all(
+				shortIdMatches.map((shortId: string) => getTrelloCardByShortId(shortId, conf.trelloBoardId)),
+			)
+			const cardIds = potentialCardIds.filter((c) => c) as string[]
+
+			if (cardIds.length) {
+				return cardIds
+			}
+		}
+	}
 	const matches = branchName.match(/(?<=^|\/)(\d+)-\S+/i)
 
-	console.log('Searching card from branch name', branchName, matches)
-
 	if (matches) {
+		console.log('Matched one potential card from branch name', matches)
+
 		const cardsWithExactMatch = await searchTrelloCards(matches[0])
 
 		if (cardsWithExactMatch?.length) {
-			return cardsWithExactMatch[0].id
+			return [cardsWithExactMatch[0].id]
 		}
 
-		console.log('Could not find Trello card with branch name, trying only with card number', matches[1])
+		console.log('Could not find Trello card with branch name, trying only with short ID', matches[1])
 
-		const cardNumber = matches[1]
-		const cardsWithNumberMatch = await searchTrelloCards(cardNumber)
+		const cardId = await getTrelloCardByShortId(matches[1])
 
-		return cardsWithNumberMatch
-			.sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
-			.find((card) => card.idShort === parseInt(cardNumber))?.id
+		if (cardId) {
+			return [cardId]
+		}
 	}
+
+	return []
+}
+
+async function getTrelloCardByShortId(shortId: string, boardId?: string) {
+	const cardsWithNumberMatch = await searchTrelloCards(shortId, boardId)
+
+	return cardsWithNumberMatch
+		?.sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
+		.find((card) => card.idShort === parseInt(shortId))?.id
 }
 
 async function moveOrArchiveCards(conf: Conf, cardIds: string[], pr: PR) {

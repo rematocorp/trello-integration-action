@@ -8,10 +8,12 @@ const trelloCardPosition = core.getInput('trello-card-position')
 
 export async function searchTrelloCards(
 	query: string,
+	boardId?: string,
 ): Promise<{ dateLastActivity: string; id: string; idShort: number }[]> {
 	const response = await makeRequest('get', `https://api.trello.com/1/search`, {
 		modelTypes: 'cards',
 		query,
+		...(boardId && { idBoard: boardId }),
 	})
 
 	return response?.data?.cards || []

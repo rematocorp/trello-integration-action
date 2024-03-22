@@ -4,6 +4,7 @@ export interface Conf {
 	githubRequireTrelloCard?: boolean
 	githubIncludePrComments?: boolean
 	githubIncludePrBranchName?: boolean
+	githubAllowMultipleCardsInPrBranchName?: boolean
 	githubIncludeNewCardCommand?: boolean
 	githubRequireKeywordPrefix?: boolean
 	githubUsersToTrelloUsers?: string

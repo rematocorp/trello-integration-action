@@ -20,6 +20,9 @@ inputs:
     github-include-pr-branch-name:
         description: Include PR branch name when searching for Trello cards (e.g. "1234-card-title"). If card ID is found, it automatically comments card URL to the PR.
         default: false
+    github-allow-multiple-cards-in-pr-branch-name:
+        description: Allows to reference multiple card short IDs in the branch name (e.g. feature/38-39-40-foo-bar). Option github-include-pr-branch-name needs to be true.
+        default: false
     github-include-new-card-command:
         description: Creates a new Trello card from PR details if "/new-trello-card" is written in the PR description. Replaces "/new-trello-card" with the card link.
         default: false
