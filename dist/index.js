@@ -33734,7 +33734,7 @@ async function searchTrelloCards(query, boardId) {
     const response = await makeRequest('get', `https://api.trello.com/1/search`, {
         modelTypes: 'cards',
         query,
-        ...(boardId && { idBoard: boardId }),
+        ...(boardId && { idBoards: [boardId] }),
     });
     return response?.data?.cards || [];
 }
