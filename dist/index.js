@@ -33540,9 +33540,9 @@ async function addCardLinkToPullRequest(conf, cardIds, pr) {
             return;
         }
     }
-    console.log('Commenting Trello card URL to PR', cardIds[0]);
-    const cardInfo = await (0, trelloRequests_1.getCardInfo)(cardIds[0]);
-    await (0, githubRequests_1.createComment)(cardInfo.shortUrl);
+    console.log('Commenting Trello card URLs to PR', cardIds);
+    const cards = await Promise.all(cardIds.map((id) => (0, trelloRequests_1.getCardInfo)(id)));
+    await (0, githubRequests_1.createComment)(cards.map((card) => card.shortUrl).join('\n'));
 }
 async function updateCardMembers(conf, cardIds) {
     console.log('Starting to update card members');

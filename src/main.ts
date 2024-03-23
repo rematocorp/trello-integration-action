@@ -274,11 +274,11 @@ async function addCardLinkToPullRequest(conf: Conf, cardIds: string[], pr: PR) {
 			return
 		}
 	}
-	console.log('Commenting Trello card URL to PR', cardIds[0])
+	console.log('Commenting Trello card URLs to PR', cardIds)
 
-	const cardInfo = await getCardInfo(cardIds[0])
+	const cards = await Promise.all(cardIds.map((id) => getCardInfo(id)))
 
-	await createComment(cardInfo.shortUrl)
+	await createComment(cards.map((card) => card.shortUrl).join('\n'))
 }
 
 async function updateCardMembers(conf: Conf, cardIds: string[]) {
