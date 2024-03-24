@@ -3,7 +3,7 @@ import { createComment, getPullRequest, getPullRequestComments } from './api/git
 import { getCardInfo } from './api/trello'
 import matchCardIds from './utils/matchCardIds'
 
-export default async function addCardsLinkToPullRequest(conf: Conf, cardIds: string[], pr: PR) {
+export default async function addCardLinksToPullRequest(conf: Conf, cardIds: string[], pr: PR) {
 	if (!conf.githubIncludePrBranchName) {
 		return
 	}
