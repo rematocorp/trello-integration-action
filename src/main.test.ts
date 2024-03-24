@@ -14,7 +14,7 @@ import {
 	getBoardLists,
 	createCard,
 	archiveCard,
-} from './trelloRequests'
+} from './actions/api/trello'
 import {
 	getPullRequestComments,
 	getBranchName,
@@ -23,12 +23,12 @@ import {
 	getCommits,
 	updatePullRequestBody,
 	isPullRequestMerged,
-} from './githubRequests'
+} from './actions/api/github'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
-jest.mock('./githubRequests')
-jest.mock('./trelloRequests')
+jest.mock('./actions/api/github')
+jest.mock('./actions/api/trello')
 
 const getPullRequestMock = getPullRequest as jest.Mock
 const getCommitsMock = getCommits as jest.Mock
