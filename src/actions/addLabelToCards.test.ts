@@ -3,26 +3,20 @@ import { addLabelToCard, getBoardLabels, getCardInfo } from './api/trello'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
-jest.mock('./actions/api/github')
-jest.mock('./actions/api/trello')
+jest.mock('./api/github')
+jest.mock('./api/trello')
 
 const getCardInfoMock = getCardInfo as jest.Mock
 const getBoardLabelsMock = getBoardLabels as jest.Mock
 
-const pr = {
-	number: 0,
-	state: 'open',
-	title: 'Title',
-	body: 'https://trello.com/c/card/title',
-	head: { ref: 'chore/clean-code' },
-}
+const head = { ref: 'chore/clean-code' }
 const conf = { trelloAddLabelsToCards: true }
 
 it('adds branch category as a card label', async () => {
 	getCardInfoMock.mockResolvedValueOnce({ id: 'card', labels: [] })
 	getBoardLabelsMock.mockResolvedValueOnce([{ id: 'chore-id', name: 'chore' }])
 
-	await addLabelToCards(pr, conf)
+	await addLabelToCards(conf, ['card'], head)
 
 	expect(addLabelToCard).toHaveBeenCalledWith('card', 'chore-id')
 })
@@ -31,16 +25,43 @@ it('adds partially matching branch category as a card label', async () => {
 	getCardInfoMock.mockResolvedValueOnce({ id: 'card', labels: [] })
 	getBoardLabelsMock.mockResolvedValueOnce([{ id: 'bug-id', name: 'bug' }])
 
-	await addLabelToCards({ ...pr, head: { ref: 'bugfix/stupid-bug' } }, conf)
+	await addLabelToCards(conf, ['card'], { ref: 'bugfix/stupid-bug' })
 
 	expect(addLabelToCard).toHaveBeenCalledWith('card', 'bug-id')
+})
+
+it('skips when branch category is not found', async () => {
+	getCardInfoMock.mockResolvedValueOnce({ id: 'card', labels: [] })
+	getBoardLabelsMock.mockResolvedValueOnce([{ id: 'chore-id', name: 'chore' }])
+
+	await addLabelToCards(conf, ['card'], { ref: 'clean-code' })
+
+	expect(addLabelToCard).not.toHaveBeenCalled()
+})
+
+it('skips when branch category does not match existing labels', async () => {
+	getCardInfoMock.mockResolvedValueOnce({ id: 'card', labels: [] })
+	getBoardLabelsMock.mockResolvedValueOnce([{ id: 'feature-id', name: 'feature' }])
+
+	await addLabelToCards(conf, ['card'], head)
+
+	expect(addLabelToCard).not.toHaveBeenCalled()
+})
+
+it('skips when has conflicting label', async () => {
+	getCardInfoMock.mockResolvedValueOnce({ id: 'card', labels: [{ name: 'bugfix' }] })
+	getBoardLabelsMock.mockResolvedValueOnce([{ id: 'chore-id', name: 'chore' }])
+
+	await addLabelToCards({ ...conf, trelloConflictingLabels: ['bugfix'] }, ['card'], head)
+
+	expect(addLabelToCard).not.toHaveBeenCalled()
 })
 
 it('skips when turned off', async () => {
 	getCardInfoMock.mockResolvedValueOnce({ id: 'card', labels: [] })
 	getBoardLabelsMock.mockResolvedValueOnce([{ id: 'chore-id', name: 'chore' }])
 
-	await addLabelToCards(pr, { trelloAddLabelsToCards: false })
+	await addLabelToCards({ trelloAddLabelsToCards: false }, ['card'], head)
 
 	expect(addLabelToCard).not.toHaveBeenCalled()
 })

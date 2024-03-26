@@ -4,24 +4,19 @@ import updateCardMembers from './updateCardMembers'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
-jest.mock('./actions/api/github')
-jest.mock('./actions/api/trello')
+jest.mock('./api/github')
+jest.mock('./api/trello')
 
 const getPullRequestMock = getPullRequest as jest.Mock
 const getCommitsMock = getCommits as jest.Mock
 const getMemberInfoMock = getMemberInfo as jest.Mock
 const getCardInfoMock = getCardInfo as jest.Mock
 
-const pr = { number: 0, state: 'open', title: 'Title' }
 const conf = { githubUsersToTrelloUsers: 'jack: jones\namy: amy1993', trelloRemoveUnrelatedMembers: true }
 const prResponse = {
 	user: { login: 'phil' },
 	body: 'https://trello.com/c/card/title',
 }
-
-afterEach(() => {
-	getPullRequestMock.mockClear()
-})
 
 it('adds PR author and assignees to the card and removes unrelated members', async () => {
 	getPullRequestMock.mockResolvedValue({ ...prResponse, assignees: [{ login: 'amy' }] })
@@ -37,7 +32,7 @@ it('adds PR author and assignees to the card and removes unrelated members', asy
 	})
 	getCardInfoMock.mockResolvedValueOnce({ id: 'card', idMembers: ['jones-id'] })
 
-	await updateCardMembers(pr, conf)
+	await updateCardMembers(conf, ['card'])
 
 	expect(addMemberToCard).toHaveBeenCalledWith('card', 'phil-id')
 	expect(addMemberToCard).toHaveBeenCalledWith('card', 'amy-id')
@@ -45,12 +40,22 @@ it('adds PR author and assignees to the card and removes unrelated members', asy
 	expect(removeMemberFromCard).toHaveBeenCalledWith('card', 'jones-id')
 })
 
+it('skips removing unrelated members when none found', async () => {
+	getPullRequestMock.mockResolvedValue(prResponse)
+	getMemberInfoMock.mockResolvedValueOnce({ id: 'phil-id' })
+	getCardInfoMock.mockResolvedValueOnce({ id: 'card', idMembers: [] })
+
+	await updateCardMembers(conf, ['card'])
+
+	expect(removeMemberFromCard).not.toHaveBeenCalled()
+})
+
 it('skips removing unrelated members when turned off', async () => {
 	getPullRequestMock.mockResolvedValue(prResponse)
 	getMemberInfoMock.mockResolvedValueOnce({ id: 'phil-id' })
 	getCardInfoMock.mockResolvedValueOnce({ id: 'card', idMembers: ['jones-id'] })
 
-	await updateCardMembers(pr, { trelloRemoveUnrelatedMembers: false })
+	await updateCardMembers({ trelloRemoveUnrelatedMembers: false }, ['card'])
 
 	expect(removeMemberFromCard).not.toHaveBeenCalled()
 })
@@ -60,7 +65,7 @@ it('skips adding when all members are already assigned to the card', async () =>
 	getMemberInfoMock.mockResolvedValueOnce({ id: 'phil-id' })
 	getCardInfoMock.mockResolvedValueOnce({ id: 'card', idMembers: ['phil-id'] })
 
-	await updateCardMembers(pr)
+	await updateCardMembers({}, ['card'])
 
 	expect(addMemberToCard).not.toHaveBeenCalled()
 })
@@ -69,7 +74,7 @@ it('skips adding when member not found with GitHub username', async () => {
 	getPullRequestMock.mockResolvedValue(prResponse)
 	getMemberInfoMock.mockResolvedValue(undefined)
 
-	await updateCardMembers(pr)
+	await updateCardMembers({}, ['card'])
 
 	expect(addMemberToCard).not.toHaveBeenCalled()
 })

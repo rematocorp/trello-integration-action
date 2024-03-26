@@ -100,6 +100,7 @@ function getTrelloUsernameFromInputMap(conf: Conf, githubUserName?: string) {
 
 	for (const line of users.split(/[\r\n]/)) {
 		const parts = line.trim().split(':')
+
 		if (parts.length < 2) {
 			console.error('Mapping of Github user to Trello does not contain 2 usernames separated by ":"', line)
 			continue

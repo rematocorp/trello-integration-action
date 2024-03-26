@@ -1,41 +1,33 @@
 import addCardLinksToPullRequest from './addCardLinksToPullRequest'
-import { createComment, getBranchName, getPullRequestComments } from './api/github'
-import { getCardInfo, searchTrelloCards } from './api/trello'
+import { createComment, getPullRequestComments } from './api/github'
+import { getCardInfo } from './api/trello'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
-jest.mock('./actions/api/github')
-jest.mock('./actions/api/trello')
+jest.mock('./api/github')
+jest.mock('./api/trello')
 
 const getCardInfoMock = getCardInfo as jest.Mock
 const getPullRequestCommentsMock = getPullRequestComments as jest.Mock
-const getBranchNameMock = getBranchName as jest.Mock
-const searchTrelloCardsMock = searchTrelloCards as jest.Mock
 
-const pr = { number: 0, state: 'open', title: 'Title' }
 const conf = { githubIncludePrBranchName: true }
+const pr = { number: 0, state: 'open', title: 'Title' }
 
 it('adds link', async () => {
-	getBranchNameMock.mockResolvedValueOnce('1-card')
-	searchTrelloCardsMock.mockResolvedValueOnce([{ id: 'card' }])
 	getCardInfoMock.mockResolvedValueOnce({ shortUrl: 'short-url' })
 
-	await addCardLinksToPullRequest(pr, conf)
+	await addCardLinksToPullRequest(conf, ['card'], pr)
 
 	expect(getCardInfo).toHaveBeenCalledWith('card')
 	expect(createComment).toHaveBeenCalledWith('short-url')
 })
 
 it('adds multiple cards link', async () => {
-	getBranchNameMock.mockResolvedValue('1-2-card')
-	searchTrelloCardsMock
-		.mockResolvedValueOnce([{ id: '1-card', idShort: 1 }])
-		.mockResolvedValueOnce([{ id: '2-card', idShort: 2 }])
 	getCardInfoMock
 		.mockResolvedValueOnce({ shortUrl: '1-short-url' })
 		.mockResolvedValueOnce({ shortUrl: '2-short-url' })
 
-	await addCardLinksToPullRequest(pr, { ...conf, githubAllowMultipleCardsInPrBranchName: true })
+	await addCardLinksToPullRequest({ ...conf, githubAllowMultipleCardsInPrBranchName: true }, ['1-card', '2-card'], pr)
 
 	expect(getCardInfo).toHaveBeenNthCalledWith(1, '1-card')
 	expect(getCardInfo).toHaveBeenNthCalledWith(2, '2-card')
@@ -43,20 +35,20 @@ it('adds multiple cards link', async () => {
 })
 
 it('skips link adding when already in PR description', async () => {
-	getBranchNameMock.mockResolvedValueOnce('1-card')
-	searchTrelloCardsMock.mockResolvedValueOnce([{ id: 'card' }])
-
-	await addCardLinksToPullRequest({ ...pr, body: 'https://trello.com/c/card/title' }, conf)
-
+	await addCardLinksToPullRequest(conf, ['card'], { ...pr, body: 'https://trello.com/c/card/title' })
 	expect(createComment).not.toHaveBeenCalled()
 })
 
 it('skips link adding when already in PR comment', async () => {
-	getBranchNameMock.mockResolvedValueOnce('1-card')
-	searchTrelloCardsMock.mockResolvedValueOnce([{ id: 'card' }])
 	getPullRequestCommentsMock.mockResolvedValueOnce([{ body: 'https://trello.com/c/card/title' }])
 
-	await addCardLinksToPullRequest(pr, conf)
+	await addCardLinksToPullRequest(conf, ['card'], pr)
+
+	expect(createComment).not.toHaveBeenCalled()
+})
+
+it('skips when turned off', async () => {
+	await addCardLinksToPullRequest({ githubIncludePrBranchName: false }, ['card'], pr)
 
 	expect(createComment).not.toHaveBeenCalled()
 })

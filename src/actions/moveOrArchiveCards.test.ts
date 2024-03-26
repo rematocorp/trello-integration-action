@@ -4,8 +4,8 @@ import moveOrArchiveCards from './moveOrArchiveCards'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
-jest.mock('./actions/api/github')
-jest.mock('./actions/api/trello')
+jest.mock('./api/github')
+jest.mock('./api/trello')
 
 const getCardInfoMock = getCardInfo as jest.Mock
 const getBoardListsMock = getBoardLists as jest.Mock
@@ -20,18 +20,18 @@ describe('Moving cards', () => {
 		const conf = { trelloListIdPrDraft: 'draft-list-id' }
 
 		it('moves the card to Draft list', async () => {
-			await moveOrArchiveCards({ ...pr, draft: true }, conf)
+			await moveOrArchiveCards(conf, ['card'], { ...pr, draft: true })
 			expect(moveCardToList).toHaveBeenCalledWith('card', 'draft-list-id', undefined)
 
-			await moveOrArchiveCards({ ...pr, title: '[DRAFT] Title' }, conf)
+			await moveOrArchiveCards(conf, ['card'], { ...pr, title: '[DRAFT] Title' })
 			expect(moveCardToList).toHaveBeenNthCalledWith(2, 'card', 'draft-list-id', undefined)
 
-			await moveOrArchiveCards({ ...pr, title: '[WIP] Title' }, conf)
+			await moveOrArchiveCards(conf, ['card'], { ...pr, title: '[WIP] Title' })
 			expect(moveCardToList).toHaveBeenNthCalledWith(3, 'card', 'draft-list-id', undefined)
 		})
 
 		it('skips move when list not configured', async () => {
-			await moveOrArchiveCards(pr, {})
+			await moveOrArchiveCards({}, ['card'], pr)
 			expect(moveCardToList).not.toHaveBeenCalled()
 		})
 	})
@@ -41,12 +41,12 @@ describe('Moving cards', () => {
 		const conf = { trelloListIdPrOpen: 'open-list-id' }
 
 		it('moves the card to Open list', async () => {
-			await moveOrArchiveCards(pr, conf)
+			await moveOrArchiveCards(conf, ['card'], pr)
 			expect(moveCardToList).toHaveBeenCalledWith('card', 'open-list-id', undefined)
 		})
 
 		it('skips move when list not configured', async () => {
-			await moveOrArchiveCards(pr, {})
+			await moveOrArchiveCards({}, ['card'], pr)
 			expect(moveCardToList).not.toHaveBeenCalled()
 		})
 	})
@@ -56,12 +56,12 @@ describe('Moving cards', () => {
 		const conf = { trelloListIdPrClosed: 'closed-list-id' }
 
 		it('moves the card to Closed list', async () => {
-			await moveOrArchiveCards(pr, conf)
+			await moveOrArchiveCards(conf, ['card'], pr)
 			expect(moveCardToList).toHaveBeenCalledWith('card', 'closed-list-id', undefined)
 		})
 
 		it('skips move when list not configured', async () => {
-			await moveOrArchiveCards(pr, {})
+			await moveOrArchiveCards({}, ['card'], pr)
 			expect(moveCardToList).not.toHaveBeenCalled()
 		})
 	})
@@ -71,7 +71,7 @@ describe('Moving cards', () => {
 		const conf = { trelloListIdPrClosed: 'closed-list-id', trelloBoardId: 'board-id' }
 
 		it('moves to the board', async () => {
-			await moveOrArchiveCards(pr, conf)
+			await moveOrArchiveCards(conf, ['card'], pr)
 			expect(moveCardToList).toHaveBeenCalledWith('card', 'closed-list-id', 'board-id')
 		})
 	})
@@ -84,7 +84,7 @@ describe('Moving cards', () => {
 			getCardInfoMock.mockResolvedValueOnce({ idBoard: 'board-id' })
 			getBoardListsMock.mockResolvedValueOnce([{ id: 'another-closed-list-id' }])
 
-			await moveOrArchiveCards(pr, conf)
+			await moveOrArchiveCards(conf, ['card'], pr)
 
 			expect(getBoardListsMock).toHaveBeenCalledWith('board-id')
 			expect(moveCardToList).toHaveBeenCalledWith('card', 'another-closed-list-id')
@@ -98,14 +98,14 @@ describe('Archiving cards on merge', () => {
 	beforeEach(() => isPullRequestMergedMock.mockResolvedValueOnce(true))
 
 	it('archives cards and does not move to closed list', async () => {
-		await moveOrArchiveCards(pr, { trelloListIdPrClosed: 'closed-list-id', trelloArchiveOnMerge: true })
+		await moveOrArchiveCards({ trelloListIdPrClosed: 'closed-list-id', trelloArchiveOnMerge: true }, ['card'], pr)
 
 		expect(archiveCardMock).toHaveBeenCalledWith('card')
 		expect(moveCardToList).not.toHaveBeenCalled()
 	})
 
 	it('skips archiving when not configured', async () => {
-		await moveOrArchiveCards(pr, {})
+		await moveOrArchiveCards({}, ['card'], pr)
 		expect(archiveCardMock).not.toHaveBeenCalled()
 	})
 })

@@ -17,7 +17,7 @@ jest.mock('./actions')
 
 const getCardIdsMock = getCardIds as jest.Mock
 
-const pr = { number: 0, state: 'open', title: 'Title', head: 'head', html_url: 'url' }
+const pr = { number: 0, state: 'open', title: 'Title', head: 'head' }
 const conf = { trelloListIdPrOpen: '123' }
 
 it('triggers all actions when cards found', async () => {
@@ -28,7 +28,7 @@ it('triggers all actions when cards found', async () => {
 	await run(pr, conf)
 
 	expect(addCardLinksToPullRequest).toHaveBeenCalledWith(conf, cardIds, pr)
-	expect(addPullRequestLinkToCards).toHaveBeenCalledWith(cardIds, pr.html_url)
+	expect(addPullRequestLinkToCards).toHaveBeenCalledWith(cardIds, pr)
 	expect(moveOrArchiveCards).toHaveBeenCalledWith(conf, cardIds, pr)
 	expect(addLabelToCards).toHaveBeenCalledWith(conf, cardIds, pr.head)
 	expect(updateCardMembers).toHaveBeenCalledWith(conf, cardIds)

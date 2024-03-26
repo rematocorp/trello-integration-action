@@ -1,6 +1,9 @@
+import { PR } from '../types'
 import { addAttachmentToCard, getCardAttachments } from './api/trello'
 
-export default async function addPullRequestLinkToCards(cardIds: string[], link: string) {
+export default async function addPullRequestLinkToCards(cardIds: string[], pr: PR) {
+	const link = pr.html_url || pr.url
+
 	return Promise.all(
 		cardIds.map(async (cardId) => {
 			const existingAttachments = await getCardAttachments(cardId)
