@@ -1,6 +1,6 @@
 import axios from 'axios'
 import * as core from '@actions/core'
-import { BoardLabel } from './types'
+import { BoardLabel } from '../../types'
 
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })

@@ -55,7 +55,9 @@
 		],
 		"collectCoverage": true,
 		"collectCoverageFrom": [
-			"./src/**"
+			"src/**",
+			"!src/index.ts",
+			"!src/actions/api/**"
 		]
 	},
 	"eslintConfig": {
