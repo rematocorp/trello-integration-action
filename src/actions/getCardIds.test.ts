@@ -57,6 +57,17 @@ describe('Finding cards', () => {
 		expect(cardIds).toEqual(['card1', 'card2'])
 	})
 
+	it('finds card with keyword prefix', async () => {
+		const cardIds = await getCardIds(
+			{ githubRequireKeywordPrefix: true },
+			{
+				...pr,
+				body: 'Fixes https://trello.com/c/card/title',
+			},
+		)
+		expect(cardIds).toEqual(['card'])
+	})
+
 	describe('from branch name', () => {
 		it('finds basic card', async () => {
 			getBranchNameMock.mockResolvedValueOnce('1-card')

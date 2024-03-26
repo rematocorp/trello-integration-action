@@ -78,3 +78,13 @@ it('skips adding when member not found with GitHub username', async () => {
 
 	expect(addMemberToCard).not.toHaveBeenCalled()
 })
+
+it('skips adding when member not part of the org', async () => {
+	getPullRequestMock.mockResolvedValue(prResponse)
+	getMemberInfoMock.mockResolvedValueOnce({ id: 'phil-id', organizations: [{ name: 'foo' }] })
+	getCardInfoMock.mockResolvedValueOnce({ id: 'card', idMembers: ['phil-id'] })
+
+	await updateCardMembers({ trelloOrganizationName: 'remato' }, ['card'])
+
+	expect(addMemberToCard).not.toHaveBeenCalled()
+})
