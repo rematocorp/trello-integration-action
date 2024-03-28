@@ -13,8 +13,6 @@ and triggering following actions:
 -   assigns a PR author and fellow contributors/assignees to a Trello card,
 -   and more...
 
-Optionally, you can create a new Trello card containing PR details by adding `/new-trello-card` to the PR description.
-
 ## Basic configuration
 
 ```yaml
