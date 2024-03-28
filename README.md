@@ -23,7 +23,7 @@ on:
     issue_comment:
         types: [created, edited]
 jobs:
-    integrate:
+    trello:
         runs-on: ubuntu-latest
         steps:
             - uses: rematocorp/trello-integration-action@v9
@@ -113,7 +113,7 @@ trello-organization-name: remato
 # DEFAULT: true
 trello-add-labels-to-cards: true
 
-# When a card has one of these labels then branch category label is not assigned.
+# When a card already has one of these labels then branch category label is not assigned.
 trello-conflicting-labels: 'feature;bug;chore'
 
 # Removes card members who are not authors, contributors or assignees of the PR.
