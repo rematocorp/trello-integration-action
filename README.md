@@ -129,7 +129,7 @@ trello-archive-on-merge: false
 
 ### Multiple boards support
 
-Separate different boards list IDs using `;`. The action will move the card to a list that exists on the board where the card is currently located.
+Use `;` to separate multiple board list IDs. The action will transfer the card to an existing list on its current board.
 
 ```yaml
 trello-list-id-pr-closed: '6603333cf96e4419a590d9ab;66025544a40b6a11a12233de;77788894a40b6a11a12233de'
