@@ -3,7 +3,7 @@
 This GitHub action seamlessly integrates GitHub with Trello by scanning:
 
 -   Trello card URLs from PR description and comments,
--   Trello card ID from PR branch name,
+-   Trello card short ID from PR branch name,
 
 and triggering following actions:
 
