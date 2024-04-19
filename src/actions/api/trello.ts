@@ -128,6 +128,18 @@ async function makeRequest(method: 'get' | 'put' | 'post' | 'delete', url: strin
 
 		return response
 	} catch (error: any) {
-		console.error('Failed to make a request', url, params, error.response.status, error.response.statusText)
+		const errorMessage = {
+			message: 'Failed to make a request',
+			method,
+			url,
+			params,
+			error: {
+				status: error.response?.status,
+				statusText: error.response?.statusText,
+				data: error.response?.data,
+				message: error.message,
+			},
+		}
+		console.error(JSON.stringify(errorMessage, null, 2))
 	}
 }
