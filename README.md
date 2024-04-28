@@ -1,5 +1,7 @@
 # Trello Card & GitHub PR Integration
 
+[![codecov](https://codecov.io/gh/rematocorp/trello-integration-action/graph/badge.svg?token=NDT35FM2LG)](https://codecov.io/gh/rematocorp/trello-integration-action)
+
 This GitHub action seamlessly integrates GitHub with Trello by scanning:
 
 -   Trello card URLs from PR description and comments,

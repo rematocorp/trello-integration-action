@@ -50,9 +50,6 @@
 		"transform": {
 			"^.+\\.ts$": "ts-jest"
 		},
-		"coverageReporters": [
-			"text"
-		],
 		"collectCoverage": true,
 		"collectCoverageFrom": [
 			"src/**",
