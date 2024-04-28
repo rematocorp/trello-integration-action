@@ -1,7 +1,7 @@
 # Trello Card & GitHub PR Integration
 
-[![build](https://github.com/rematocorp/trello-integration-action/actions/workflows/ci.yml/badge.svg)](https://github.com/rematocorp/trello-integration-action/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/rematocorp/trello-integration-action/graph/badge.svg?token=NDT35FM2LG)](https://codecov.io/gh/rematocorp/trello-integration-action)
+[![Build](https://img.shields.io/github/actions/workflow/status/rematocorp/trello-integration-action/ci.yml)](https://github.com/rematocorp/trello-integration-action/actions/workflows/ci.yml)
+[![Codecov](https://img.shields.io/codecov/c/github/rematocorp/trello-integration-action?token=NDT35FM2LG&style=flat)](https://codecov.io/gh/rematocorp/trello-integration-action)
 
 This GitHub action seamlessly integrates GitHub with Trello by scanning:
 
