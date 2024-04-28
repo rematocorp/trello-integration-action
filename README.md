@@ -25,8 +25,6 @@ on:
 jobs:
     trello:
         runs-on: ubuntu-latest
-        permissions:
-          pull-requests: write
         steps:
             - uses: rematocorp/trello-integration-action@v9
               with:
@@ -55,6 +53,7 @@ github-include-pr-comments: true
 
 # Uses the branch name to find card id (e.g. feature/38-card-title).
 # Comments card URL to the PR if found.
+# NOTE: Make sure you set `pull-requests: write` permission for the job https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
 # DEFAULT: false
 github-include-pr-branch-name: false
 
@@ -65,6 +64,7 @@ github-allow-multiple-cards-in-pr-branch-name: false
 
 # Creates a new Trello card from PR details if "/new-trello-card" is written in the PR description.
 # Replaces "/new-trello-card" with the card link.
+# NOTE: Make sure you set `pull-requests: write` permission for the job https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
 # DEFAULT: false
 github-include-new-card-command: false
 
