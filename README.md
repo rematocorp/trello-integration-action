@@ -25,6 +25,8 @@ on:
 jobs:
     trello:
         runs-on: ubuntu-latest
+        permissions:
+          pull-requests: write
         steps:
             - uses: rematocorp/trello-integration-action@v9
               with:
