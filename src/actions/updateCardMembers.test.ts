@@ -40,6 +40,17 @@ it('adds PR author and assignees to the card and removes unrelated members', asy
 	expect(removeMemberFromCard).toHaveBeenCalledWith('card', 'jones-id')
 })
 
+it('adds committer to the card', async () => {
+	getPullRequestMock.mockResolvedValue(prResponse)
+	getCommitsMock.mockResolvedValue([{ committer: { login: 'john' } }])
+	getMemberInfoMock.mockResolvedValue({ id: 'john-id' })
+	getCardInfoMock.mockResolvedValueOnce({ id: 'card', idMembers: [] })
+
+	await updateCardMembers(conf, ['card'])
+
+	expect(addMemberToCard).toHaveBeenCalledWith('card', 'john-id')
+})
+
 it('skips removing unrelated members when none found', async () => {
 	getPullRequestMock.mockResolvedValue(prResponse)
 	getMemberInfoMock.mockResolvedValueOnce({ id: 'phil-id' })
