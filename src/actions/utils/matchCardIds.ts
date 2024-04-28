@@ -32,11 +32,10 @@ function extractUniqueCardIds(matches: string[]): string[] {
 	return Array.from(
 		new Set(
 			matches.flatMap((match) => {
-				// Find card URLs
-				const urlMatches = match.match(new RegExp(CARD_URL_REGEX, 'g')) || []
-
 				// Extract card IDs from the URLs
-				return urlMatches.map((url) => url.match(new RegExp(CARD_URL_REGEX))?.[1] || '')
+				return match
+					.match(new RegExp(CARD_URL_REGEX, 'g'))!
+					.map((url) => url.match(new RegExp(CARD_URL_REGEX))?.[1]) as string[]
 			}),
 		),
 	)
