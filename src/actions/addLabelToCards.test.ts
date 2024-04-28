@@ -1,5 +1,6 @@
 import addLabelToCards from './addLabelToCards'
 import { addLabelToCard, getBoardLabels, getCardInfo } from './api/trello'
+import { getBranchName } from './api/github'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')
@@ -8,6 +9,7 @@ jest.mock('./api/trello')
 
 const getCardInfoMock = getCardInfo as jest.Mock
 const getBoardLabelsMock = getBoardLabels as jest.Mock
+const getBranchNameMock = getBranchName as jest.Mock
 
 const head = { ref: 'chore/clean-code' }
 const conf = { trelloAddLabelsToCards: true }
@@ -17,6 +19,16 @@ it('adds branch category as a card label', async () => {
 	getBoardLabelsMock.mockResolvedValueOnce([{ id: 'chore-id', name: 'chore' }])
 
 	await addLabelToCards(conf, ['card'], head)
+
+	expect(addLabelToCard).toHaveBeenCalledWith('card', 'chore-id')
+})
+
+it('adds requested branch category as a card label', async () => {
+	getBranchNameMock.mockResolvedValueOnce('chore/clean-code')
+	getCardInfoMock.mockResolvedValueOnce({ id: 'card', labels: [] })
+	getBoardLabelsMock.mockResolvedValueOnce([{ id: 'chore-id', name: 'chore' }])
+
+	await addLabelToCards(conf, ['card'])
 
 	expect(addLabelToCard).toHaveBeenCalledWith('card', 'chore-id')
 })
@@ -53,6 +65,15 @@ it('skips when has conflicting label', async () => {
 	getBoardLabelsMock.mockResolvedValueOnce([{ id: 'chore-id', name: 'chore' }])
 
 	await addLabelToCards({ ...conf, trelloConflictingLabels: ['bugfix'] }, ['card'], head)
+
+	expect(addLabelToCard).not.toHaveBeenCalled()
+})
+
+it('skips when correct label is already assigned', async () => {
+	getCardInfoMock.mockResolvedValueOnce({ id: 'card', labels: [{ name: 'chore' }] })
+	getBoardLabelsMock.mockResolvedValueOnce([{ id: 'chore-id', name: 'chore' }])
+
+	await addLabelToCards(conf, ['card'], head)
 
 	expect(addLabelToCard).not.toHaveBeenCalled()
 })

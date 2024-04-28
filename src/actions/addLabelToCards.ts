@@ -2,7 +2,7 @@ import { BoardLabel, Conf, PRHead } from '../types'
 import { getBranchName } from './api/github'
 import { addLabelToCard, getBoardLabels, getCardInfo } from './api/trello'
 
-export default async function addLabelToCards(conf: Conf, cardIds: string[], head: PRHead) {
+export default async function addLabelToCards(conf: Conf, cardIds: string[], head?: PRHead) {
 	if (!conf.trelloAddLabelsToCards) {
 		console.log('Skipping label adding')
 

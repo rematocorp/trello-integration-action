@@ -60,12 +60,8 @@ async function getPullRequestContributors() {
 	return Array.from(contributors)
 }
 
-async function getTrelloMemberId(conf: Conf, githubUserName?: string) {
-	let username = githubUserName?.replace('-', '_')
-
-	if (conf.githubUsersToTrelloUsers?.trim()) {
-		username = getTrelloUsernameFromInputMap(conf, githubUserName) || username
-	}
+async function getTrelloMemberId(conf: Conf, githubUsername?: string) {
+	const username = getTrelloUsername(conf, githubUsername)
 
 	console.log('Searching Trello member id by username', username)
 
@@ -74,7 +70,7 @@ async function getTrelloMemberId(conf: Conf, githubUserName?: string) {
 	if (!member) {
 		return
 	}
-	console.log('Found member id by name', member.id, username)
+	console.log('Found member id by username', member.id, username)
 
 	if (conf.trelloOrganizationName) {
 		const hasAccess = member.organizations?.some((org) => org.name === conf.trelloOrganizationName)
@@ -89,22 +85,28 @@ async function getTrelloMemberId(conf: Conf, githubUserName?: string) {
 	return member.id
 }
 
-function getTrelloUsernameFromInputMap(conf: Conf, githubUserName?: string) {
+function getTrelloUsername(conf: Conf, githubUsername?: string) {
+	const username = githubUsername?.replace('-', '_')
+	const usernamesMap = conf.githubUsersToTrelloUsers?.trim()
+
+	if (!usernamesMap) {
+		return username
+	}
 	console.log('Mapping Github users to Trello users')
 
-	const users = conf.githubUsersToTrelloUsers || ''
-
-	for (const line of users.split(/[\r\n]/)) {
+	for (const line of usernamesMap.split(/[\r\n]/)) {
 		const parts = line.trim().split(':')
 
 		if (parts.length < 2) {
 			console.error('Mapping of Github user to Trello does not contain 2 usernames separated by ":"', line)
 			continue
 		}
-		if (parts[0].trim() === githubUserName && parts[1].trim() !== '') {
+		if (parts[0].trim() === githubUsername && parts[1].trim() !== '') {
 			return parts[1].trim()
 		}
 	}
+
+	return username
 }
 
 async function removeUnrelatedMembers(cardInfo: any, memberIds: string[]) {

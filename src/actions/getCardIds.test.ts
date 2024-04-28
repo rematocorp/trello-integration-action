@@ -168,7 +168,11 @@ describe('Finding cards', () => {
 })
 
 describe('Creating new card', () => {
-	const conf = { trelloListIdPrOpen: 'open-list-id', githubIncludeNewCardCommand: true }
+	const conf = {
+		trelloListIdPrOpen: 'open-list-id',
+		trelloListIdPrDraft: 'draft-list-id',
+		githubIncludeNewCardCommand: true,
+	}
 
 	it('adds new card, updates PR body and adds to card ids list', async () => {
 		createCardMock.mockResolvedValueOnce({ id: 'card-id', url: 'card-url' })
@@ -178,6 +182,14 @@ describe('Creating new card', () => {
 		expect(createCard).toHaveBeenCalledWith('open-list-id', 'Title', ' Description')
 		expect(updatePullRequestBody).toHaveBeenCalledWith('card-url Description')
 		expect(cardIds).toEqual(['card-id'])
+	})
+
+	it('adds new card to draft list', async () => {
+		createCardMock.mockResolvedValueOnce({ id: 'card-id', url: 'card-url' })
+
+		await getCardIds(conf, { ...pr, body: '/new-trello-card Description', draft: true })
+
+		expect(createCard).toHaveBeenCalledWith('draft-list-id', 'Title', ' Description')
 	})
 
 	it('skips when no command found', async () => {

@@ -89,6 +89,15 @@ describe('Moving cards', () => {
 			expect(getBoardListsMock).toHaveBeenCalledWith('board-id')
 			expect(moveCardToList).toHaveBeenCalledWith('card', 'another-closed-list-id')
 		})
+
+		it('moves to first configured list when none of the lists exist on the current board', async () => {
+			getCardInfoMock.mockResolvedValueOnce({ idBoard: 'board-id' })
+			getBoardListsMock.mockResolvedValueOnce([{ id: 'list-id' }])
+
+			await moveOrArchiveCards(conf, ['card'], pr)
+
+			expect(moveCardToList).toHaveBeenCalledWith('card', 'closed-list-id')
+		})
 	})
 })
 
