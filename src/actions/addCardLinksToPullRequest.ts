@@ -26,6 +26,8 @@ export default async function addCardLinksToPullRequest(conf: Conf, cardIds: str
 	console.log('Commenting Trello card URLs to PR', cardIds)
 
 	const cards = await Promise.all(cardIds.map((id) => getCardInfo(id)))
+	const urls = cards.map((card) => card.shortUrl)
+	const comment = conf.githubRequireKeywordPrefix ? `Closes ${urls.join(' ')}` : urls.join('\n')
 
-	await createComment(cards.map((card) => card.shortUrl).join('\n'))
+	await createComment(comment)
 }

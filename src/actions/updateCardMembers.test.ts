@@ -70,6 +70,14 @@ it('skips adding when all members are already assigned to the card', async () =>
 	expect(addMemberToCard).not.toHaveBeenCalled()
 })
 
+it('ignores incorrectly configured usernames mapping', async () => {
+	getPullRequestMock.mockResolvedValue(prResponse)
+
+	await updateCardMembers({ githubUsersToTrelloUsers: 'phil' }, ['card'])
+
+	expect(getMemberInfoMock).toHaveBeenCalledWith('phil')
+})
+
 it('skips adding when member not found with GitHub username', async () => {
 	getPullRequestMock.mockResolvedValue(prResponse)
 	getMemberInfoMock.mockResolvedValue(undefined)
@@ -83,6 +91,14 @@ it('skips adding when member not part of the org', async () => {
 	getPullRequestMock.mockResolvedValue(prResponse)
 	getMemberInfoMock.mockResolvedValueOnce({ id: 'phil-id', organizations: [{ name: 'foo' }] })
 	getCardInfoMock.mockResolvedValueOnce({ id: 'card', idMembers: ['phil-id'] })
+
+	await updateCardMembers({ trelloOrganizationName: 'remato' }, ['card'])
+
+	expect(addMemberToCard).not.toHaveBeenCalled()
+})
+
+it('skips adding when PR not found', async () => {
+	getPullRequestMock.mockResolvedValue(null)
 
 	await updateCardMembers({ trelloOrganizationName: 'remato' }, ['card'])
 

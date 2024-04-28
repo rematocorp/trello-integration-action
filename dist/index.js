@@ -33976,7 +33976,9 @@ async function addCardLinksToPullRequest(conf, cardIds, pr) {
     }
     console.log('Commenting Trello card URLs to PR', cardIds);
     const cards = await Promise.all(cardIds.map((id) => (0, trello_1.getCardInfo)(id)));
-    await (0, github_1.createComment)(cards.map((card) => card.shortUrl).join('\n'));
+    const urls = cards.map((card) => card.shortUrl);
+    const comment = conf.githubRequireKeywordPrefix ? `Closes ${urls.join(' ')}` : urls.join('\n');
+    await (0, github_1.createComment)(comment);
 }
 exports["default"] = addCardLinksToPullRequest;
 
@@ -34031,9 +34033,6 @@ async function getBranchLabel(prHead) {
     }
 }
 function findMatchingLabel(branchLabel, boardLabels) {
-    if (!branchLabel) {
-        return;
-    }
     const match = boardLabels.find((label) => label.name === branchLabel);
     if (match) {
         return match;
@@ -34407,6 +34406,9 @@ async function getCardIdsFromBranchName(conf, prHead) {
 }
 async function getTrelloCardByShortId(shortId, boardId) {
     const cardsWithNumberMatch = await (0, trello_1.searchTrelloCards)(shortId, boardId);
+    console.error('NO MIDA', cardsWithNumberMatch
+        ?.sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
+        .find((card) => card.idShort === parseInt(shortId))?.id);
     return cardsWithNumberMatch
         ?.sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
         .find((card) => card.idShort === parseInt(shortId))?.id;
@@ -34540,13 +34542,9 @@ async function getPullRequestContributors() {
     }
     const commits = await (0, github_1.getCommits)();
     for (const commit of commits || []) {
-        const author = commit.author?.login;
-        const committer = commit.committer?.login;
+        const author = commit.author?.login || commit.committer?.login;
         if (author) {
             contributors.add(author);
-        }
-        if (committer) {
-            contributors.add(committer);
         }
     }
     return Array.from(contributors);
@@ -34730,7 +34728,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core_1 = __nccwpck_require__(2186);
 const actions_1 = __nccwpck_require__(6535);
-async function run(pr, conf = {}) {
+async function run(pr, conf) {
     try {
         const cardIds = await (0, actions_1.getCardIds)(conf, pr);
         if (cardIds.length) {

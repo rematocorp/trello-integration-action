@@ -50,14 +50,10 @@ async function getPullRequestContributors() {
 	const commits = await getCommits()
 
 	for (const commit of commits || []) {
-		const author = commit.author?.login
-		const committer = commit.committer?.login
+		const author = commit.author?.login || commit.committer?.login
 
 		if (author) {
 			contributors.add(author)
-		}
-		if (committer) {
-			contributors.add(committer)
 		}
 	}
 

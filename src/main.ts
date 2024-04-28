@@ -9,7 +9,7 @@ import {
 	updateCardMembers,
 } from './actions'
 
-export async function run(pr: PR, conf: Conf = {}) {
+export async function run(pr: PR, conf: Conf) {
 	try {
 		const cardIds = await getCardIds(conf, pr)
 

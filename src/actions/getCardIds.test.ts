@@ -9,7 +9,6 @@ jest.mock('./api/github')
 jest.mock('./api/trello')
 
 const getPullRequestMock = getPullRequest as jest.Mock
-const getCardInfoMock = getCardInfo as jest.Mock
 const getPullRequestCommentsMock = getPullRequestComments as jest.Mock
 const getBranchNameMock = getBranchName as jest.Mock
 const searchTrelloCardsMock = searchTrelloCards as jest.Mock
@@ -106,7 +105,6 @@ describe('Finding cards', () => {
 	describe('from branch name', () => {
 		it('finds basic card', async () => {
 			getBranchNameMock.mockResolvedValueOnce('1-card')
-			getCardInfoMock.mockResolvedValueOnce({ shortUrl: 'short-url' })
 			searchTrelloCardsMock.mockResolvedValueOnce([{ id: 'card' }])
 
 			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, pr)
@@ -117,7 +115,6 @@ describe('Finding cards', () => {
 
 		it('finds categorized card', async () => {
 			getBranchNameMock.mockResolvedValueOnce('feature/1-card')
-			getCardInfoMock.mockResolvedValueOnce({ shortUrl: 'short-url' })
 			searchTrelloCardsMock.mockResolvedValueOnce([{ id: 'card' }])
 
 			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, pr)
@@ -128,18 +125,18 @@ describe('Finding cards', () => {
 
 		it('finds card with short ID', async () => {
 			getBranchNameMock.mockResolvedValueOnce('1-nan')
-			searchTrelloCardsMock.mockResolvedValueOnce([]).mockResolvedValueOnce([{ id: 'card', idShort: 1 }])
-			getCardInfoMock.mockResolvedValueOnce({ shortUrl: 'short-url' })
+			searchTrelloCardsMock.mockResolvedValueOnce([]).mockResolvedValueOnce([
+				{ id: 'card-1', idShort: 1, dateLastActivity: '2023-01-01' },
+				{ id: 'card-2', idShort: 1, dateLastActivity: '2024-01-01' },
+			])
 
 			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, pr)
 
-			expect(searchTrelloCards).toHaveBeenLastCalledWith('1', undefined)
-			expect(cardIds).toEqual(['card'])
+			expect(cardIds).toEqual(['card-2'])
 		})
 
 		it('finds multiple cards', async () => {
 			getBranchNameMock.mockResolvedValueOnce('1-2-card')
-			getCardInfoMock.mockResolvedValue({ shortUrl: 'short-url' })
 			searchTrelloCardsMock
 				.mockResolvedValueOnce([{ id: '1-card', idShort: 1 }])
 				.mockResolvedValueOnce([{ id: '2-card', idShort: 2 }])

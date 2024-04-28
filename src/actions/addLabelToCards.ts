@@ -54,9 +54,6 @@ async function getBranchLabel(prHead?: PRHead) {
 }
 
 function findMatchingLabel(branchLabel: string, boardLabels: BoardLabel[]) {
-	if (!branchLabel) {
-		return
-	}
 	const match = boardLabels.find((label) => label.name === branchLabel)
 
 	if (match) {
