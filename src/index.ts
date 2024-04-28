@@ -5,6 +5,7 @@ import { PR } from './types'
 
 run((context.payload.pull_request || context.payload.issue) as PR, {
 	githubRequireKeywordPrefix: core.getBooleanInput('github-require-keyword-prefix'),
+	githubEnableRelatedKeywordPrefix: core.getBooleanInput('github-enable-related-keyword-prefix'),
 	githubRequireTrelloCard: core.getBooleanInput('github-require-trello-card'),
 	githubIncludePrComments: core.getBooleanInput('github-include-pr-comments'),
 	githubIncludePrBranchName: core.getBooleanInput('github-include-pr-branch-name'),

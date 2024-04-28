@@ -11,6 +11,9 @@ inputs:
     github-require-keyword-prefix:
         description: When set to true, match only URLs prefixed with “Closes” etc. Just like https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword.
         default: false
+    github-enable-related-keyword-prefix:
+        description: When set to true, ignore URLs prefixed with "Related".
+        default: false
     github-require-trello-card:
         description: Throw an error if no Trello cards can be found in the PR description.
         default: false

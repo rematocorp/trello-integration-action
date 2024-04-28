@@ -1,12 +1,13 @@
 import { context } from '@actions/github'
 
 export interface Conf {
+	githubRequireKeywordPrefix?: boolean
 	githubRequireTrelloCard?: boolean
+	githubEnableRelatedKeywordPrefix?: boolean
 	githubIncludePrComments?: boolean
 	githubIncludePrBranchName?: boolean
 	githubAllowMultipleCardsInPrBranchName?: boolean
 	githubIncludeNewCardCommand?: boolean
-	githubRequireKeywordPrefix?: boolean
 	githubUsersToTrelloUsers?: string
 	trelloListIdPrDraft?: string
 	trelloListIdPrOpen?: string

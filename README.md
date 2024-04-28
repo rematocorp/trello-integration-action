@@ -79,6 +79,13 @@ github-include-new-card-command: false
 # DEFAULT: false
 github-require-keyword-prefix: false
 
+# Ignores Trello URLs prefixed with "Related".
+#
+# Alternative approach when you don't want to use github-require-keyword-prefix but still want to link related cards for extra context.
+#
+# DEFAULT: false
+github-enable-related-keyword-prefix: false
+
 # Throws an error if no Trello card can be found in the PR.
 #
 # DEFAULT: false

@@ -68,6 +68,41 @@ describe('Finding cards', () => {
 		expect(cardIds).toEqual(['card'])
 	})
 
+	describe('related cards', () => {
+		it('does not match related cards', async () => {
+			const cardIds = await getCardIds(
+				{ githubEnableRelatedKeywordPrefix: true },
+				{
+					...pr,
+					body: 'Related https://trello.com/c/card/title',
+				},
+			)
+			expect(cardIds).toEqual([])
+		})
+
+		it('does not match multiple related cards', async () => {
+			const cardIds = await getCardIds(
+				{ githubEnableRelatedKeywordPrefix: true },
+				{
+					...pr,
+					body: 'Relates to https://trello.com/c/card1/title https://trello.com/c/card2/title',
+				},
+			)
+			expect(cardIds).toEqual([])
+		})
+
+		it('matches related cards when feature is turned off', async () => {
+			const cardIds = await getCardIds(
+				{ githubEnableRelatedKeywordPrefix: false },
+				{
+					...pr,
+					body: 'Related https://trello.com/c/card/title',
+				},
+			)
+			expect(cardIds).toEqual(['card'])
+		})
+	})
+
 	describe('from branch name', () => {
 		it('finds basic card', async () => {
 			getBranchNameMock.mockResolvedValueOnce('1-card')

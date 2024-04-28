@@ -34634,22 +34634,34 @@ exports["default"] = isDraftPullRequest;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const CARD_URL_REGEX = 'https://trello\\.com/c/(\\w+)(?:/[^\\s,]*)?';
+const INCLUSION_KEYWORDS = ['close', 'closes', 'closed', 'fix', 'fixes', 'fixed', 'resolve', 'resolves', 'resolved'];
+const EXCLUSION_KEYWORDS = ['related', 'relates', 'related to', 'relates to'];
 function matchCardIds(conf, text) {
-    const keywords = ['close', 'closes', 'closed', 'fix', 'fixes', 'fixed', 'resolve', 'resolves', 'resolved'];
-    const keywordsRegExp = conf.githubRequireKeywordPrefix ? '(?:' + keywords.join('|') + ')\\s+' : '';
-    const urlRegExp = 'https://trello\\.com/c/(\\w+)(?:/[^\\s,]*)?';
-    const closesRegExp = `${keywordsRegExp}${urlRegExp}(?:\\s*,\\s*${urlRegExp})*`;
-    // Find all “Closes URL, URL…”
-    const matches = text?.match(new RegExp(closesRegExp, 'gi')) || [];
-    return Array.from(new Set(matches.flatMap((match) => {
-        // Find URLs
-        const urlMatches = match.match(new RegExp(urlRegExp, 'g')) || [];
-        // Find cardId in the URL (only capture group in urlRegexp)
-        const cardIds = urlMatches.map((url) => url?.match(new RegExp(urlRegExp))?.[1] || '');
-        return cardIds;
-    })));
+    const matches = text?.match(buildRegExp(conf)) || [];
+    return extractUniqueCardIds(matches);
 }
 exports["default"] = matchCardIds;
+function buildRegExp(conf) {
+    const inclusionRegex = buildInclusionRegex(conf);
+    const regex = conf.githubEnableRelatedKeywordPrefix ? buildRegexWithExclusion(inclusionRegex) : inclusionRegex;
+    return new RegExp(regex, 'gmi');
+}
+function buildInclusionRegex(conf) {
+    const keywordsRegExp = conf.githubRequireKeywordPrefix ? `(?:${INCLUSION_KEYWORDS.join('|')})\\s+` : '';
+    return `${keywordsRegExp}${CARD_URL_REGEX}(?:\\s*,\\s*${CARD_URL_REGEX})*`;
+}
+function buildRegexWithExclusion(inclusionRegex) {
+    return `^(?!.*\\b(${EXCLUSION_KEYWORDS.join('|')})\\b).*${inclusionRegex}`;
+}
+function extractUniqueCardIds(matches) {
+    return Array.from(new Set(matches.flatMap((match) => {
+        // Find card URLs
+        const urlMatches = match.match(new RegExp(CARD_URL_REGEX, 'g')) || [];
+        // Extract card IDs from the URLs
+        return urlMatches.map((url) => url.match(new RegExp(CARD_URL_REGEX))?.[1] || '');
+    })));
+}
 
 
 /***/ }),
@@ -34688,6 +34700,7 @@ const github_1 = __nccwpck_require__(5438);
 const main_1 = __nccwpck_require__(399);
 (0, main_1.run)((github_1.context.payload.pull_request || github_1.context.payload.issue), {
     githubRequireKeywordPrefix: core.getBooleanInput('github-require-keyword-prefix'),
+    githubEnableRelatedKeywordPrefix: core.getBooleanInput('github-enable-related-keyword-prefix'),
     githubRequireTrelloCard: core.getBooleanInput('github-require-trello-card'),
     githubIncludePrComments: core.getBooleanInput('github-include-pr-comments'),
     githubIncludePrBranchName: core.getBooleanInput('github-include-pr-branch-name'),
