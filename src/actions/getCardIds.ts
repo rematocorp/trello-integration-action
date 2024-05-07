@@ -58,7 +58,9 @@ async function createNewCard(conf: Conf, pr: PR) {
 
 	if (listId && pr.body && commandRegex.test(pr.body)) {
 		const card = await createCard(listId, pr.title, pr.body.replace('/new-trello-card', ''))
-		await updatePullRequestBody(pr.body.replace('/new-trello-card', card.url))
+		const body = conf.githubRequireKeywordPrefix ? `Closes ${card.url}` : card.url
+
+		await updatePullRequestBody(pr.body.replace('/new-trello-card', body))
 
 		return card.id
 	}

@@ -192,6 +192,14 @@ describe('Creating new card', () => {
 		expect(createCard).toHaveBeenCalledWith('draft-list-id', 'Title', ' Description')
 	})
 
+	it('adds new card with "Closes" keyword', async () => {
+		createCardMock.mockResolvedValueOnce({ id: 'card-id', url: 'card-url' })
+
+		await getCardIds({ ...conf, githubRequireKeywordPrefix: true }, { ...pr, body: '/new-trello-card Description' })
+
+		expect(updatePullRequestBody).toHaveBeenCalledWith('Closes card-url Description')
+	})
+
 	it('skips when no command found', async () => {
 		const cardIds = await getCardIds(conf, { ...pr, body: '' })
 		expect(createCard).not.toHaveBeenCalled()

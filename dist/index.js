@@ -34370,7 +34370,8 @@ async function createNewCard(conf, pr) {
     const commandRegex = /(^|\s)\/new-trello-card(\s|$)/; // Avoids matching URLs
     if (listId && pr.body && commandRegex.test(pr.body)) {
         const card = await (0, trello_1.createCard)(listId, pr.title, pr.body.replace('/new-trello-card', ''));
-        await (0, github_1.updatePullRequestBody)(pr.body.replace('/new-trello-card', card.url));
+        const newBody = conf.githubRequireKeywordPrefix ? `Closes ${card.url}` : card.url;
+        await (0, github_1.updatePullRequestBody)(pr.body.replace('/new-trello-card', newBody));
         return card.id;
     }
     return;
@@ -34406,9 +34407,6 @@ async function getCardIdsFromBranchName(conf, prHead) {
 }
 async function getTrelloCardByShortId(shortId, boardId) {
     const cardsWithNumberMatch = await (0, trello_1.searchTrelloCards)(shortId, boardId);
-    console.error('NO MIDA', cardsWithNumberMatch
-        ?.sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
-        .find((card) => card.idShort === parseInt(shortId))?.id);
     return cardsWithNumberMatch
         ?.sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
         .find((card) => card.idShort === parseInt(shortId))?.id;
@@ -34549,17 +34547,14 @@ async function getPullRequestContributors() {
     }
     return Array.from(contributors);
 }
-async function getTrelloMemberId(conf, githubUserName) {
-    let username = githubUserName?.replace('-', '_');
-    if (conf.githubUsersToTrelloUsers?.trim()) {
-        username = getTrelloUsernameFromInputMap(conf, githubUserName) || username;
-    }
+async function getTrelloMemberId(conf, githubUsername) {
+    const username = getTrelloUsername(conf, githubUsername);
     console.log('Searching Trello member id by username', username);
     const member = await (0, trello_1.getMemberInfo)(username);
     if (!member) {
         return;
     }
-    console.log('Found member id by name', member.id, username);
+    console.log('Found member id by username', member.id, username);
     if (conf.trelloOrganizationName) {
         const hasAccess = member.organizations?.some((org) => org.name === conf.trelloOrganizationName);
         if (!hasAccess) {
@@ -34569,19 +34564,24 @@ async function getTrelloMemberId(conf, githubUserName) {
     }
     return member.id;
 }
-function getTrelloUsernameFromInputMap(conf, githubUserName) {
+function getTrelloUsername(conf, githubUsername) {
+    const username = githubUsername?.replace('-', '_');
+    const usernamesMap = conf.githubUsersToTrelloUsers?.trim();
+    if (!usernamesMap) {
+        return username;
+    }
     console.log('Mapping Github users to Trello users');
-    const users = conf.githubUsersToTrelloUsers || '';
-    for (const line of users.split(/[\r\n]/)) {
+    for (const line of usernamesMap.split(/[\r\n]/)) {
         const parts = line.trim().split(':');
         if (parts.length < 2) {
             console.error('Mapping of Github user to Trello does not contain 2 usernames separated by ":"', line);
             continue;
         }
-        if (parts[0].trim() === githubUserName && parts[1].trim() !== '') {
+        if (parts[0].trim() === githubUsername && parts[1].trim() !== '') {
             return parts[1].trim();
         }
     }
+    return username;
 }
 async function removeUnrelatedMembers(cardInfo, memberIds) {
     const filtered = cardInfo.idMembers.filter((id) => !memberIds.includes(id));
@@ -34655,8 +34655,10 @@ function buildRegexWithExclusion(inclusionRegex) {
 function extractUniqueCardIds(matches) {
     return Array.from(new Set(matches.flatMap((match) => {
         // Find card URLs
+        // istanbul ignore next: Seemingly impossible to not find url at this stage
         const urlMatches = match.match(new RegExp(CARD_URL_REGEX, 'g')) || [];
         // Extract card IDs from the URLs
+        // istanbul ignore next: Seemingly impossible to not find url at this stage
         return urlMatches.map((url) => url.match(new RegExp(CARD_URL_REGEX))?.[1] || '');
     })));
 }
