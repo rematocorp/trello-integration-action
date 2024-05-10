@@ -3,17 +3,19 @@
 [![Build](https://img.shields.io/github/actions/workflow/status/rematocorp/trello-integration-action/ci.yml)](https://github.com/rematocorp/trello-integration-action/actions/workflows/ci.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/rematocorp/trello-integration-action?token=NDT35FM2LG&style=flat)](https://codecov.io/gh/rematocorp/trello-integration-action)
 
-This GitHub action seamlessly integrates GitHub with Trello by scanning:
+This GitHub action integrates GitHub with Trello to reduce redundant manual work by using PR information to update Trello cards.
 
--   Trello card URLs from PR description and comments,
+The action looks for:
+
+-   Trello card URLs from PR description, comments and commit messages,
 -   Trello card short ID from PR branch name,
 
-and triggering following actions:
+and:
 
 -   links a PR to a Trello card and vice versa,
--   moves a Trello card when PR is opened, moved back to draft or merged/closed,
+-   moves a Trello card when PR is opened, moved back to draft or closed,
 -   adds a label to a Trello card based on the branch name (e.g. `feature/foo`),
--   assigns a PR author and fellow contributors/assignees to a Trello card,
+-   assigns a PR author and fellow contributors to a Trello card,
 -   and more...
 
 ## Basic configuration
@@ -54,6 +56,11 @@ trello-auth-token: ${{ secrets.TRELLO_AUTH_TOKEN }}
 #
 # DEFAULT: true
 github-include-pr-comments: true
+
+# Scans PR commit messages to find Trello card URLs and comments card URL to the PR if found.
+#
+# DEFAULT: false
+github-include-pr-commit-messages: true
 
 # Uses the branch name to find card id (e.g. feature/38-card-title) and comments card URL to the PR if found.
 #

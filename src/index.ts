@@ -5,10 +5,11 @@ import { PR } from './types'
 
 run((context.payload.pull_request || context.payload.issue) as PR, {
 	githubRequireKeywordPrefix: core.getBooleanInput('github-require-keyword-prefix'),
-	githubEnableRelatedKeywordPrefix: core.getBooleanInput('github-enable-related-keyword-prefix'),
 	githubRequireTrelloCard: core.getBooleanInput('github-require-trello-card'),
+	githubEnableRelatedKeywordPrefix: core.getBooleanInput('github-enable-related-keyword-prefix'),
 	githubIncludePrComments: core.getBooleanInput('github-include-pr-comments'),
 	githubIncludePrBranchName: core.getBooleanInput('github-include-pr-branch-name'),
+	githubIncludePrCommitMessages: core.getBooleanInput('github-include-pr-commit-messages'),
 	githubAllowMultipleCardsInPrBranchName: core.getBooleanInput('github-allow-multiple-cards-in-pr-branch-name'),
 	githubIncludeNewCardCommand: core.getBooleanInput('github-include-new-card-command'),
 	githubUsersToTrelloUsers: core.getInput('github-users-to-trello-users'),
@@ -16,8 +17,8 @@ run((context.payload.pull_request || context.payload.issue) as PR, {
 	trelloListIdPrDraft: core.getInput('trello-list-id-pr-draft'),
 	trelloListIdPrOpen: core.getInput('trello-list-id-pr-open'),
 	trelloListIdPrClosed: core.getInput('trello-list-id-pr-closed'),
-	trelloConflictingLabels: core.getInput('trello-conflicting-labels')?.split(';'),
 	trelloBoardId: core.getInput('trello-board-id'),
+	trelloConflictingLabels: core.getInput('trello-conflicting-labels')?.split(';'),
 	trelloAddLabelsToCards: core.getBooleanInput('trello-add-labels-to-cards'),
 	trelloRemoveUnrelatedMembers: core.getBooleanInput('trello-remove-unrelated-members'),
 	trelloArchiveOnMerge: core.getBooleanInput('trello-archive-on-merge'),

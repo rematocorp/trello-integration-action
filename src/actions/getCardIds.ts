@@ -1,12 +1,12 @@
 import { setFailed } from '@actions/core'
 import { Conf, PR, PRHead } from '../types'
-import { getBranchName, getPullRequest, getPullRequestComments, updatePullRequestBody } from './api/github'
+import { getBranchName, getCommits, getPullRequest, getPullRequestComments, updatePullRequestBody } from './api/github'
 import { createCard, searchTrelloCards } from './api/trello'
 import matchCardIds from './utils/matchCardIds'
 import isDraftPullRequest from './utils/isDraftPullRequest'
 
 export default async function getCardIds(conf: Conf, pr: PR) {
-	console.log('Searching for card ids')
+	console.log('Searching for card IDs')
 
 	const latestPRInfo = (await getPullRequest()) || pr
 	let cardIds = matchCardIds(conf, latestPRInfo.body || '')
@@ -19,39 +19,44 @@ export default async function getCardIds(conf: Conf, pr: PR) {
 		}
 	}
 
-	const createdCardId = await createNewCard(conf, latestPRInfo)
-	if (createdCardId) {
-		cardIds = [...cardIds, createdCardId]
+	if (conf.githubIncludePrCommitMessages) {
+		const commits = await getCommits()
+
+		for (const commit of commits || []) {
+			cardIds = [...cardIds, ...matchCardIds(conf, commit.commit.message)]
+		}
+	}
+
+	if (conf.githubIncludePrBranchName) {
+		const cardIdsFromBranch = await getCardIdsFromBranchName(conf, pr.head)
+
+		cardIds = [...cardIds, ...cardIdsFromBranch]
+	}
+
+	if (conf.githubIncludeNewCardCommand) {
+		const createdCardId = await createNewCard(conf, latestPRInfo)
+
+		if (createdCardId) {
+			cardIds = [...cardIds, createdCardId]
+		}
 	}
 
 	if (cardIds.length) {
 		console.log('Found card IDs', cardIds)
 
 		return [...new Set(cardIds)]
-	}
+	} else {
+		console.log('Could not find card IDs')
 
-	if (conf.githubIncludePrBranchName) {
-		cardIds = await getCardIdsFromBranchName(conf, pr.head)
-
-		if (cardIds.length) {
-			console.log('Found card IDs from branch name', cardIds)
-
-			return cardIds
+		if (conf.githubRequireTrelloCard) {
+			setFailed('The PR does not contain a link to a Trello card')
 		}
-	}
-	console.log('Could not find card IDs')
 
-	if (conf.githubRequireTrelloCard) {
-		setFailed('The PR does not contain a link to a Trello card')
+		return []
 	}
-
-	return []
 }
 
 async function createNewCard(conf: Conf, pr: PR) {
-	if (!conf.githubIncludeNewCardCommand) {
-		return
-	}
 	const isDraft = isDraftPullRequest(pr)
 	const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen
 	const commandRegex = /(^|\s)\/new-trello-card(\s|$)/ // Avoids matching URLs

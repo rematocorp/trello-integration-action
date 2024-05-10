@@ -27,7 +27,7 @@ it('triggers all actions when cards found', async () => {
 
 	await run(pr, conf)
 
-	expect(addCardLinksToPullRequest).toHaveBeenCalledWith(conf, cardIds, pr)
+	expect(addCardLinksToPullRequest).toHaveBeenCalledWith(conf, cardIds)
 	expect(addPullRequestLinkToCards).toHaveBeenCalledWith(cardIds, pr)
 	expect(moveOrArchiveCards).toHaveBeenCalledWith(conf, cardIds, pr)
 	expect(addLabelToCards).toHaveBeenCalledWith(conf, cardIds, pr.head)
