@@ -38,6 +38,7 @@ jobs:
                   trello-auth-token: ${{ secrets.TRELLO_AUTH_TOKEN }}
                   trello-list-id-pr-open: 6603333cf96e4419a590d9ab
                   trello-list-id-pr-closed: 66025544a40b6a11a12233de
+                  # For more options look below
 ```
 
 ## All options
@@ -165,7 +166,7 @@ trello-archive-on-merge: false
 
 ### Multiple boards support
 
-Use `;` to separate multiple board list IDs. The action will transfer the card to a list on its current board. [Learn more](https://github.com/rematocorp/trello-integration-action/issues/68)
+Use `;` to separate multiple board list IDs. The action will transfer the card to a list on the card's current board. [Learn more](https://github.com/rematocorp/trello-integration-action/issues/68)
 
 ```yaml
 trello-list-id-pr-closed: '6603333cf96e4419a590d9ab;66025544a40b6a11a12233de;77788894a40b6a11a12233de'
