@@ -3,7 +3,7 @@
 [![Build](https://img.shields.io/github/actions/workflow/status/rematocorp/trello-integration-action/ci.yml)](https://github.com/rematocorp/trello-integration-action/actions/workflows/ci.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/rematocorp/trello-integration-action?token=NDT35FM2LG&style=flat)](https://codecov.io/gh/rematocorp/trello-integration-action)
 
-This GitHub action integrates GitHub with Trello to reduce redundant manual work by using PR information to update Trello cards.
+This GitHub action integrates GitHub and Trello, automatically updating Trello cards with pull request information to minimize redundant manual work.
 
 The action looks for:
 
