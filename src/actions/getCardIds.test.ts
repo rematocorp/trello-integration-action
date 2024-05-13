@@ -127,7 +127,7 @@ describe('Finding cards', () => {
 	describe('from branch name', () => {
 		it('finds basic card', async () => {
 			getBranchNameMock.mockResolvedValueOnce('1-card')
-			searchTrelloCardsMock.mockResolvedValueOnce([{ id: 'card' }])
+			searchTrelloCardsMock.mockResolvedValueOnce([{ shortLink: 'card' }])
 
 			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, pr)
 
@@ -137,7 +137,7 @@ describe('Finding cards', () => {
 
 		it('finds categorized card', async () => {
 			getBranchNameMock.mockResolvedValueOnce('feature/1-card')
-			searchTrelloCardsMock.mockResolvedValueOnce([{ id: 'card' }])
+			searchTrelloCardsMock.mockResolvedValueOnce([{ shortLink: 'card' }])
 
 			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, pr)
 
@@ -148,8 +148,8 @@ describe('Finding cards', () => {
 		it('finds card with short ID', async () => {
 			getBranchNameMock.mockResolvedValueOnce('1-nan')
 			searchTrelloCardsMock.mockResolvedValueOnce([]).mockResolvedValueOnce([
-				{ id: 'card-1', idShort: 1, dateLastActivity: '2023-01-01' },
-				{ id: 'card-2', idShort: 1, dateLastActivity: '2024-01-01' },
+				{ shortLink: 'card-1', idShort: 1, dateLastActivity: '2023-01-01' },
+				{ shortLink: 'card-2', idShort: 1, dateLastActivity: '2024-01-01' },
 			])
 
 			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, pr)
@@ -160,8 +160,8 @@ describe('Finding cards', () => {
 		it('finds multiple cards', async () => {
 			getBranchNameMock.mockResolvedValueOnce('1-2-card')
 			searchTrelloCardsMock
-				.mockResolvedValueOnce([{ id: '1-card', idShort: 1 }])
-				.mockResolvedValueOnce([{ id: '2-card', idShort: 2 }])
+				.mockResolvedValueOnce([{ shortLink: '1-card', idShort: 1 }])
+				.mockResolvedValueOnce([{ shortLink: '2-card', idShort: 2 }])
 
 			const cardIds = await getCardIds(
 				{
@@ -197,7 +197,7 @@ describe('Creating new card', () => {
 	}
 
 	it('adds new card, updates PR body and adds to card ids list', async () => {
-		createCardMock.mockResolvedValueOnce({ id: 'card-id', url: 'card-url' })
+		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
 
 		const cardIds = await getCardIds(conf, { ...pr, body: '/new-trello-card Description' })
 
@@ -207,7 +207,7 @@ describe('Creating new card', () => {
 	})
 
 	it('adds new card to draft list', async () => {
-		createCardMock.mockResolvedValueOnce({ id: 'card-id', url: 'card-url' })
+		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
 
 		await getCardIds(conf, { ...pr, body: '/new-trello-card Description', draft: true })
 
@@ -215,7 +215,7 @@ describe('Creating new card', () => {
 	})
 
 	it('adds new card with "Closes" keyword', async () => {
-		createCardMock.mockResolvedValueOnce({ id: 'card-id', url: 'card-url' })
+		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
 
 		await getCardIds({ ...conf, githubRequireKeywordPrefix: true }, { ...pr, body: '/new-trello-card Description' })
 

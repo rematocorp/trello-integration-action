@@ -56,23 +56,6 @@ export default async function getCardIds(conf: Conf, pr: PR) {
 	}
 }
 
-async function createNewCard(conf: Conf, pr: PR) {
-	const isDraft = isDraftPullRequest(pr)
-	const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen
-	const commandRegex = /(^|\s)\/new-trello-card(\s|$)/ // Avoids matching URLs
-
-	if (listId && pr.body && commandRegex.test(pr.body)) {
-		const card = await createCard(listId, pr.title, pr.body.replace('/new-trello-card', ''))
-		const body = conf.githubRequireKeywordPrefix ? `Closes ${card.url}` : card.url
-
-		await updatePullRequestBody(pr.body.replace('/new-trello-card', body))
-
-		return card.id
-	}
-
-	return
-}
-
 async function getCardIdsFromBranchName(conf: Conf, prHead?: PRHead) {
 	const branchName = prHead?.ref || (await getBranchName())
 
@@ -102,7 +85,7 @@ async function getCardIdsFromBranchName(conf: Conf, prHead?: PRHead) {
 		const cardsWithExactMatch = await searchTrelloCards(matches[0])
 
 		if (cardsWithExactMatch?.length) {
-			return [cardsWithExactMatch[0].id]
+			return [cardsWithExactMatch[0].shortLink]
 		}
 
 		console.log('Could not find Trello card with branch name, trying only with short ID', matches[1])
@@ -122,5 +105,22 @@ async function getTrelloCardByShortId(shortId: string, boardId?: string) {
 
 	return cardsWithNumberMatch
 		?.sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
-		.find((card) => card.idShort === parseInt(shortId))?.id
+		.find((card) => card.idShort === parseInt(shortId))?.shortLink
+}
+
+async function createNewCard(conf: Conf, pr: PR) {
+	const isDraft = isDraftPullRequest(pr)
+	const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen
+	const commandRegex = /(^|\s)\/new-trello-card(\s|$)/ // Avoids matching URLs
+
+	if (listId && pr.body && commandRegex.test(pr.body)) {
+		const card = await createCard(listId, pr.title, pr.body.replace('/new-trello-card', ''))
+		const body = conf.githubRequireKeywordPrefix ? `Closes ${card.url}` : card.url
+
+		await updatePullRequestBody(pr.body.replace('/new-trello-card', body))
+
+		return card.shortLink
+	}
+
+	return
 }

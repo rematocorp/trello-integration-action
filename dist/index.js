@@ -34374,18 +34374,6 @@ async function getCardIds(conf, pr) {
     }
 }
 exports["default"] = getCardIds;
-async function createNewCard(conf, pr) {
-    const isDraft = (0, isDraftPullRequest_1.default)(pr);
-    const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen;
-    const commandRegex = /(^|\s)\/new-trello-card(\s|$)/; // Avoids matching URLs
-    if (listId && pr.body && commandRegex.test(pr.body)) {
-        const card = await (0, trello_1.createCard)(listId, pr.title, pr.body.replace('/new-trello-card', ''));
-        const body = conf.githubRequireKeywordPrefix ? `Closes ${card.url}` : card.url;
-        await (0, github_1.updatePullRequestBody)(pr.body.replace('/new-trello-card', body));
-        return card.id;
-    }
-    return;
-}
 async function getCardIdsFromBranchName(conf, prHead) {
     const branchName = prHead?.ref || (await (0, github_1.getBranchName)());
     console.log('Searching cards from branch name', branchName);
@@ -34405,7 +34393,7 @@ async function getCardIdsFromBranchName(conf, prHead) {
         console.log('Matched one potential card from branch name', matches);
         const cardsWithExactMatch = await (0, trello_1.searchTrelloCards)(matches[0]);
         if (cardsWithExactMatch?.length) {
-            return [cardsWithExactMatch[0].id];
+            return [cardsWithExactMatch[0].shortLink];
         }
         console.log('Could not find Trello card with branch name, trying only with short ID', matches[1]);
         const cardId = await getTrelloCardByShortId(matches[1]);
@@ -34419,7 +34407,19 @@ async function getTrelloCardByShortId(shortId, boardId) {
     const cardsWithNumberMatch = await (0, trello_1.searchTrelloCards)(shortId, boardId);
     return cardsWithNumberMatch
         ?.sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
-        .find((card) => card.idShort === parseInt(shortId))?.id;
+        .find((card) => card.idShort === parseInt(shortId))?.shortLink;
+}
+async function createNewCard(conf, pr) {
+    const isDraft = (0, isDraftPullRequest_1.default)(pr);
+    const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen;
+    const commandRegex = /(^|\s)\/new-trello-card(\s|$)/; // Avoids matching URLs
+    if (listId && pr.body && commandRegex.test(pr.body)) {
+        const card = await (0, trello_1.createCard)(listId, pr.title, pr.body.replace('/new-trello-card', ''));
+        const body = conf.githubRequireKeywordPrefix ? `Closes ${card.url}` : card.url;
+        await (0, github_1.updatePullRequestBody)(pr.body.replace('/new-trello-card', body));
+        return card.shortLink;
+    }
+    return;
 }
 
 

@@ -9,7 +9,7 @@ const trelloCardPosition = core.getInput('trello-card-position')
 export async function searchTrelloCards(
 	query: string,
 	boardId?: string,
-): Promise<{ dateLastActivity: string; id: string; idShort: number }[]> {
+): Promise<{ dateLastActivity: string; id: string; idShort: number; shortLink: string }[]> {
 	const response = await makeRequest('get', `https://api.trello.com/1/search`, {
 		modelTypes: 'cards',
 		query,
@@ -101,7 +101,11 @@ export async function getMemberInfo(username?: string): Promise<{ id: string; or
 	return response?.data
 }
 
-export async function createCard(listId: string, title: string, body?: string): Promise<{ id: string; url: string }> {
+export async function createCard(
+	listId: string,
+	title: string,
+	body?: string,
+): Promise<{ id: string; url: string; shortLink: string }> {
 	console.log('Creating card based on PR info', title, body)
 
 	const response = await makeRequest('post', `https://api.trello.com/1/cards`, {
