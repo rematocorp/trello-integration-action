@@ -5,15 +5,16 @@ export interface Conf {
 	githubRequireTrelloCard?: boolean
 	githubEnableRelatedKeywordPrefix?: boolean
 	githubIncludePrComments?: boolean
+	githubIncludePrCommitMessages?: boolean
 	githubIncludePrBranchName?: boolean
 	githubAllowMultipleCardsInPrBranchName?: boolean
 	githubIncludeNewCardCommand?: boolean
 	githubUsersToTrelloUsers?: string
+	trelloOrganizationName?: string
 	trelloListIdPrDraft?: string
 	trelloListIdPrOpen?: string
 	trelloListIdPrClosed?: string
 	trelloBoardId?: string
-	trelloOrganizationName?: string
 	trelloConflictingLabels?: string[]
 	trelloAddLabelsToCards?: boolean
 	trelloRemoveUnrelatedMembers?: boolean

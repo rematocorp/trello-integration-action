@@ -14,7 +14,7 @@ export async function run(pr: PR, conf: Conf) {
 		const cardIds = await getCardIds(conf, pr)
 
 		if (cardIds.length) {
-			await addCardLinksToPullRequest(conf, cardIds, pr)
+			await addCardLinksToPullRequest(conf, cardIds)
 			await addPullRequestLinkToCards(cardIds, pr)
 			await moveOrArchiveCards(conf, cardIds, pr)
 			await addLabelToCards(conf, cardIds, pr.head)

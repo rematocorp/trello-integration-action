@@ -20,6 +20,9 @@ inputs:
     github-include-pr-comments:
         description: Include PR comments when searching for Trello cards.
         default: true
+    github-include-pr-commit-messages:
+        description: Include PR commit messages when searching for Trello cards. If card ID is found, it automatically comments card URL to the PR.
+        default: false
     github-include-pr-branch-name:
         description: Include PR branch name when searching for Trello cards (e.g. "1234-card-title"). If card ID is found, it automatically comments card URL to the PR.
         default: false

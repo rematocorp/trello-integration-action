@@ -1,5 +1,5 @@
 import { setFailed } from '@actions/core'
-import { getBranchName, getPullRequest, getPullRequestComments, updatePullRequestBody } from './api/github'
+import { getBranchName, getPullRequest, getPullRequestComments, updatePullRequestBody, getCommits } from './api/github'
 import { createCard, moveCardToList, searchTrelloCards } from './api/trello'
 import getCardIds from './getCardIds'
 
@@ -8,6 +8,7 @@ jest.mock('@actions/github')
 jest.mock('./api/github')
 jest.mock('./api/trello')
 
+const getCommitsMock = getCommits as jest.Mock
 const getPullRequestMock = getPullRequest as jest.Mock
 const getPullRequestCommentsMock = getPullRequestComments as jest.Mock
 const getBranchNameMock = getBranchName as jest.Mock
@@ -99,6 +100,27 @@ describe('Finding cards', () => {
 				},
 			)
 			expect(cardIds).toEqual(['card'])
+		})
+	})
+
+	describe('from commit messages', () => {
+		it('finds cards', async () => {
+			getCommitsMock.mockResolvedValueOnce([
+				{ commit: { message: 'https://trello.com/c/card1/title' } },
+				{ commit: { message: 'Fix overflow\n\nhttps://trello.com/c/card2/title' } },
+			])
+
+			const cardIds = await getCardIds({ githubIncludePrCommitMessages: true }, pr)
+
+			expect(cardIds).toEqual(['card1', 'card2'])
+		})
+
+		it('skips when no commits', async () => {
+			getCommitsMock.mockResolvedValueOnce(undefined)
+
+			const cardIds = await getCardIds({ githubIncludePrCommitMessages: true }, pr)
+
+			expect(cardIds).toEqual([])
 		})
 	})
 
