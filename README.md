@@ -61,7 +61,7 @@ github-include-pr-comments: true
 # Scans PR commit messages to find Trello card URLs and comments card URL to the PR if found.
 #
 # DEFAULT: false
-github-include-pr-commit-messages: true
+github-include-pr-commit-messages: false
 
 # Uses the branch name to find card id (e.g. feature/38-card-title) and comments card URL to the PR if found.
 #
