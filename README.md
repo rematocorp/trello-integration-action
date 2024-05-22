@@ -76,6 +76,7 @@ github-include-pr-commit-messages: false
 # Uses the branch name to find card id (e.g. feature/38-card-title) and comments card URL to the PR if found.
 #
 # NOTE: Make sure you set `pull-requests: write` permission for the job https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
+#
 # DEFAULT: false
 github-include-pr-branch-name: false
 ```
@@ -84,16 +85,16 @@ github-include-pr-branch-name: false
 # Allows to reference multiple card short IDs in the branch name (e.g. feature/38-39-40-foo-bar).
 #
 # NOTE: Option github-include-pr-branch-name needs to be true and it is recommended to set trello-board-id to avoid moving wrong cards
+#
 # DEFAULT: false
 github-allow-multiple-cards-in-pr-branch-name: false
 ```
 
 ```yaml
-# Creates a new Trello card from PR details if "/new-trello-card" is written in the PR description.
-#
-# Replaces "/new-trello-card" with the card link.
+# Creates a new Trello card from PR details if "/new-trello-card" is written in the PR description. Replaces "/new-trello-card" with the card link.
 #
 # NOTE: Make sure you set `pull-requests: write` permission for the job https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
+#
 # DEFAULT: false
 github-include-new-card-command: false
 ```
