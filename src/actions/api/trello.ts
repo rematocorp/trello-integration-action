@@ -145,5 +145,7 @@ async function makeRequest(method: 'get' | 'put' | 'post' | 'delete', url: strin
 			},
 		}
 		console.error(JSON.stringify(errorMessage, null, 2))
+
+		throw error
 	}
 }
