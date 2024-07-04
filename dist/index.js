@@ -34483,9 +34483,8 @@ const github_1 = __nccwpck_require__(2649);
 const trello_1 = __nccwpck_require__(9763);
 const isDraftPullRequest_1 = __importDefault(__nccwpck_require__(5593));
 async function moveOrArchiveCards(conf, cardIds, pr) {
-    const reviews = await (0, github_1.getPullRequestReviews)();
-    const requestedReviewers = await (0, github_1.getPullRequestRequestedReviewers)();
-    console.log('Debugging reviews', reviews, requestedReviewers);
+    const reviews = await getActivePullRequestReviews();
+    console.log('Debugging reviews', reviews);
     const isChangesRequested = reviews?.some((review) => review.state === 'CHANGES_REQUESTED');
     const isApproved = reviews?.some((review) => review.state === 'APPROVED');
     const isDraft = (0, isDraftPullRequest_1.default)(pr);
@@ -34522,6 +34521,19 @@ async function moveOrArchiveCards(conf, cardIds, pr) {
     console.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged });
 }
 exports["default"] = moveOrArchiveCards;
+/**
+ * Returns all pull request reviews that are still relevant
+ *
+ * @returns https://docs.github.com/en/graphql/reference/objects#pullrequestreview
+ */
+async function getActivePullRequestReviews() {
+    const reviews = await (0, github_1.getPullRequestReviews)();
+    const requestedReviewers = await (0, github_1.getPullRequestRequestedReviewers)();
+    // Filters in only the latest review per person
+    const latestReviews = Array.from(reviews.reduce((map, review) => map.set(review.user?.id, review), new Map()).values());
+    // Filters out reviews by people who have been re-requested for review
+    return latestReviews.filter((r) => !requestedReviewers.users.some((u) => u.id === r.user?.id));
+}
 async function moveCardsToList(cardIds, listId, boardId) {
     const listIds = listId.split(';');
     return Promise.all(cardIds.map(async (cardId) => {

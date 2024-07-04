@@ -4,10 +4,9 @@ import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/t
 import isDraftPullRequest from './utils/isDraftPullRequest'
 
 export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], pr: PR) {
-	const reviews = await getPullRequestReviews()
-	const requestedReviewers = await getPullRequestRequestedReviewers()
+	const reviews = await getActivePullRequestReviews()
 
-	console.log('Debugging reviews', reviews, requestedReviewers)
+	console.log('Debugging reviews', reviews)
 
 	const isChangesRequested = reviews?.some((review) => review.state === 'CHANGES_REQUESTED')
 	const isApproved = reviews?.some((review) => review.state === 'APPROVED')
@@ -56,6 +55,24 @@ export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], 
 	}
 
 	console.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged })
+}
+
+/**
+ * Returns all pull request reviews that are still relevant
+ *
+ * @returns https://docs.github.com/en/graphql/reference/objects#pullrequestreview
+ */
+async function getActivePullRequestReviews(): Promise<{ state: string }[]> {
+	const reviews = await getPullRequestReviews()
+	const requestedReviewers = await getPullRequestRequestedReviewers()
+
+	// Filters in only the latest review per person
+	const latestReviews = Array.from(
+		reviews.reduce((map, review) => map.set(review.user?.id, review), new Map()).values(),
+	)
+
+	// Filters out reviews by people who have been re-requested for review
+	return latestReviews.filter((r) => !requestedReviewers.users.some((u) => u.id === r.user?.id))
 }
 
 async function moveCardsToList(cardIds: string[], listId: string, boardId?: string) {
