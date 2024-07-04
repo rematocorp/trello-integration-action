@@ -34528,8 +34528,10 @@ exports["default"] = moveOrArchiveCards;
 async function getActivePullRequestReviews() {
     const reviews = await (0, github_1.getPullRequestReviews)();
     const requestedReviewers = await (0, github_1.getPullRequestRequestedReviewers)();
+    // Filters out pending reviews
+    const submittedReviews = reviews?.filter((review) => review.state !== 'PENDING');
     // Filters in only the latest review per person
-    const latestReviews = Array.from(reviews?.reduce((map, review) => map.set(review.user?.id, review), new Map()).values() || []);
+    const latestReviews = Array.from(submittedReviews?.reduce((map, review) => map.set(review.user?.id, review), new Map()).values() || []);
     // Filters out reviews by people who have been re-requested for review
     return latestReviews.filter((r) => !requestedReviewers?.users.some((u) => u.id === r.user?.id));
 }

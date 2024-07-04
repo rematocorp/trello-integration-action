@@ -63,9 +63,12 @@ async function getActivePullRequestReviews(): Promise<{ state: string }[]> {
 	const reviews = await getPullRequestReviews()
 	const requestedReviewers = await getPullRequestRequestedReviewers()
 
+	// Filters out pending reviews
+	const submittedReviews = reviews?.filter((review) => review.state !== 'PENDING')
+
 	// Filters in only the latest review per person
 	const latestReviews = Array.from(
-		reviews?.reduce((map, review) => map.set(review.user?.id, review), new Map()).values() || [],
+		submittedReviews?.reduce((map, review) => map.set(review.user?.id, review), new Map()).values() || [],
 	)
 
 	// Filters out reviews by people who have been re-requested for review
