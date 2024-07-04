@@ -34492,12 +34492,12 @@ async function moveOrArchiveCards(conf, cardIds, pr) {
     }
     if (pr.state === 'open' && !isDraft && isApproved && conf.trelloListIdPrApproved) {
         await moveCardsToList(cardIds, conf.trelloListIdPrApproved, conf.trelloBoardId);
-        console.log('Moved cards to changes requested PR list');
+        console.log('Moved cards to approved PR list');
         return;
     }
     if (pr.state === 'open' && !isDraft && conf.trelloListIdPrOpen) {
         await moveCardsToList(cardIds, conf.trelloListIdPrOpen, conf.trelloBoardId);
-        console.log('Moved cards to approved PR list');
+        console.log('Moved cards to opened PR list');
         return;
     }
     if (pr.state === 'closed' && isMerged && conf.trelloArchiveOnMerge) {
