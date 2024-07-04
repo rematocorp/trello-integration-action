@@ -143,6 +143,8 @@ trello-list-id-pr-open: xxx
 # Trello list ID for a pull request which has at least one review requesting for changes.
 #
 # How to find list ID https://stackoverflow.com/a/50908600/2311110
+#
+# NOTE: You need to add review_requested and review_request_removed types to pull_request trigger and also pull_request_review trigger, read more https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_review
 trello-list-id-pr-changes-requested: xxx
 ```
 
@@ -150,6 +152,8 @@ trello-list-id-pr-changes-requested: xxx
 # Trello list ID for a pull request which has at least one approve and no reviews requesting for changes.
 #
 # How to find list ID https://stackoverflow.com/a/50908600/2311110
+#
+# NOTE: You need to add review_requested and review_request_removed types to pull_request trigger and also pull_request_review trigger, read more https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_review
 trello-list-id-pr-approved: xxx
 ```
 
