@@ -1,12 +1,13 @@
 import { Conf, PR } from '../types'
-import { isPullRequestMerged, getPullRequestReviews } from './api/github'
+import { isPullRequestMerged, getPullRequestReviews, getPullRequestRequestedReviewers } from './api/github'
 import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/trello'
 import isDraftPullRequest from './utils/isDraftPullRequest'
 
 export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], pr: PR) {
 	const reviews = await getPullRequestReviews()
+	const requestedReviewers = await getPullRequestRequestedReviewers()
 
-	console.log('Debugging reviews', reviews)
+	console.log('Debugging reviews', reviews, requestedReviewers)
 
 	const isChangesRequested = reviews?.some((review) => review.state === 'CHANGES_REQUESTED')
 	const isApproved = reviews?.some((review) => review.state === 'APPROVED')

@@ -73,6 +73,16 @@ export async function getPullRequestReviews() {
 	return response.data
 }
 
+export async function getPullRequestRequestedReviewers() {
+	const response = await octokit.rest.pulls.listRequestedReviewers({
+		owner,
+		repo,
+		pull_number: issueNumber,
+	})
+
+	return response.data
+}
+
 export async function createComment(shortUrl: string) {
 	console.log('Creating PR comment', shortUrl)
 
