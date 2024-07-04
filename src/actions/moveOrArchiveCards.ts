@@ -1,26 +1,57 @@
 import { Conf, PR } from '../types'
-import { isPullRequestMerged } from './api/github'
+import { isPullRequestMerged, getPullRequestReviews } from './api/github'
 import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/trello'
 import isDraftPullRequest from './utils/isDraftPullRequest'
 
 export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], pr: PR) {
+	const reviews = await getPullRequestReviews()
+	const isChangesRequested = reviews?.some((review) => review.state === 'CHANGES_REQUESTED')
+	const isApproved = reviews?.some((review) => review.state === 'APPROVED')
 	const isDraft = isDraftPullRequest(pr)
 	const isMerged = await isPullRequestMerged()
 
 	if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId)
 		console.log('Moved cards to draft PR list')
-	} else if (pr.state === 'open' && !isDraft && conf.trelloListIdPrOpen) {
+
+		return
+	}
+
+	if (pr.state === 'open' && !isDraft && isChangesRequested && conf.trelloListIdPrChangesRequested) {
+		await moveCardsToList(cardIds, conf.trelloListIdPrChangesRequested, conf.trelloBoardId)
+		console.log('Moved cards to changes requested PR list')
+
+		return
+	}
+
+	if (pr.state === 'open' && !isDraft && isApproved && conf.trelloListIdPrApproved) {
+		await moveCardsToList(cardIds, conf.trelloListIdPrApproved, conf.trelloBoardId)
+		console.log('Moved cards to changes requested PR list')
+
+		return
+	}
+
+	if (pr.state === 'open' && !isDraft && conf.trelloListIdPrOpen) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrOpen, conf.trelloBoardId)
-		console.log('Moved cards to open PR list')
-	} else if (pr.state === 'closed' && isMerged && conf.trelloArchiveOnMerge) {
+		console.log('Moved cards to approved PR list')
+
+		return
+	}
+
+	if (pr.state === 'closed' && isMerged && conf.trelloArchiveOnMerge) {
 		await archiveCards(cardIds)
-	} else if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
+
+		return
+	}
+
+	if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrClosed, conf.trelloBoardId)
 		console.log('Moved cards to closed PR list')
-	} else {
-		console.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged })
+
+		return
 	}
+
+	console.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged })
 }
 
 async function moveCardsToList(cardIds: string[], listId: string, boardId?: string) {

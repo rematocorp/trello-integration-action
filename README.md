@@ -140,6 +140,20 @@ trello-list-id-pr-open: xxx
 ```
 
 ```yaml
+# Trello list ID for a pull request which has at least one review requesting for changes.
+#
+# How to find list ID https://stackoverflow.com/a/50908600/2311110
+trello-list-id-pr-changes-requested: xxx
+```
+
+```yaml
+# Trello list ID for a pull request which has at least one approve and no reviews requesting for changes.
+#
+# How to find list ID https://stackoverflow.com/a/50908600/2311110
+trello-list-id-pr-approved: xxx
+```
+
+```yaml
 # Trello list ID for closed pull request.
 #
 # How to find list ID https://stackoverflow.com/a/50908600/2311110

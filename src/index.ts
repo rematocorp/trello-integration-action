@@ -16,6 +16,8 @@ run((context.payload.pull_request || context.payload.issue) as PR, {
 	trelloOrganizationName: core.getInput('trello-organization-name'),
 	trelloListIdPrDraft: core.getInput('trello-list-id-pr-draft'),
 	trelloListIdPrOpen: core.getInput('trello-list-id-pr-open'),
+	trelloListIdPrChangesRequested: core.getInput('trello-list-id-pr-changes-requested'),
+	trelloListIdPrApproved: core.getInput('trello-list-id-pr-approved'),
 	trelloListIdPrClosed: core.getInput('trello-list-id-pr-closed'),
 	trelloBoardId: core.getInput('trello-board-id'),
 	trelloConflictingLabels: core.getInput('trello-conflicting-labels')?.split(';'),

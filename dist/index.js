@@ -34078,7 +34078,7 @@ exports["default"] = addPullRequestLinkToCards;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updatePullRequestBody = exports.createComment = exports.isPullRequestMerged = exports.getCommits = exports.getBranchName = exports.getPullRequest = exports.getPullRequestComments = void 0;
+exports.updatePullRequestBody = exports.createComment = exports.getPullRequestReviews = exports.isPullRequestMerged = exports.getCommits = exports.getBranchName = exports.getPullRequest = exports.getPullRequestComments = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const githubToken = (0, core_1.getInput)('github-token', { required: true });
@@ -34137,6 +34137,15 @@ async function isPullRequestMerged() {
     }
 }
 exports.isPullRequestMerged = isPullRequestMerged;
+async function getPullRequestReviews() {
+    const response = await octokit.rest.pulls.listReviews({
+        owner,
+        repo,
+        pull_number: issueNumber,
+    });
+    return response.data;
+}
+exports.getPullRequestReviews = getPullRequestReviews;
 async function createComment(shortUrl) {
     console.log('Creating PR comment', shortUrl);
     await octokit.rest.issues.createComment({
@@ -34465,26 +34474,41 @@ const github_1 = __nccwpck_require__(2649);
 const trello_1 = __nccwpck_require__(9763);
 const isDraftPullRequest_1 = __importDefault(__nccwpck_require__(5593));
 async function moveOrArchiveCards(conf, cardIds, pr) {
+    const reviews = await (0, github_1.getPullRequestReviews)();
+    const isChangesRequested = reviews?.some((review) => review.state === 'CHANGES_REQUESTED');
+    const isApproved = reviews?.some((review) => review.state === 'APPROVED');
     const isDraft = (0, isDraftPullRequest_1.default)(pr);
     const isMerged = await (0, github_1.isPullRequestMerged)();
     if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
         await moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId);
         console.log('Moved cards to draft PR list');
+        return;
     }
-    else if (pr.state === 'open' && !isDraft && conf.trelloListIdPrOpen) {
+    if (pr.state === 'open' && !isDraft && isChangesRequested && conf.trelloListIdPrChangesRequested) {
+        await moveCardsToList(cardIds, conf.trelloListIdPrChangesRequested, conf.trelloBoardId);
+        console.log('Moved cards to changes requested PR list');
+        return;
+    }
+    if (pr.state === 'open' && !isDraft && isApproved && conf.trelloListIdPrApproved) {
+        await moveCardsToList(cardIds, conf.trelloListIdPrApproved, conf.trelloBoardId);
+        console.log('Moved cards to changes requested PR list');
+        return;
+    }
+    if (pr.state === 'open' && !isDraft && conf.trelloListIdPrOpen) {
         await moveCardsToList(cardIds, conf.trelloListIdPrOpen, conf.trelloBoardId);
-        console.log('Moved cards to open PR list');
+        console.log('Moved cards to approved PR list');
+        return;
     }
-    else if (pr.state === 'closed' && isMerged && conf.trelloArchiveOnMerge) {
+    if (pr.state === 'closed' && isMerged && conf.trelloArchiveOnMerge) {
         await archiveCards(cardIds);
+        return;
     }
-    else if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
+    if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
         await moveCardsToList(cardIds, conf.trelloListIdPrClosed, conf.trelloBoardId);
         console.log('Moved cards to closed PR list');
+        return;
     }
-    else {
-        console.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged });
-    }
+    console.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged });
 }
 exports["default"] = moveOrArchiveCards;
 async function moveCardsToList(cardIds, listId, boardId) {
@@ -34722,6 +34746,8 @@ const main_1 = __nccwpck_require__(399);
     trelloOrganizationName: core.getInput('trello-organization-name'),
     trelloListIdPrDraft: core.getInput('trello-list-id-pr-draft'),
     trelloListIdPrOpen: core.getInput('trello-list-id-pr-open'),
+    trelloListIdPrChangesRequested: core.getInput('trello-list-id-pr-changes-requested'),
+    trelloListIdPrApproved: core.getInput('trello-list-id-pr-approved'),
     trelloListIdPrClosed: core.getInput('trello-list-id-pr-closed'),
     trelloBoardId: core.getInput('trello-board-id'),
     trelloConflictingLabels: core.getInput('trello-conflicting-labels')?.split(';'),

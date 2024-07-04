@@ -13,6 +13,8 @@ export interface Conf {
 	trelloOrganizationName?: string
 	trelloListIdPrDraft?: string
 	trelloListIdPrOpen?: string
+	trelloListIdPrChangesRequested?: string
+	trelloListIdPrApproved?: string
 	trelloListIdPrClosed?: string
 	trelloBoardId?: string
 	trelloConflictingLabels?: string[]
