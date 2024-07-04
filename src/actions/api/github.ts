@@ -63,6 +63,26 @@ export async function isPullRequestMerged() {
 	}
 }
 
+export async function getPullRequestReviews() {
+	const response = await octokit.rest.pulls.listReviews({
+		owner,
+		repo,
+		pull_number: issueNumber,
+	})
+
+	return response.data
+}
+
+export async function getPullRequestRequestedReviewers() {
+	const response = await octokit.rest.pulls.listRequestedReviewers({
+		owner,
+		repo,
+		pull_number: issueNumber,
+	})
+
+	return response.data
+}
+
 export async function createComment(shortUrl: string) {
 	console.log('Creating PR comment', shortUrl)
 

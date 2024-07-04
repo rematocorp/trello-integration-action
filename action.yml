@@ -52,6 +52,10 @@ inputs:
         description: Trello list ID for draft pull request.
     trello-list-id-pr-open:
         description: Trello list ID for open pull request.
+    trello-list-id-pr-changes-requested:
+        description: Trello list ID for a pull request which has at least one review requesting for changes.
+    trello-list-id-pr-approved:
+        description: Trello list ID for a pull request which has at least one approve and no reviews requesting for changes.
     trello-list-id-pr-closed:
         description: Trello list ID for closed pull request.
     trello-add-labels-to-cards:
