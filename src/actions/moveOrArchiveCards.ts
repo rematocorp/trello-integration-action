@@ -5,9 +5,6 @@ import isDraftPullRequest from './utils/isDraftPullRequest'
 
 export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], pr: PR) {
 	const reviews = await getActivePullRequestReviews()
-
-	console.log('Debugging reviews', reviews)
-
 	const isChangesRequested = reviews?.some((review) => review.state === 'CHANGES_REQUESTED')
 	const isApproved = reviews?.some((review) => review.state === 'APPROVED')
 	const isDraft = isDraftPullRequest(pr)
@@ -68,11 +65,11 @@ async function getActivePullRequestReviews(): Promise<{ state: string }[]> {
 
 	// Filters in only the latest review per person
 	const latestReviews = Array.from(
-		reviews.reduce((map, review) => map.set(review.user?.id, review), new Map()).values(),
+		reviews?.reduce((map, review) => map.set(review.user?.id, review), new Map()).values() || [],
 	)
 
 	// Filters out reviews by people who have been re-requested for review
-	return latestReviews.filter((r) => !requestedReviewers.users.some((u) => u.id === r.user?.id))
+	return latestReviews.filter((r) => !requestedReviewers?.users.some((u) => u.id === r.user?.id))
 }
 
 async function moveCardsToList(cardIds: string[], listId: string, boardId?: string) {

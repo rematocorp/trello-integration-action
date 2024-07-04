@@ -1,4 +1,4 @@
-import { isPullRequestMerged, getPullRequestReviews } from './api/github'
+import { isPullRequestMerged, getPullRequestReviews, getPullRequestRequestedReviewers } from './api/github'
 import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/trello'
 import moveOrArchiveCards from './moveOrArchiveCards'
 
@@ -12,6 +12,7 @@ const getBoardListsMock = getBoardLists as jest.Mock
 const archiveCardMock = archiveCard as jest.Mock
 const isPullRequestMergedMock = isPullRequestMerged as jest.Mock
 const getPullRequestReviewsMock = getPullRequestReviews as jest.Mock
+const getPullRequestRequestedReviewersMock = getPullRequestRequestedReviewers as jest.Mock
 
 const basePR = { number: 0, state: 'open', title: 'Title' }
 
@@ -57,12 +58,18 @@ describe('Moving cards', () => {
 		const conf = { trelloListIdPrChangesRequested: 'changes-requested-list-id' }
 
 		beforeEach(() => {
-			getPullRequestReviewsMock.mockResolvedValue([{ state: 'CHANGES_REQUESTED' }])
+			getPullRequestReviewsMock.mockResolvedValue([{ state: 'CHANGES_REQUESTED', user: { id: 'user-id' } }])
 		})
 
 		it('moves the card to Changes requested list', async () => {
 			await moveOrArchiveCards(conf, ['card'], pr)
 			expect(moveCardToList).toHaveBeenCalledWith('card', 'changes-requested-list-id', undefined)
+		})
+
+		it('skips move when review is re-requested', async () => {
+			getPullRequestRequestedReviewersMock.mockResolvedValue({ users: [{ id: 'user-id' }] })
+			await moveOrArchiveCards({}, ['card'], pr)
+			expect(moveCardToList).not.toHaveBeenCalled()
 		})
 
 		it('skips move when list not configured', async () => {
