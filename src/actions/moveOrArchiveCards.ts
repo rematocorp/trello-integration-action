@@ -24,7 +24,7 @@ export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], 
 		return
 	}
 
-	if (pr.state === 'open' && !isDraft && isApproved && conf.trelloListIdPrApproved) {
+	if (pr.state === 'open' && !isDraft && !isChangesRequested && isApproved && conf.trelloListIdPrApproved) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrApproved, conf.trelloBoardId)
 		console.log('Moved cards to approved PR list')
 

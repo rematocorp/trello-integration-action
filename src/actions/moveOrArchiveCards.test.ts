@@ -68,7 +68,9 @@ describe('Moving cards', () => {
 
 		it('skips move when review is re-requested', async () => {
 			getPullRequestRequestedReviewersMock.mockResolvedValue({ users: [{ id: 'user-id' }] })
-			await moveOrArchiveCards({}, ['card'], pr)
+
+			await moveOrArchiveCards(conf, ['card'], pr)
+
 			expect(moveCardToList).not.toHaveBeenCalled()
 		})
 
@@ -89,6 +91,17 @@ describe('Moving cards', () => {
 		it('moves the card to Approved list', async () => {
 			await moveOrArchiveCards(conf, ['card'], pr)
 			expect(moveCardToList).toHaveBeenCalledWith('card', 'approved-list-id', undefined)
+		})
+
+		it('skips move when someone else has requested changes', async () => {
+			getPullRequestReviewsMock.mockResolvedValue([
+				{ state: 'APPROVED', user: { id: 'user-1' } },
+				{ state: 'CHANGES_REQUESTED', user: { id: 'user-2' } },
+			])
+
+			await moveOrArchiveCards(conf, ['card'], pr)
+
+			expect(moveCardToList).not.toHaveBeenCalled()
 		})
 
 		it('skips move when list not configured', async () => {
