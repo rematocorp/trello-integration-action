@@ -5,6 +5,9 @@ import isDraftPullRequest from './utils/isDraftPullRequest'
 
 export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], pr: PR) {
 	const reviews = await getPullRequestReviews()
+
+	console.log('Debugging reviews', reviews)
+
 	const isChangesRequested = reviews?.some((review) => review.state === 'CHANGES_REQUESTED')
 	const isApproved = reviews?.some((review) => review.state === 'APPROVED')
 	const isDraft = isDraftPullRequest(pr)

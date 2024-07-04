@@ -34475,6 +34475,7 @@ const trello_1 = __nccwpck_require__(9763);
 const isDraftPullRequest_1 = __importDefault(__nccwpck_require__(5593));
 async function moveOrArchiveCards(conf, cardIds, pr) {
     const reviews = await (0, github_1.getPullRequestReviews)();
+    console.log('Debugging reviews', reviews);
     const isChangesRequested = reviews?.some((review) => review.state === 'CHANGES_REQUESTED');
     const isApproved = reviews?.some((review) => review.state === 'APPROVED');
     const isDraft = (0, isDraftPullRequest_1.default)(pr);
