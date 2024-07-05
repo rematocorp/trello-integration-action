@@ -144,7 +144,7 @@ trello-list-id-pr-open: xxx
 #
 # How to find list ID https://stackoverflow.com/a/50908600/2311110
 #
-# NOTE: You need to add review_requested and review_request_removed types to pull_request action trigger and also pull_request_review action trigger, read more https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_review
+# NOTE: You need to add pull_request_review action trigger and modify pull_request action trigger by adding two more types: review_requested and review_request_removed. Read more https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
 trello-list-id-pr-changes-requested: xxx
 ```
 
@@ -153,7 +153,7 @@ trello-list-id-pr-changes-requested: xxx
 #
 # How to find list ID https://stackoverflow.com/a/50908600/2311110
 #
-# NOTE: You need to add review_requested and review_request_removed types to pull_request action trigger and also pull_request_review action trigger, read more https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_review
+# NOTE: You need to add pull_request_review action trigger and modify pull_request action trigger by adding two more types: review_requested and review_request_removed. Read more https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
 trello-list-id-pr-approved: xxx
 ```
 
