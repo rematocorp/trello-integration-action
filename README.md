@@ -167,7 +167,7 @@ NB! Add `pull_request_review` trigger and modify `pull_request` trigger with `re
 
 Trello list ID for closed pull request. [How to find list ID.](https://stackoverflow.com/a/50908600/2311110)
 
-### `trello-list-id-pr-closed`
+### `trello-board-id`
 
 Trello board ID where to move the cards. [How to find board ID.](https://stackoverflow.com/a/50908600/2311110)
 
