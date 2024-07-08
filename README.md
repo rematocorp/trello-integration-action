@@ -43,7 +43,7 @@ jobs:
 
 ## All options
 
-### `trello-api-key`
+### `trello-api-key` & `trello-auth-token`
 
 **Required:** Visit https://trello.com/app-key
 
@@ -51,15 +51,6 @@ jobs:
 
 ```yaml
 trello-api-key: ${{ secrets.TRELLO_API_KEY }}
-```
-
-### `trello-auth-token`
-
-**Required:** Visit https://trello.com/app-key
-
-**Example:**
-
-```yaml
 trello-auth-token: ${{ secrets.TRELLO_AUTH_TOKEN }}
 ```
 
@@ -95,7 +86,7 @@ NB! Option `github-include-pr-branch-name` needs to be true and it is recommende
 
 Creates a new Trello card from PR details if "/new-trello-card" is written in the PR description. Replaces "/new-trello-card" with the card link.
 
-NOTE: Make sure you set `pull-requests: write` permission for the job. [Learn more.](https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs)
+NB! Make sure you set `pull-requests: write` permission for the job. [Learn more.](https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs)
 
 **Default:** `false`
 
