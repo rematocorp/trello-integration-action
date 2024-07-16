@@ -15,9 +15,11 @@ export default async function updateCardMembers(conf: Conf, cardIds: string[], p
 
 	// Assigns PR reviewers to the card when the PR is in review
 	if (conf.trelloSwitchMembersInReview) {
+		console.log('Checking if in review')
 		const inReview = await isPullRequestInReview(conf, pr)
 
 		if (inReview) {
+			console.log('Is in review')
 			await switchCardMembersToReviewers(conf, cardIds)
 
 			return
