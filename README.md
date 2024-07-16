@@ -194,7 +194,7 @@ github-users-to-trello-users: |-
 
 #### 2. `trello-add-members-to-cards`
 
-Adds PR author, contributors and assignees to Trello card members list. This turns off also `trello-switch-members-in-review` and `trello-remove-unrelated-members`.
+Adds PR author, contributors and assignees to Trello card members list. This affects also `trello-switch-members-in-review` and `trello-remove-unrelated-members` when turned off.
 
 Default: `true`
 

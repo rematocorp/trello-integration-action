@@ -35,4 +35,4 @@ export type PRHead = { ref: string }
 
 export type BoardLabel = { id: string; name: string }
 
-export type Card = { idMembers: string[]; id: string }
+export type Card = { id: string; idMembers: string[] }
