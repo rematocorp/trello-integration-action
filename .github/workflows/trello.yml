@@ -1,4 +1,4 @@
-name: Trello integration
+name: trello
 on:
     pull_request:
         types:
@@ -16,7 +16,7 @@ on:
     issue_comment:
         types: [created, edited]
 jobs:
-    trello:
+    test:
         runs-on: ubuntu-latest
         steps:
             - uses: rematocorp/trello-integration-action@114-disabling-member-assigning-completely
@@ -24,6 +24,7 @@ jobs:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
                   trello-api-key: ${{ secrets.TRELLO_API_KEY }}
                   trello-auth-token: ${{ secrets.TRELLO_AUTH_TOKEN }}
-                  trello-list-id-pr-open: 66963abac807711874026524
-                  trello-list-id-pr-closed: 66963ac72b1222986bf432a2
+                  trello-list-id-pr-draft: 6092503e9a89e4752911fce7
+                  trello-list-id-pr-open: 60b4ca9140982c5b39c314a7
+                  trello-list-id-pr-closed: 60925045a40b6a17a17293de
                   trello-switch-members-in-review: true
