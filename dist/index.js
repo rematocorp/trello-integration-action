@@ -34353,7 +34353,7 @@ const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(2649);
 const trello_1 = __nccwpck_require__(9763);
 const matchCardIds_1 = __importDefault(__nccwpck_require__(9812));
-const isDraftPullRequest_1 = __importDefault(__nccwpck_require__(5593));
+const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3031));
 async function getCardIds(conf, pr) {
     console.log('Searching for card IDs');
     const latestPRInfo = (await (0, github_1.getPullRequest)()) || pr;
@@ -34429,7 +34429,7 @@ async function getTrelloCardByShortId(shortId, boardId) {
         .find((card) => card.idShort === parseInt(shortId))?.shortLink;
 }
 async function createNewCard(conf, pr) {
-    const isDraft = (0, isDraftPullRequest_1.default)(pr);
+    const isDraft = (0, isPullRequestInDraft_1.default)(pr);
     const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen;
     const commandRegex = /(^|\s)\/new-trello-card(\s|$)/; // Avoids matching URLs
     if (listId && pr.body && commandRegex.test(pr.body)) {
@@ -34481,12 +34481,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const github_1 = __nccwpck_require__(2649);
 const trello_1 = __nccwpck_require__(9763);
-const isDraftPullRequest_1 = __importDefault(__nccwpck_require__(5593));
+const isChangesRequestedInReview_1 = __importDefault(__nccwpck_require__(4028));
+const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3031));
+const isPullRequestApproved_1 = __importDefault(__nccwpck_require__(4414));
 async function moveOrArchiveCards(conf, cardIds, pr) {
-    const reviews = await getActivePullRequestReviews();
-    const isChangesRequested = reviews?.some((review) => review.state === 'CHANGES_REQUESTED');
-    const isApproved = reviews?.some((review) => review.state === 'APPROVED');
-    const isDraft = (0, isDraftPullRequest_1.default)(pr);
+    const isDraft = (0, isPullRequestInDraft_1.default)(pr);
+    const isChangesRequested = await (0, isChangesRequestedInReview_1.default)();
+    const isApproved = await (0, isPullRequestApproved_1.default)();
     const isMerged = await (0, github_1.isPullRequestMerged)();
     if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
         await moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId);
@@ -34520,21 +34521,6 @@ async function moveOrArchiveCards(conf, cardIds, pr) {
     console.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged });
 }
 exports["default"] = moveOrArchiveCards;
-/**
- * Returns all pull request reviews that are still relevant
- *
- * @returns https://docs.github.com/en/graphql/reference/objects#pullrequestreview
- */
-async function getActivePullRequestReviews() {
-    const reviews = await (0, github_1.getPullRequestReviews)();
-    const requestedReviewers = await (0, github_1.getPullRequestRequestedReviewers)();
-    // Filters out pending reviews
-    const submittedReviews = reviews?.filter((review) => review.state !== 'PENDING');
-    // Filters in only the latest review per person
-    const latestReviews = Array.from(submittedReviews?.reduce((map, review) => map.set(review.user?.id, review), new Map()).values() || []);
-    // Filters out reviews by people who have been re-requested for review
-    return latestReviews.filter((r) => !requestedReviewers?.users.some((u) => u.id === r.user?.id));
-}
 async function moveCardsToList(cardIds, listId, boardId) {
     const listIds = listId.split(';');
     return Promise.all(cardIds.map(async (cardId) => {
@@ -34557,35 +34543,90 @@ async function archiveCards(cardIds) {
 /***/ }),
 
 /***/ 5978:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const github_1 = __nccwpck_require__(2649);
 const trello_1 = __nccwpck_require__(9763);
-async function updateCardMembers(conf, cardIds) {
+const isChangesRequestedInReview_1 = __importDefault(__nccwpck_require__(4028));
+const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3031));
+const isPullRequestApproved_1 = __importDefault(__nccwpck_require__(4414));
+async function updateCardMembers(conf, cardIds, pr) {
+    if (!conf.trelloAddMembersToCards) {
+        console.log('Skipping members updating');
+        return;
+    }
     console.log('Starting to update card members');
+    if (conf.trelloSwitchMembersInReview) {
+        // Assigns PR reviewers to the card when the PR is in review
+        const inReview = await isPullRequestInReview(conf, pr);
+        if (inReview) {
+            await switchCardMembersToReviewers(conf, cardIds);
+            return;
+        }
+    }
+    // Assigns PR author, committers and assignees to the PR
     const contributors = await getPullRequestContributors();
     if (!contributors.length) {
         console.log('No PR contributors found');
         return;
     }
-    const result = await Promise.all(contributors.map((member) => getTrelloMemberId(conf, member)));
-    const memberIds = result.filter((id) => id);
+    const memberIds = await getTrelloMemberIds(conf, contributors);
     if (!memberIds.length) {
         console.log('No Trello members found based on PR contributors');
         return;
     }
     return Promise.all(cardIds.map(async (cardId) => {
         const cardInfo = await (0, trello_1.getCardInfo)(cardId);
-        await addNewMembers(cardInfo, memberIds);
+        await addMembers(cardInfo, memberIds);
         if (conf.trelloRemoveUnrelatedMembers) {
             await removeUnrelatedMembers(cardInfo, memberIds);
         }
     }));
 }
 exports["default"] = updateCardMembers;
+async function isPullRequestInReview(conf, pr) {
+    if (pr.state !== 'open') {
+        return false;
+    }
+    if ((0, isPullRequestInDraft_1.default)(pr)) {
+        return false;
+    }
+    const isChangesRequested = await (0, isChangesRequestedInReview_1.default)();
+    const isApproved = await (0, isPullRequestApproved_1.default)();
+    if (isChangesRequested && conf.trelloListIdPrChangesRequested) {
+        return false;
+    }
+    if (!isChangesRequested && isApproved && conf.trelloListIdPrApproved) {
+        return false;
+    }
+    return true;
+}
+async function switchCardMembersToReviewers(conf, cardIds) {
+    const reviewers = await getReviewers();
+    return Promise.all(cardIds.map(async (cardId) => {
+        const cardInfo = await (0, trello_1.getCardInfo)(cardId);
+        // Removes all current members from the card
+        await Promise.all(cardInfo.idMembers.map((memberId) => (0, trello_1.removeMemberFromCard)(cardInfo.id, memberId)));
+        // Assigns PR reviewers to the Trello card
+        const memberIds = await getTrelloMemberIds(conf, reviewers);
+        await addMembers(cardInfo, memberIds);
+    }));
+}
+async function getReviewers() {
+    const reviews = await (0, github_1.getPullRequestReviews)();
+    const requestedReviewers = await (0, github_1.getPullRequestRequestedReviewers)();
+    const allReviewers = [
+        ...reviews.filter((r) => r.state !== 'PENDING').map((r) => r.user?.login),
+        ...requestedReviewers?.users?.map((u) => u.login),
+    ].filter((username) => username !== undefined);
+    return allReviewers;
+}
 async function getPullRequestContributors() {
     const pr = await (0, github_1.getPullRequest)();
     if (!pr) {
@@ -34606,22 +34647,25 @@ async function getPullRequestContributors() {
     }
     return Array.from(contributors);
 }
-async function getTrelloMemberId(conf, githubUsername) {
-    const username = getTrelloUsername(conf, githubUsername);
-    console.log('Searching Trello member id by username', username);
-    const member = await (0, trello_1.getMemberInfo)(username);
-    if (!member) {
-        return;
-    }
-    console.log('Found member id by username', member.id, username);
-    if (conf.trelloOrganizationName) {
-        const hasAccess = member.organizations?.some((org) => org.name === conf.trelloOrganizationName);
-        if (!hasAccess) {
-            console.log('...but the member has no access to the org', conf.trelloOrganizationName);
+async function getTrelloMemberIds(conf, githubUsernames) {
+    const result = await Promise.all(githubUsernames.map(async (githubUsername) => {
+        const username = getTrelloUsername(conf, githubUsername);
+        console.log('Searching Trello member id by username', username);
+        const member = await (0, trello_1.getMemberInfo)(username);
+        if (!member) {
             return;
         }
-    }
-    return member.id;
+        console.log('Found member id by username', member.id, username);
+        if (conf.trelloOrganizationName) {
+            const hasAccess = member.organizations?.some((org) => org.name === conf.trelloOrganizationName);
+            if (!hasAccess) {
+                console.log('...but the member has no access to the org', conf.trelloOrganizationName);
+                return;
+            }
+        }
+        return member.id;
+    }));
+    return result.filter((id) => id);
 }
 function getTrelloUsername(conf, githubUsername) {
     const username = githubUsername?.replace('-', '_');
@@ -34642,6 +34686,14 @@ function getTrelloUsername(conf, githubUsername) {
     }
     return username;
 }
+async function addMembers(cardInfo, memberIds) {
+    const filtered = memberIds.filter((id) => !cardInfo.idMembers.includes(id));
+    if (!filtered.length) {
+        console.log('All members are already assigned to the card');
+        return;
+    }
+    return Promise.all(filtered.map((memberId) => (0, trello_1.addMemberToCard)(cardInfo.id, memberId)));
+}
 async function removeUnrelatedMembers(cardInfo, memberIds) {
     const filtered = cardInfo.idMembers.filter((id) => !memberIds.includes(id));
     if (!filtered.length) {
@@ -34650,25 +34702,82 @@ async function removeUnrelatedMembers(cardInfo, memberIds) {
     }
     return Promise.all(filtered.map((unrelatedMemberId) => (0, trello_1.removeMemberFromCard)(cardInfo.id, unrelatedMemberId)));
 }
-async function addNewMembers(cardInfo, memberIds) {
-    const filtered = memberIds.filter((id) => !cardInfo.idMembers.includes(id));
-    if (!filtered.length) {
-        console.log('All members are already assigned to the card');
-        return;
-    }
-    return Promise.all(filtered.map((memberId) => (0, trello_1.addMemberToCard)(cardInfo.id, memberId)));
-}
 
 
 /***/ }),
 
-/***/ 5593:
+/***/ 1266:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const github_1 = __nccwpck_require__(2649);
+/**
+ * Returns all pull request reviews that are still relevant
+ *
+ * @returns https://docs.github.com/en/graphql/reference/objects#pullrequestreview
+ */
+async function getActivePullRequestReviews() {
+    const reviews = await (0, github_1.getPullRequestReviews)();
+    const requestedReviewers = await (0, github_1.getPullRequestRequestedReviewers)();
+    // Filters out pending reviews
+    const submittedReviews = reviews?.filter((review) => review.state !== 'PENDING');
+    // Filters in only the latest review per person
+    const latestReviews = Array.from(submittedReviews?.reduce((map, review) => map.set(review.user?.id, review), new Map()).values() || []);
+    // Filters out reviews by people who have been re-requested for review
+    return latestReviews.filter((r) => !requestedReviewers?.users.some((u) => u.id === r.user?.id));
+}
+exports["default"] = getActivePullRequestReviews;
+
+
+/***/ }),
+
+/***/ 4028:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const getActivePullRequestReviews_1 = __importDefault(__nccwpck_require__(1266));
+async function isChangesRequestedInReview() {
+    const reviews = await (0, getActivePullRequestReviews_1.default)();
+    return reviews?.some((review) => review.state === 'CHANGES_REQUESTED');
+}
+exports["default"] = isChangesRequestedInReview;
+
+
+/***/ }),
+
+/***/ 4414:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const getActivePullRequestReviews_1 = __importDefault(__nccwpck_require__(1266));
+async function isPullRequestApproved() {
+    const reviews = await (0, getActivePullRequestReviews_1.default)();
+    return reviews?.some((review) => review.state === 'APPROVED');
+}
+exports["default"] = isPullRequestApproved;
+
+
+/***/ }),
+
+/***/ 3031:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-function isDraftPullRequest(pr) {
+function isPullRequestInDraft(pr) {
     // Treat PRs with “draft” or “wip” in brackets at the start or
     // end of the titles like drafts. Useful for orgs on unpaid
     // plans which doesn’t support PR drafts.
@@ -34680,7 +34789,7 @@ function isDraftPullRequest(pr) {
     }
     return isRealDraft || isFauxDraft;
 }
-exports["default"] = isDraftPullRequest;
+exports["default"] = isPullRequestInDraft;
 
 
 /***/ }),
@@ -34776,6 +34885,8 @@ const main_1 = __nccwpck_require__(399);
     trelloBoardId: core.getInput('trello-board-id'),
     trelloConflictingLabels: core.getInput('trello-conflicting-labels')?.split(';'),
     trelloAddLabelsToCards: core.getBooleanInput('trello-add-labels-to-cards'),
+    trelloAddMembersToCards: core.getBooleanInput('trello-add-members-to-cards'),
+    trelloSwitchMembersInReview: core.getBooleanInput('trello-switch-members-in-review'),
     trelloRemoveUnrelatedMembers: core.getBooleanInput('trello-remove-unrelated-members'),
     trelloArchiveOnMerge: core.getBooleanInput('trello-archive-on-merge'),
 });
@@ -34800,7 +34911,7 @@ async function run(pr, conf) {
             await (0, actions_1.addPullRequestLinkToCards)(cardIds, pr);
             await (0, actions_1.moveOrArchiveCards)(conf, cardIds, pr);
             await (0, actions_1.addLabelToCards)(conf, cardIds, pr.head);
-            await (0, actions_1.updateCardMembers)(conf, cardIds);
+            await (0, actions_1.updateCardMembers)(conf, cardIds, pr);
         }
     }
     catch (error) {

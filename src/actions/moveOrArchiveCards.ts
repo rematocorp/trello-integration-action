@@ -1,13 +1,14 @@
 import { Conf, PR } from '../types'
-import { isPullRequestMerged, getPullRequestReviews, getPullRequestRequestedReviewers } from './api/github'
+import { isPullRequestMerged } from './api/github'
 import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/trello'
-import isDraftPullRequest from './utils/isDraftPullRequest'
+import isChangesRequestedInReview from './utils/isChangesRequestedInReview'
+import isPullRequestInDraft from './utils/isPullRequestInDraft'
+import isPullRequestApproved from './utils/isPullRequestApproved'
 
 export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], pr: PR) {
-	const reviews = await getActivePullRequestReviews()
-	const isChangesRequested = reviews?.some((review) => review.state === 'CHANGES_REQUESTED')
-	const isApproved = reviews?.some((review) => review.state === 'APPROVED')
-	const isDraft = isDraftPullRequest(pr)
+	const isDraft = isPullRequestInDraft(pr)
+	const isChangesRequested = await isChangesRequestedInReview()
+	const isApproved = await isPullRequestApproved()
 	const isMerged = await isPullRequestMerged()
 
 	if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
@@ -52,27 +53,6 @@ export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], 
 	}
 
 	console.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged })
-}
-
-/**
- * Returns all pull request reviews that are still relevant
- *
- * @returns https://docs.github.com/en/graphql/reference/objects#pullrequestreview
- */
-async function getActivePullRequestReviews(): Promise<{ state: string }[]> {
-	const reviews = await getPullRequestReviews()
-	const requestedReviewers = await getPullRequestRequestedReviewers()
-
-	// Filters out pending reviews
-	const submittedReviews = reviews?.filter((review) => review.state !== 'PENDING')
-
-	// Filters in only the latest review per person
-	const latestReviews = Array.from(
-		submittedReviews?.reduce((map, review) => map.set(review.user?.id, review), new Map()).values() || [],
-	)
-
-	// Filters out reviews by people who have been re-requested for review
-	return latestReviews.filter((r) => !requestedReviewers?.users.some((u) => u.id === r.user?.id))
 }
 
 async function moveCardsToList(cardIds: string[], listId: string, boardId?: string) {

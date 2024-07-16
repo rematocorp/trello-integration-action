@@ -19,6 +19,8 @@ export interface Conf {
 	trelloBoardId?: string
 	trelloConflictingLabels?: string[]
 	trelloAddLabelsToCards?: boolean
+	trelloAddMembersToCards?: boolean
+	trelloSwitchMembersInReview?: boolean
 	trelloRemoveUnrelatedMembers?: boolean
 	trelloArchiveOnMerge?: boolean
 }
@@ -32,3 +34,5 @@ export type PR = Omit<
 export type PRHead = { ref: string }
 
 export type BoardLabel = { id: string; name: string }
+
+export type Card = { id: string; idMembers: string[] }

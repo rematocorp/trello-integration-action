@@ -1,4 +1,4 @@
-export default function isDraftPullRequest(pr: any) {
+export default function isPullRequestInDraft(pr: any) {
 	// Treat PRs with “draft” or “wip” in brackets at the start or
 	// end of the titles like drafts. Useful for orgs on unpaid
 	// plans which doesn’t support PR drafts.
