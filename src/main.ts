@@ -18,7 +18,7 @@ export async function run(pr: PR, conf: Conf) {
 			await addPullRequestLinkToCards(cardIds, pr)
 			await moveOrArchiveCards(conf, cardIds, pr)
 			await addLabelToCards(conf, cardIds, pr.head)
-			await updateCardMembers(conf, cardIds)
+			await updateCardMembers(conf, cardIds, pr)
 		}
 	} catch (error: any) {
 		setFailed(error)

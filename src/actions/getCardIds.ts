@@ -3,7 +3,7 @@ import { Conf, PR, PRHead } from '../types'
 import { getBranchName, getCommits, getPullRequest, getPullRequestComments, updatePullRequestBody } from './api/github'
 import { createCard, searchTrelloCards } from './api/trello'
 import matchCardIds from './utils/matchCardIds'
-import isDraftPullRequest from './utils/isDraftPullRequest'
+import isPullRequestInDraft from './utils/isPullRequestInDraft'
 
 export default async function getCardIds(conf: Conf, pr: PR) {
 	console.log('Searching for card IDs')
@@ -109,7 +109,7 @@ async function getTrelloCardByShortId(shortId: string, boardId?: string) {
 }
 
 async function createNewCard(conf: Conf, pr: PR) {
-	const isDraft = isDraftPullRequest(pr)
+	const isDraft = isPullRequestInDraft(pr)
 	const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen
 	const commandRegex = /(^|\s)\/new-trello-card(\s|$)/ // Avoids matching URLs
 

@@ -66,6 +66,12 @@ inputs:
     trello-card-position:
         description: Position of the card after being moved to a list. Can be "top" or "bottom".
         default: 'top'
+    trello-add-members-to-cards:
+        description: Adds PR author, contributors and assignees to the Trello card.
+        default: true
+    trello-switch-members-in-review:
+        description: Replaces Trello card members with PR reviewers when PR is opened. It reassigns the PR author, contributors and assignees when the card is moved away from trello-list-id-pr-open.
+        default: false
     trello-remove-unrelated-members:
         description: Removes card members who are not authors or assignees of the PR.
         default: true

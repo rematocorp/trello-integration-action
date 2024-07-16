@@ -22,6 +22,8 @@ run((context.payload.pull_request || context.payload.issue) as PR, {
 	trelloBoardId: core.getInput('trello-board-id'),
 	trelloConflictingLabels: core.getInput('trello-conflicting-labels')?.split(';'),
 	trelloAddLabelsToCards: core.getBooleanInput('trello-add-labels-to-cards'),
+	trelloAddMembersToCards: core.getBooleanInput('trello-add-members-to-cards'),
+	trelloSwitchMembersInReview: core.getBooleanInput('trello-switch-members-in-review'),
 	trelloRemoveUnrelatedMembers: core.getBooleanInput('trello-remove-unrelated-members'),
 	trelloArchiveOnMerge: core.getBooleanInput('trello-archive-on-merge'),
 })
