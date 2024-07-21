@@ -19,7 +19,7 @@ jobs:
     test:
         runs-on: ubuntu-latest
         steps:
-            - uses: rematocorp/trello-integration-action@main
+            - uses: rematocorp/trello-integration-action@trello-switch-members-in-review-vol-2
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
                   trello-api-key: ${{ secrets.TRELLO_API_KEY }}

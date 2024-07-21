@@ -34575,36 +34575,15 @@ const isPullRequestApproved_1 = __importDefault(__nccwpck_require__(4414));
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function updateCardMembers(conf, cardIds, pr) {
     if (!conf.trelloAddMembersToCards) {
-        logger_1.default.log('Skipping members updating');
-        return;
+        return logger_1.default.log('Skipping members updating');
     }
-    logger_1.default.log('Starting to update card members');
-    if (conf.trelloSwitchMembersInReview) {
-        // Assigns PR reviewers to the card when the PR is in review
-        const inReview = await isPullRequestInReview(conf, pr);
-        if (inReview) {
-            await switchCardMembersToReviewers(conf, cardIds);
-            return;
-        }
+    const inReview = await isPullRequestInReview(conf, pr);
+    if (inReview) {
+        await assignReviewers(conf, cardIds);
     }
-    // Assigns PR author, committers and assignees to the PR
-    const contributors = await getPullRequestContributors();
-    if (!contributors.length) {
-        logger_1.default.log('No PR contributors found');
-        return;
+    else {
+        await assignContributors(conf, cardIds);
     }
-    const memberIds = await getTrelloMemberIds(conf, contributors);
-    if (!memberIds.length) {
-        logger_1.default.log('No Trello members found based on PR contributors');
-        return;
-    }
-    return Promise.all(cardIds.map(async (cardId) => {
-        const cardInfo = await (0, trello_1.getCardInfo)(cardId);
-        await addMembers(cardInfo, memberIds);
-        if (conf.trelloRemoveUnrelatedMembers) {
-            await removeUnrelatedMembers(cardInfo, memberIds);
-        }
-    }));
 }
 exports["default"] = updateCardMembers;
 async function isPullRequestInReview(conf, pr) {
@@ -34612,6 +34591,9 @@ async function isPullRequestInReview(conf, pr) {
     const isChangesRequested = await (0, isChangesRequestedInReview_1.default)();
     const isApproved = await (0, isPullRequestApproved_1.default)();
     logger_1.default.log('Checking if PR is in review', { prState: pr.state, isInDraft, isChangesRequested, isApproved });
+    if (!conf.trelloSwitchMembersInReview) {
+        return false;
+    }
     if (pr.state !== 'open') {
         return false;
     }
@@ -34626,9 +34608,9 @@ async function isPullRequestInReview(conf, pr) {
     }
     return true;
 }
-async function switchCardMembersToReviewers(conf, cardIds) {
+async function assignReviewers(conf, cardIds) {
     const reviewers = await getReviewers();
-    logger_1.default.log('Switching card members to reviewers', { reviewers });
+    logger_1.default.log('Removing contributors and assigning reviewers', { reviewers });
     return Promise.all(cardIds.map(async (cardId) => {
         const cardInfo = await (0, trello_1.getCardInfo)(cardId);
         // Removes all current members from the card
@@ -34646,6 +34628,25 @@ async function getReviewers() {
         ...requestedReviewers?.users?.map((u) => u.login),
     ].filter((username) => username !== undefined);
     return allReviewers;
+}
+async function assignContributors(conf, cardIds) {
+    const contributors = await getPullRequestContributors();
+    if (!contributors.length) {
+        logger_1.default.log('No PR contributors found');
+        return;
+    }
+    const memberIds = await getTrelloMemberIds(conf, contributors);
+    if (!memberIds.length) {
+        logger_1.default.log('No Trello members found based on PR contributors');
+        return;
+    }
+    return Promise.all(cardIds.map(async (cardId) => {
+        const cardInfo = await (0, trello_1.getCardInfo)(cardId);
+        await addMembers(cardInfo, memberIds);
+        if (conf.trelloRemoveUnrelatedMembers) {
+            await removeUnrelatedMembers(cardInfo, memberIds);
+        }
+    }));
 }
 async function getPullRequestContributors() {
     const pr = await (0, github_1.getPullRequest)();

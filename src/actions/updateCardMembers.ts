@@ -8,24 +8,74 @@ import logger from './utils/logger'
 
 export default async function updateCardMembers(conf: Conf, cardIds: string[], pr: PR) {
 	if (!conf.trelloAddMembersToCards) {
-		logger.log('Skipping members updating')
-
-		return
+		return logger.log('Skipping members updating')
 	}
-	logger.log('Starting to update card members')
+	const inReview = await isPullRequestInReview(conf, pr)
 
-	if (conf.trelloSwitchMembersInReview) {
-		// Assigns PR reviewers to the card when the PR is in review
-		const inReview = await isPullRequestInReview(conf, pr)
+	if (inReview) {
+		await assignReviewers(conf, cardIds)
+	} else {
+		await assignContributors(conf, cardIds)
+	}
+}
 
-		if (inReview) {
-			await switchCardMembersToReviewers(conf, cardIds)
+async function isPullRequestInReview(conf: Conf, pr: PR) {
+	const isInDraft = isPullRequestInDraft(pr)
+	const isChangesRequested = await isChangesRequestedInReview()
+	const isApproved = await isPullRequestApproved()
 
-			return
-		}
+	logger.log('Checking if PR is in review', { prState: pr.state, isInDraft, isChangesRequested, isApproved })
+
+	if (!conf.trelloSwitchMembersInReview) {
+		return false
+	}
+	if (pr.state !== 'open') {
+		return false
+	}
+	if (isPullRequestInDraft(pr)) {
+		return false
+	}
+	if (isChangesRequested && conf.trelloListIdPrChangesRequested) {
+		return false
+	}
+	if (!isChangesRequested && isApproved && conf.trelloListIdPrApproved) {
+		return false
 	}
 
-	// Assigns PR author, committers and assignees to the PR
+	return true
+}
+
+async function assignReviewers(conf: Conf, cardIds: string[]) {
+	const reviewers = await getReviewers()
+
+	logger.log('Removing contributors and assigning reviewers', { reviewers })
+
+	return Promise.all(
+		cardIds.map(async (cardId) => {
+			const cardInfo = await getCardInfo(cardId)
+
+			// Removes all current members from the card
+			await Promise.all(cardInfo.idMembers.map((memberId: string) => removeMemberFromCard(cardInfo.id, memberId)))
+
+			// Assigns PR reviewers to the Trello card
+			const memberIds = await getTrelloMemberIds(conf, reviewers)
+			await addMembers({ ...cardInfo, idMembers: [] }, memberIds)
+		}),
+	)
+}
+
+async function getReviewers() {
+	const reviews = await getPullRequestReviews()
+	const requestedReviewers = await getPullRequestRequestedReviewers()
+	const allReviewers = [
+		...reviews.filter((r) => r.state !== 'PENDING').map((r) => r.user?.login),
+		...requestedReviewers?.users?.map((u) => u.login),
+	].filter((username) => username !== undefined)
+
+	return allReviewers as string[]
+}
+
+async function assignContributors(conf: Conf, cardIds: string[]) {
 	const contributors = await getPullRequestContributors()
 
 	if (!contributors.length) {
@@ -52,60 +102,6 @@ export default async function updateCardMembers(conf: Conf, cardIds: string[], p
 			}
 		}),
 	)
-}
-
-async function isPullRequestInReview(conf: Conf, pr: PR) {
-	const isInDraft = isPullRequestInDraft(pr)
-	const isChangesRequested = await isChangesRequestedInReview()
-	const isApproved = await isPullRequestApproved()
-
-	logger.log('Checking if PR is in review', { prState: pr.state, isInDraft, isChangesRequested, isApproved })
-
-	if (pr.state !== 'open') {
-		return false
-	}
-	if (isPullRequestInDraft(pr)) {
-		return false
-	}
-
-	if (isChangesRequested && conf.trelloListIdPrChangesRequested) {
-		return false
-	}
-	if (!isChangesRequested && isApproved && conf.trelloListIdPrApproved) {
-		return false
-	}
-
-	return true
-}
-
-async function switchCardMembersToReviewers(conf: Conf, cardIds: string[]) {
-	const reviewers = await getReviewers()
-
-	logger.log('Switching card members to reviewers', { reviewers })
-
-	return Promise.all(
-		cardIds.map(async (cardId) => {
-			const cardInfo = await getCardInfo(cardId)
-
-			// Removes all current members from the card
-			await Promise.all(cardInfo.idMembers.map((memberId: string) => removeMemberFromCard(cardInfo.id, memberId)))
-
-			// Assigns PR reviewers to the Trello card
-			const memberIds = await getTrelloMemberIds(conf, reviewers)
-			await addMembers({ ...cardInfo, idMembers: [] }, memberIds)
-		}),
-	)
-}
-
-async function getReviewers() {
-	const reviews = await getPullRequestReviews()
-	const requestedReviewers = await getPullRequestRequestedReviewers()
-	const allReviewers = [
-		...reviews.filter((r) => r.state !== 'PENDING').map((r) => r.user?.login),
-		...requestedReviewers?.users?.map((u) => u.login),
-	].filter((username) => username !== undefined)
-
-	return allReviewers as string[]
 }
 
 async function getPullRequestContributors() {
