@@ -1,5 +1,6 @@
 import { getInput } from '@actions/core'
 import { getOctokit, context } from '@actions/github'
+import logger from '../utils/logger'
 
 const githubToken = getInput('github-token', { required: true })
 
@@ -84,7 +85,7 @@ export async function getPullRequestRequestedReviewers() {
 }
 
 export async function createComment(shortUrl: string) {
-	console.log('Creating PR comment', shortUrl)
+	logger.log('Creating PR comment', shortUrl)
 
 	await octokit.rest.issues.createComment({
 		owner,
@@ -95,7 +96,7 @@ export async function createComment(shortUrl: string) {
 }
 
 export async function updatePullRequestBody(newBody: string) {
-	console.log('Updating PR body', newBody)
+	logger.log('Updating PR body', newBody)
 
 	await octokit.rest.issues.update({
 		owner,

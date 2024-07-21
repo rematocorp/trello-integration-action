@@ -1,3 +1,5 @@
+import logger from './logger'
+
 export default function isPullRequestInDraft(pr: any) {
 	// Treat PRs with “draft” or “wip” in brackets at the start or
 	// end of the titles like drafts. Useful for orgs on unpaid
@@ -7,7 +9,7 @@ export default function isPullRequestInDraft(pr: any) {
 	const isFauxDraft = Boolean(pr.title.match(titleDraftRegExp))
 
 	if (isFauxDraft) {
-		console.log('This PR is in faux draft')
+		logger.log('This PR is in faux draft')
 	}
 
 	return isRealDraft || isFauxDraft

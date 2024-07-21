@@ -33957,6 +33957,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const github_1 = __nccwpck_require__(2649);
 const trello_1 = __nccwpck_require__(9763);
+const logger_1 = __importDefault(__nccwpck_require__(2358));
 const matchCardIds_1 = __importDefault(__nccwpck_require__(9812));
 async function addCardLinksToPullRequest(conf, cardIds) {
     const bodyCardIds = await getCardIdsFromBody(conf);
@@ -33964,10 +33965,10 @@ async function addCardLinksToPullRequest(conf, cardIds) {
     const linkedCardIds = [...bodyCardIds, ...commentsCardIds];
     const unlinkedCardIds = cardIds.filter((id) => !linkedCardIds.includes(id));
     if (!unlinkedCardIds.length) {
-        console.log('Skipping card linking as all cards are already mentioned under the PR');
+        logger_1.default.log('Skipping card linking as all cards are already mentioned under the PR');
         return;
     }
-    console.log('Commenting Trello card URLs to PR', unlinkedCardIds);
+    logger_1.default.log('Commenting Trello card URLs to PR', unlinkedCardIds);
     const cards = await Promise.all(unlinkedCardIds.map((id) => (0, trello_1.getCardInfo)(id)));
     const urls = cards.map((card) => card.shortUrl);
     const comment = conf.githubRequireKeywordPrefix ? `Closes ${urls.join(' ')}` : urls.join('\n');
@@ -33991,29 +33992,33 @@ async function getCardIdsFromComments(conf) {
 /***/ }),
 
 /***/ 7340:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const github_1 = __nccwpck_require__(2649);
 const trello_1 = __nccwpck_require__(9763);
+const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function addLabelToCards(conf, cardIds, head) {
     if (!conf.trelloAddLabelsToCards) {
-        console.log('Skipping label adding');
+        logger_1.default.log('Skipping label adding');
         return;
     }
-    console.log('Starting to add labels to cards');
+    logger_1.default.log('Starting to add labels to cards');
     const branchLabel = await getBranchLabel(head);
     if (!branchLabel) {
-        console.log('Could not find branch label');
+        logger_1.default.log('Could not find branch label');
         return;
     }
     return Promise.all(cardIds.map(async (cardId) => {
         const cardInfo = await (0, trello_1.getCardInfo)(cardId);
         const hasConflictingLabel = cardInfo.labels.find((label) => conf.trelloConflictingLabels?.includes(label.name) || label.name === branchLabel);
         if (hasConflictingLabel) {
-            console.log('Skipping label adding to a card because it has a conflicting label', cardInfo.labels);
+            logger_1.default.log('Skipping label adding to a card because it has a conflicting label', cardInfo.labels);
             return;
         }
         const boardLabels = await (0, trello_1.getBoardLabels)(cardInfo.idBoard);
@@ -34022,7 +34027,7 @@ async function addLabelToCards(conf, cardIds, head) {
             await (0, trello_1.addLabelToCard)(cardId, matchingLabel.id);
         }
         else {
-            console.log('Could not find a matching label from the board', branchLabel, boardLabels);
+            logger_1.default.log('Could not find a matching label from the board', { branchLabel, boardLabels });
         }
     }));
 }
@@ -34034,7 +34039,7 @@ async function getBranchLabel(prHead) {
         return matches[1];
     }
     else {
-        console.log('Did not find branch label', branchName);
+        logger_1.default.log('Did not find branch label', branchName);
     }
 }
 function findMatchingLabel(branchLabel, boardLabels) {
@@ -34042,7 +34047,7 @@ function findMatchingLabel(branchLabel, boardLabels) {
     if (match) {
         return match;
     }
-    console.log('Could not match the exact label name, trying to find partially matching label');
+    logger_1.default.log('Could not match the exact label name, trying to find partially matching label');
     return boardLabels.find((label) => branchLabel.startsWith(label.name));
 }
 
@@ -34050,18 +34055,22 @@ function findMatchingLabel(branchLabel, boardLabels) {
 /***/ }),
 
 /***/ 37:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const trello_1 = __nccwpck_require__(9763);
+const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function addPullRequestLinkToCards(cardIds, pr) {
     const link = pr.html_url || pr.url;
     return Promise.all(cardIds.map(async (cardId) => {
         const existingAttachments = await (0, trello_1.getCardAttachments)(cardId);
         if (existingAttachments?.some((it) => it.url.includes(link))) {
-            console.log('Found existing attachment, skipping adding attachment', cardId, link);
+            logger_1.default.log('Found existing attachment, skipping adding attachment', { cardId, link });
             return;
         }
         return (0, trello_1.addAttachmentToCard)(cardId, link);
@@ -34073,14 +34082,18 @@ exports["default"] = addPullRequestLinkToCards;
 /***/ }),
 
 /***/ 2649:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.updatePullRequestBody = exports.createComment = exports.getPullRequestRequestedReviewers = exports.getPullRequestReviews = exports.isPullRequestMerged = exports.getCommits = exports.getBranchName = exports.getPullRequest = exports.getPullRequestComments = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
+const logger_1 = __importDefault(__nccwpck_require__(2358));
 const githubToken = (0, core_1.getInput)('github-token', { required: true });
 const octokit = (0, github_1.getOctokit)(githubToken);
 const payload = github_1.context.payload;
@@ -34156,7 +34169,7 @@ async function getPullRequestRequestedReviewers() {
 }
 exports.getPullRequestRequestedReviewers = getPullRequestRequestedReviewers;
 async function createComment(shortUrl) {
-    console.log('Creating PR comment', shortUrl);
+    logger_1.default.log('Creating PR comment', shortUrl);
     await octokit.rest.issues.createComment({
         owner,
         repo,
@@ -34166,7 +34179,7 @@ async function createComment(shortUrl) {
 }
 exports.createComment = createComment;
 async function updatePullRequestBody(newBody) {
-    console.log('Updating PR body', newBody);
+    logger_1.default.log('Updating PR body', newBody);
     await octokit.rest.issues.update({
         owner,
         repo,
@@ -34214,6 +34227,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createCard = exports.getMemberInfo = exports.archiveCard = exports.moveCardToList = exports.removeMemberFromCard = exports.addLabelToCard = exports.getBoardLists = exports.getBoardLabels = exports.addMemberToCard = exports.addAttachmentToCard = exports.getCardAttachments = exports.getCardInfo = exports.searchTrelloCards = void 0;
 const axios_1 = __importDefault(__nccwpck_require__(8757));
 const core = __importStar(__nccwpck_require__(2186));
+const logger_1 = __importDefault(__nccwpck_require__(2358));
 const trelloApiKey = core.getInput('trello-api-key', { required: true });
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true });
 const trelloCardPosition = core.getInput('trello-card-position');
@@ -34237,12 +34251,12 @@ async function getCardAttachments(cardId) {
 }
 exports.getCardAttachments = getCardAttachments;
 async function addAttachmentToCard(cardId, link) {
-    console.log('Adding attachment to the card', cardId, link);
+    logger_1.default.log('Adding attachment to the card', { cardId, link });
     return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/attachments`, { url: link });
 }
 exports.addAttachmentToCard = addAttachmentToCard;
 async function addMemberToCard(cardId, memberId) {
-    console.log('Adding member to a card', cardId, memberId);
+    logger_1.default.log('Adding member to a card', { cardId, memberId });
     return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idMembers`, {
         value: memberId,
     });
@@ -34261,19 +34275,19 @@ async function getBoardLists(boardId) {
 }
 exports.getBoardLists = getBoardLists;
 async function addLabelToCard(cardId, labelId) {
-    console.log('Adding label to a card', cardId, labelId);
+    logger_1.default.log('Adding label to a card', { cardId, labelId });
     return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idLabels`, {
         value: labelId,
     });
 }
 exports.addLabelToCard = addLabelToCard;
 async function removeMemberFromCard(cardId, memberId) {
-    console.log('Removing card member', cardId, memberId);
+    logger_1.default.log('Removing card member', { cardId, memberId });
     return makeRequest('delete', `https://api.trello.com/1/cards/${cardId}/idMembers/${memberId}`);
 }
 exports.removeMemberFromCard = removeMemberFromCard;
 async function moveCardToList(cardId, listId, boardId) {
-    console.log('Moving card to list', cardId, listId);
+    logger_1.default.log('Moving card to list', { cardId, listId, boardId });
     return makeRequest('put', `https://api.trello.com/1/cards/${cardId}`, {
         pos: trelloCardPosition,
         idList: listId,
@@ -34282,7 +34296,7 @@ async function moveCardToList(cardId, listId, boardId) {
 }
 exports.moveCardToList = moveCardToList;
 async function archiveCard(cardId) {
-    console.log('Archiving card', cardId);
+    logger_1.default.log('Archiving card', { cardId });
     return makeRequest('put', `https://api.trello.com/1/cards/${cardId}`, {
         closed: true,
     });
@@ -34296,7 +34310,7 @@ async function getMemberInfo(username) {
 }
 exports.getMemberInfo = getMemberInfo;
 async function createCard(listId, title, body) {
-    console.log('Creating card based on PR info', title, body);
+    logger_1.default.log('Creating card based on PR info', { title, body });
     const response = await makeRequest('post', `https://api.trello.com/1/cards`, {
         idList: listId,
         name: title,
@@ -34332,7 +34346,7 @@ async function makeRequest(method, url, params) {
                 message: error.message,
             },
         };
-        console.error(JSON.stringify(errorMessage, null, 2));
+        logger_1.default.error(JSON.stringify(errorMessage, null, 2));
         throw error;
     }
 }
@@ -34354,8 +34368,9 @@ const github_1 = __nccwpck_require__(2649);
 const trello_1 = __nccwpck_require__(9763);
 const matchCardIds_1 = __importDefault(__nccwpck_require__(9812));
 const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3031));
+const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function getCardIds(conf, pr) {
-    console.log('Searching for card IDs');
+    logger_1.default.log('Searching for card IDs');
     const latestPRInfo = (await (0, github_1.getPullRequest)()) || pr;
     let cardIds = (0, matchCardIds_1.default)(conf, latestPRInfo.body || '');
     if (conf.githubIncludePrComments) {
@@ -34381,11 +34396,11 @@ async function getCardIds(conf, pr) {
         }
     }
     if (cardIds.length) {
-        console.log('Found card IDs', cardIds);
+        logger_1.default.log('Found card IDs', cardIds);
         return [...new Set(cardIds)];
     }
     else {
-        console.log('Could not find card IDs');
+        logger_1.default.log('Could not find card IDs');
         if (conf.githubRequireTrelloCard) {
             (0, core_1.setFailed)('The PR does not contain a link to a Trello card');
         }
@@ -34395,11 +34410,11 @@ async function getCardIds(conf, pr) {
 exports["default"] = getCardIds;
 async function getCardIdsFromBranchName(conf, prHead) {
     const branchName = prHead?.ref || (await (0, github_1.getBranchName)());
-    console.log('Searching cards from branch name', branchName);
+    logger_1.default.log('Searching cards from branch name', branchName);
     if (conf.githubAllowMultipleCardsInPrBranchName) {
         const shortIdMatches = branchName.match(/(?<=^|\/)\d+(?:-\d+)+/gi)?.[0].split('-');
         if (shortIdMatches && shortIdMatches.length > 1) {
-            console.log('Matched multiple potential Trello short IDs from branch name', shortIdMatches);
+            logger_1.default.log('Matched multiple potential Trello short IDs from branch name', shortIdMatches);
             const potentialCardIds = await Promise.all(shortIdMatches.map((shortId) => getTrelloCardByShortId(shortId, conf.trelloBoardId)));
             const cardIds = potentialCardIds.filter((c) => c);
             if (cardIds.length) {
@@ -34409,12 +34424,12 @@ async function getCardIdsFromBranchName(conf, prHead) {
     }
     const matches = branchName.match(/(?<=^|\/)(\d+)-\S+/i);
     if (matches) {
-        console.log('Matched one potential card from branch name', matches);
+        logger_1.default.log('Matched one potential card from branch name', matches);
         const cardsWithExactMatch = await (0, trello_1.searchTrelloCards)(matches[0]);
         if (cardsWithExactMatch?.length) {
             return [cardsWithExactMatch[0].shortLink];
         }
-        console.log('Could not find Trello card with branch name, trying only with short ID', matches[1]);
+        logger_1.default.log('Could not find Trello card with branch name, trying only with short ID', matches[1]);
         const cardId = await getTrelloCardByShortId(matches[1]);
         if (cardId) {
             return [cardId];
@@ -34484,6 +34499,7 @@ const trello_1 = __nccwpck_require__(9763);
 const isChangesRequestedInReview_1 = __importDefault(__nccwpck_require__(4028));
 const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3031));
 const isPullRequestApproved_1 = __importDefault(__nccwpck_require__(4414));
+const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function moveOrArchiveCards(conf, cardIds, pr) {
     const isDraft = (0, isPullRequestInDraft_1.default)(pr);
     const isChangesRequested = await (0, isChangesRequestedInReview_1.default)();
@@ -34491,22 +34507,22 @@ async function moveOrArchiveCards(conf, cardIds, pr) {
     const isMerged = await (0, github_1.isPullRequestMerged)();
     if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
         await moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId);
-        console.log('Moved cards to draft PR list');
+        logger_1.default.log('Moved cards to draft PR list');
         return;
     }
     if (pr.state === 'open' && !isDraft && isChangesRequested && conf.trelloListIdPrChangesRequested) {
         await moveCardsToList(cardIds, conf.trelloListIdPrChangesRequested, conf.trelloBoardId);
-        console.log('Moved cards to changes requested PR list');
+        logger_1.default.log('Moved cards to changes requested PR list');
         return;
     }
     if (pr.state === 'open' && !isDraft && !isChangesRequested && isApproved && conf.trelloListIdPrApproved) {
         await moveCardsToList(cardIds, conf.trelloListIdPrApproved, conf.trelloBoardId);
-        console.log('Moved cards to approved PR list');
+        logger_1.default.log('Moved cards to approved PR list');
         return;
     }
     if (pr.state === 'open' && !isDraft && conf.trelloListIdPrOpen) {
         await moveCardsToList(cardIds, conf.trelloListIdPrOpen, conf.trelloBoardId);
-        console.log('Moved cards to opened PR list');
+        logger_1.default.log('Moved cards to opened PR list');
         return;
     }
     if (pr.state === 'closed' && isMerged && conf.trelloArchiveOnMerge) {
@@ -34515,10 +34531,10 @@ async function moveOrArchiveCards(conf, cardIds, pr) {
     }
     if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
         await moveCardsToList(cardIds, conf.trelloListIdPrClosed, conf.trelloBoardId);
-        console.log('Moved cards to closed PR list');
+        logger_1.default.log('Moved cards to closed PR list');
         return;
     }
-    console.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged });
+    logger_1.default.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged });
 }
 exports["default"] = moveOrArchiveCards;
 async function moveCardsToList(cardIds, listId, boardId) {
@@ -34556,12 +34572,13 @@ const trello_1 = __nccwpck_require__(9763);
 const isChangesRequestedInReview_1 = __importDefault(__nccwpck_require__(4028));
 const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3031));
 const isPullRequestApproved_1 = __importDefault(__nccwpck_require__(4414));
+const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function updateCardMembers(conf, cardIds, pr) {
     if (!conf.trelloAddMembersToCards) {
-        console.log('Skipping members updating');
+        logger_1.default.log('Skipping members updating');
         return;
     }
-    console.log('Starting to update card members');
+    logger_1.default.log('Starting to update card members');
     if (conf.trelloSwitchMembersInReview) {
         // Assigns PR reviewers to the card when the PR is in review
         const inReview = await isPullRequestInReview(conf, pr);
@@ -34573,12 +34590,12 @@ async function updateCardMembers(conf, cardIds, pr) {
     // Assigns PR author, committers and assignees to the PR
     const contributors = await getPullRequestContributors();
     if (!contributors.length) {
-        console.log('No PR contributors found');
+        logger_1.default.log('No PR contributors found');
         return;
     }
     const memberIds = await getTrelloMemberIds(conf, contributors);
     if (!memberIds.length) {
-        console.log('No Trello members found based on PR contributors');
+        logger_1.default.log('No Trello members found based on PR contributors');
         return;
     }
     return Promise.all(cardIds.map(async (cardId) => {
@@ -34591,14 +34608,16 @@ async function updateCardMembers(conf, cardIds, pr) {
 }
 exports["default"] = updateCardMembers;
 async function isPullRequestInReview(conf, pr) {
+    const isInDraft = (0, isPullRequestInDraft_1.default)(pr);
+    const isChangesRequested = await (0, isChangesRequestedInReview_1.default)();
+    const isApproved = await (0, isPullRequestApproved_1.default)();
+    logger_1.default.log('Checking if PR is in review', { prState: pr.state, isInDraft, isChangesRequested, isApproved });
     if (pr.state !== 'open') {
         return false;
     }
     if ((0, isPullRequestInDraft_1.default)(pr)) {
         return false;
     }
-    const isChangesRequested = await (0, isChangesRequestedInReview_1.default)();
-    const isApproved = await (0, isPullRequestApproved_1.default)();
     if (isChangesRequested && conf.trelloListIdPrChangesRequested) {
         return false;
     }
@@ -34609,13 +34628,14 @@ async function isPullRequestInReview(conf, pr) {
 }
 async function switchCardMembersToReviewers(conf, cardIds) {
     const reviewers = await getReviewers();
+    logger_1.default.log('Switching card members to reviewers', { reviewers });
     return Promise.all(cardIds.map(async (cardId) => {
         const cardInfo = await (0, trello_1.getCardInfo)(cardId);
         // Removes all current members from the card
         await Promise.all(cardInfo.idMembers.map((memberId) => (0, trello_1.removeMemberFromCard)(cardInfo.id, memberId)));
         // Assigns PR reviewers to the Trello card
         const memberIds = await getTrelloMemberIds(conf, reviewers);
-        await addMembers(cardInfo, memberIds);
+        await addMembers({ ...cardInfo, idMembers: [] }, memberIds);
     }));
 }
 async function getReviewers() {
@@ -34650,16 +34670,16 @@ async function getPullRequestContributors() {
 async function getTrelloMemberIds(conf, githubUsernames) {
     const result = await Promise.all(githubUsernames.map(async (githubUsername) => {
         const username = getTrelloUsername(conf, githubUsername);
-        console.log('Searching Trello member id by username', username);
+        logger_1.default.log('Searching Trello member id by username', username);
         const member = await (0, trello_1.getMemberInfo)(username);
         if (!member) {
             return;
         }
-        console.log('Found member id by username', member.id, username);
+        logger_1.default.log('Found member id by username', { memberId: member.id, username });
         if (conf.trelloOrganizationName) {
             const hasAccess = member.organizations?.some((org) => org.name === conf.trelloOrganizationName);
             if (!hasAccess) {
-                console.log('...but the member has no access to the org', conf.trelloOrganizationName);
+                logger_1.default.log('...but the member has no access to the org', conf.trelloOrganizationName);
                 return;
             }
         }
@@ -34673,11 +34693,11 @@ function getTrelloUsername(conf, githubUsername) {
     if (!usernamesMap) {
         return username;
     }
-    console.log('Mapping Github users to Trello users');
+    logger_1.default.log('Mapping Github users to Trello users');
     for (const line of usernamesMap.split(/[\r\n]/)) {
         const parts = line.trim().split(':');
         if (parts.length < 2) {
-            console.error('Mapping of Github user to Trello does not contain 2 usernames separated by ":"', line);
+            logger_1.default.error('Mapping of Github user to Trello does not contain 2 usernames separated by ":"', line);
             continue;
         }
         if (parts[0].trim() === githubUsername && parts[1].trim() !== '') {
@@ -34689,7 +34709,7 @@ function getTrelloUsername(conf, githubUsername) {
 async function addMembers(cardInfo, memberIds) {
     const filtered = memberIds.filter((id) => !cardInfo.idMembers.includes(id));
     if (!filtered.length) {
-        console.log('All members are already assigned to the card');
+        logger_1.default.log('All members are already assigned to the card');
         return;
     }
     return Promise.all(filtered.map((memberId) => (0, trello_1.addMemberToCard)(cardInfo.id, memberId)));
@@ -34697,7 +34717,7 @@ async function addMembers(cardInfo, memberIds) {
 async function removeUnrelatedMembers(cardInfo, memberIds) {
     const filtered = cardInfo.idMembers.filter((id) => !memberIds.includes(id));
     if (!filtered.length) {
-        console.log('Did not find any unrelated members');
+        logger_1.default.log('Did not find any unrelated members');
         return;
     }
     return Promise.all(filtered.map((unrelatedMemberId) => (0, trello_1.removeMemberFromCard)(cardInfo.id, unrelatedMemberId)));
@@ -34772,11 +34792,15 @@ exports["default"] = isPullRequestApproved;
 /***/ }),
 
 /***/ 3031:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const logger_1 = __importDefault(__nccwpck_require__(2358));
 function isPullRequestInDraft(pr) {
     // Treat PRs with “draft” or “wip” in brackets at the start or
     // end of the titles like drafts. Useful for orgs on unpaid
@@ -34785,11 +34809,33 @@ function isPullRequestInDraft(pr) {
     const isRealDraft = pr.draft === true;
     const isFauxDraft = Boolean(pr.title.match(titleDraftRegExp));
     if (isFauxDraft) {
-        console.log('This PR is in faux draft');
+        logger_1.default.log('This PR is in faux draft');
     }
     return isRealDraft || isFauxDraft;
 }
 exports["default"] = isPullRequestInDraft;
+
+
+/***/ }),
+
+/***/ 2358:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports["default"] = {
+    log: (...message) => {
+        if (!process.env.JEST_WORKER_ID) {
+            console.log(...message);
+        }
+    },
+    error: (...message) => {
+        if (!process.env.JEST_WORKER_ID) {
+            console.error(...message);
+        }
+    },
+};
 
 
 /***/ }),

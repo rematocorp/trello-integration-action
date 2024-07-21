@@ -1,6 +1,7 @@
 import axios from 'axios'
 import * as core from '@actions/core'
 import { BoardLabel } from '../../types'
+import logger from '../utils/logger'
 
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
 const trelloAuthToken = core.getInput('trello-auth-token', { required: true })
@@ -34,13 +35,13 @@ export async function getCardAttachments(cardId: string): Promise<{ url: string 
 }
 
 export async function addAttachmentToCard(cardId: string, link: string) {
-	console.log('Adding attachment to the card', cardId, link)
+	logger.log('Adding attachment to the card', { cardId, link })
 
 	return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/attachments`, { url: link })
 }
 
 export async function addMemberToCard(cardId: string, memberId: string) {
-	console.log('Adding member to a card', cardId, memberId)
+	logger.log('Adding member to a card', { cardId, memberId })
 
 	return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idMembers`, {
 		value: memberId,
@@ -62,7 +63,7 @@ export async function getBoardLists(boardId: string): Promise<{ id: string }[]> 
 }
 
 export async function addLabelToCard(cardId: string, labelId: string) {
-	console.log('Adding label to a card', cardId, labelId)
+	logger.log('Adding label to a card', { cardId, labelId })
 
 	return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idLabels`, {
 		value: labelId,
@@ -70,13 +71,13 @@ export async function addLabelToCard(cardId: string, labelId: string) {
 }
 
 export async function removeMemberFromCard(cardId: string, memberId: string) {
-	console.log('Removing card member', cardId, memberId)
+	logger.log('Removing card member', { cardId, memberId })
 
 	return makeRequest('delete', `https://api.trello.com/1/cards/${cardId}/idMembers/${memberId}`)
 }
 
 export async function moveCardToList(cardId: string, listId: string, boardId?: string) {
-	console.log('Moving card to list', cardId, listId)
+	logger.log('Moving card to list', { cardId, listId, boardId })
 
 	return makeRequest('put', `https://api.trello.com/1/cards/${cardId}`, {
 		pos: trelloCardPosition,
@@ -86,7 +87,7 @@ export async function moveCardToList(cardId: string, listId: string, boardId?: s
 }
 
 export async function archiveCard(cardId: string) {
-	console.log('Archiving card', cardId)
+	logger.log('Archiving card', { cardId })
 
 	return makeRequest('put', `https://api.trello.com/1/cards/${cardId}`, {
 		closed: true,
@@ -106,7 +107,7 @@ export async function createCard(
 	title: string,
 	body?: string,
 ): Promise<{ id: string; url: string; shortLink: string }> {
-	console.log('Creating card based on PR info', title, body)
+	logger.log('Creating card based on PR info', { title, body })
 
 	const response = await makeRequest('post', `https://api.trello.com/1/cards`, {
 		idList: listId,
@@ -144,7 +145,7 @@ async function makeRequest(method: 'get' | 'put' | 'post' | 'delete', url: strin
 				message: error.message,
 			},
 		}
-		console.error(JSON.stringify(errorMessage, null, 2))
+		logger.error(JSON.stringify(errorMessage, null, 2))
 
 		throw error
 	}
