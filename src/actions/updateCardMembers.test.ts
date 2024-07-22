@@ -158,6 +158,15 @@ describe('switching card members with reviewers when PR is in review', () => {
 		expect(addMemberToCard).toHaveBeenCalledWith('card', 'mike')
 	})
 
+	it('only removes all existing members when reviewers missing', async () => {
+		getMemberInfoMock.mockImplementation(() => null)
+
+		await updateCardMembers(conf, ['card'], pr)
+
+		expect(removeMemberFromCard).toHaveBeenCalledWith('card', 'phil')
+		expect(addMemberToCard).not.toHaveBeenCalled()
+	})
+
 	it('skips when PR not open', async () => {
 		await updateCardMembers(conf, ['card'], { ...pr, state: 'closed' })
 
