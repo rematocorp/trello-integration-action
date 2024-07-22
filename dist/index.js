@@ -34224,7 +34224,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createCard = exports.getMemberInfo = exports.archiveCard = exports.moveCardToList = exports.removeMemberFromCard = exports.addLabelToCard = exports.getBoardLists = exports.getBoardLabels = exports.addMemberToCard = exports.addAttachmentToCard = exports.getCardAttachments = exports.getCardInfo = exports.searchTrelloCards = void 0;
+exports.createCard = exports.archiveCard = exports.moveCardToList = exports.getBoardLists = exports.removeMemberFromCard = exports.addMemberToCard = exports.addLabelToCard = exports.getBoardLabels = exports.addAttachmentToCard = exports.getCardAttachments = exports.getMemberInfo = exports.getCardInfo = exports.searchTrelloCards = void 0;
 const axios_1 = __importDefault(__nccwpck_require__(8757));
 const core = __importStar(__nccwpck_require__(2186));
 const logger_1 = __importDefault(__nccwpck_require__(2358));
@@ -34245,6 +34245,13 @@ async function getCardInfo(cardId) {
     return response?.data;
 }
 exports.getCardInfo = getCardInfo;
+async function getMemberInfo(username) {
+    const response = await makeRequest('get', `https://api.trello.com/1/members/${username}`, {
+        organizations: 'all',
+    });
+    return response?.data;
+}
+exports.getMemberInfo = getMemberInfo;
 async function getCardAttachments(cardId) {
     const response = await makeRequest('get', `https://api.trello.com/1/cards/${cardId}/attachments`);
     return response?.data || null;
@@ -34255,13 +34262,6 @@ async function addAttachmentToCard(cardId, link) {
     return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/attachments`, { url: link });
 }
 exports.addAttachmentToCard = addAttachmentToCard;
-async function addMemberToCard(cardId, memberId) {
-    logger_1.default.log('Adding member to a card', { cardId, memberId });
-    return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idMembers`, {
-        value: memberId,
-    });
-}
-exports.addMemberToCard = addMemberToCard;
 async function getBoardLabels(boardId) {
     const response = await makeRequest('get', `https://api.trello.com/1/boards/${boardId}/labels`);
     // Filters out board labels that have no name to avoid assigning them to every PR
@@ -34269,11 +34269,6 @@ async function getBoardLabels(boardId) {
     return response?.data?.filter((label) => label.name);
 }
 exports.getBoardLabels = getBoardLabels;
-async function getBoardLists(boardId) {
-    const response = await makeRequest('get', `https://api.trello.com/1/boards/${boardId}/lists`);
-    return response?.data;
-}
-exports.getBoardLists = getBoardLists;
 async function addLabelToCard(cardId, labelId) {
     logger_1.default.log('Adding label to a card', { cardId, labelId });
     return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idLabels`, {
@@ -34281,11 +34276,23 @@ async function addLabelToCard(cardId, labelId) {
     });
 }
 exports.addLabelToCard = addLabelToCard;
+async function addMemberToCard(cardId, memberId) {
+    logger_1.default.log('Adding member to a card', { cardId, memberId });
+    return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idMembers`, {
+        value: memberId,
+    });
+}
+exports.addMemberToCard = addMemberToCard;
 async function removeMemberFromCard(cardId, memberId) {
     logger_1.default.log('Removing card member', { cardId, memberId });
     return makeRequest('delete', `https://api.trello.com/1/cards/${cardId}/idMembers/${memberId}`);
 }
 exports.removeMemberFromCard = removeMemberFromCard;
+async function getBoardLists(boardId) {
+    const response = await makeRequest('get', `https://api.trello.com/1/boards/${boardId}/lists`);
+    return response?.data;
+}
+exports.getBoardLists = getBoardLists;
 async function moveCardToList(cardId, listId, boardId) {
     logger_1.default.log('Moving card to list', { cardId, listId, boardId });
     return makeRequest('put', `https://api.trello.com/1/cards/${cardId}`, {
@@ -34302,13 +34309,6 @@ async function archiveCard(cardId) {
     });
 }
 exports.archiveCard = archiveCard;
-async function getMemberInfo(username) {
-    const response = await makeRequest('get', `https://api.trello.com/1/members/${username}`, {
-        organizations: 'all',
-    });
-    return response?.data;
-}
-exports.getMemberInfo = getMemberInfo;
 async function createCard(listId, title, body) {
     logger_1.default.log('Creating card based on PR info', { title, body });
     const response = await makeRequest('post', `https://api.trello.com/1/cards`, {
@@ -34610,24 +34610,26 @@ async function isPullRequestInReview(conf, pr) {
 }
 async function assignReviewers(conf, cardIds) {
     const reviewers = await getReviewers();
-    logger_1.default.log('Removing contributors and assigning reviewers', { reviewers });
+    const memberIds = await getTrelloMemberIds(conf, reviewers);
+    if (memberIds.length) {
+        logger_1.default.log('Removing contributors and assigning reviewers', { reviewers, memberIds });
+    }
+    else {
+        logger_1.default.log('No Trello members found based on reviewers, but still removing current card members', { reviewers });
+    }
     return Promise.all(cardIds.map(async (cardId) => {
         const cardInfo = await (0, trello_1.getCardInfo)(cardId);
-        // Removes all current members from the card
-        await Promise.all(cardInfo.idMembers.map((memberId) => (0, trello_1.removeMemberFromCard)(cardInfo.id, memberId)));
-        // Assigns PR reviewers to the Trello card
-        const memberIds = await getTrelloMemberIds(conf, reviewers);
+        await removeMembers(cardId, cardInfo.idMembers);
         await addMembers({ ...cardInfo, idMembers: [] }, memberIds);
     }));
 }
 async function getReviewers() {
     const reviews = await (0, github_1.getPullRequestReviews)();
     const requestedReviewers = await (0, github_1.getPullRequestRequestedReviewers)();
-    const allReviewers = [
+    return [
         ...reviews.filter((r) => r.state !== 'PENDING').map((r) => r.user?.login),
         ...requestedReviewers?.users?.map((u) => u.login),
-    ].filter((username) => username !== undefined);
-    return allReviewers;
+    ].filter((username) => username);
 }
 async function assignContributors(conf, cardIds) {
     const contributors = await getPullRequestContributors();
@@ -34643,9 +34645,7 @@ async function assignContributors(conf, cardIds) {
     return Promise.all(cardIds.map(async (cardId) => {
         const cardInfo = await (0, trello_1.getCardInfo)(cardId);
         await addMembers(cardInfo, memberIds);
-        if (conf.trelloRemoveUnrelatedMembers) {
-            await removeUnrelatedMembers(cardInfo, memberIds);
-        }
+        await removeUnrelatedMembers(conf, cardInfo, memberIds);
     }));
 }
 async function getPullRequestContributors() {
@@ -34669,7 +34669,7 @@ async function getPullRequestContributors() {
     return Array.from(contributors);
 }
 async function getTrelloMemberIds(conf, githubUsernames) {
-    const result = await Promise.all(githubUsernames.map(async (githubUsername) => {
+    const memberIds = await Promise.all(githubUsernames.map(async (githubUsername) => {
         const username = getTrelloUsername(conf, githubUsername);
         logger_1.default.log('Searching Trello member id by username', username);
         const member = await (0, trello_1.getMemberInfo)(username);
@@ -34686,7 +34686,7 @@ async function getTrelloMemberIds(conf, githubUsernames) {
         }
         return member.id;
     }));
-    return result.filter((id) => id);
+    return memberIds.filter((id) => id);
 }
 function getTrelloUsername(conf, githubUsername) {
     const username = githubUsername?.replace('-', '_');
@@ -34715,13 +34715,20 @@ async function addMembers(cardInfo, memberIds) {
     }
     return Promise.all(filtered.map((memberId) => (0, trello_1.addMemberToCard)(cardInfo.id, memberId)));
 }
-async function removeUnrelatedMembers(cardInfo, memberIds) {
+async function removeUnrelatedMembers(conf, cardInfo, memberIds) {
+    if (!conf.trelloRemoveUnrelatedMembers) {
+        return;
+    }
+    logger_1.default.log('Starting to remove unrelated members');
     const filtered = cardInfo.idMembers.filter((id) => !memberIds.includes(id));
     if (!filtered.length) {
         logger_1.default.log('Did not find any unrelated members');
         return;
     }
-    return Promise.all(filtered.map((unrelatedMemberId) => (0, trello_1.removeMemberFromCard)(cardInfo.id, unrelatedMemberId)));
+    return removeMembers(cardInfo.id, filtered);
+}
+async function removeMembers(cardId, memberIds) {
+    return Promise.all(memberIds.map((memberId) => (0, trello_1.removeMemberFromCard)(cardId, memberId)));
 }
 
 

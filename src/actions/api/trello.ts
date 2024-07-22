@@ -28,6 +28,14 @@ export async function getCardInfo(
 	return response?.data
 }
 
+export async function getMemberInfo(username?: string): Promise<{ id: string; organizations: { name: string }[] }> {
+	const response = await makeRequest('get', `https://api.trello.com/1/members/${username}`, {
+		organizations: 'all',
+	})
+
+	return response?.data
+}
+
 export async function getCardAttachments(cardId: string): Promise<{ url: string }[]> {
 	const response = await makeRequest('get', `https://api.trello.com/1/cards/${cardId}/attachments`)
 
@@ -40,26 +48,12 @@ export async function addAttachmentToCard(cardId: string, link: string) {
 	return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/attachments`, { url: link })
 }
 
-export async function addMemberToCard(cardId: string, memberId: string) {
-	logger.log('Adding member to a card', { cardId, memberId })
-
-	return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idMembers`, {
-		value: memberId,
-	})
-}
-
 export async function getBoardLabels(boardId: string): Promise<BoardLabel[]> {
 	const response = await makeRequest('get', `https://api.trello.com/1/boards/${boardId}/labels`)
 
 	// Filters out board labels that have no name to avoid assigning them to every PR
 	// because 'foo'.startsWith('') is true (partially matching label logic)
 	return response?.data?.filter((label: { name: string }) => label.name)
-}
-
-export async function getBoardLists(boardId: string): Promise<{ id: string }[]> {
-	const response = await makeRequest('get', `https://api.trello.com/1/boards/${boardId}/lists`)
-
-	return response?.data
 }
 
 export async function addLabelToCard(cardId: string, labelId: string) {
@@ -70,10 +64,24 @@ export async function addLabelToCard(cardId: string, labelId: string) {
 	})
 }
 
+export async function addMemberToCard(cardId: string, memberId: string) {
+	logger.log('Adding member to a card', { cardId, memberId })
+
+	return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idMembers`, {
+		value: memberId,
+	})
+}
+
 export async function removeMemberFromCard(cardId: string, memberId: string) {
 	logger.log('Removing card member', { cardId, memberId })
 
 	return makeRequest('delete', `https://api.trello.com/1/cards/${cardId}/idMembers/${memberId}`)
+}
+
+export async function getBoardLists(boardId: string): Promise<{ id: string }[]> {
+	const response = await makeRequest('get', `https://api.trello.com/1/boards/${boardId}/lists`)
+
+	return response?.data
 }
 
 export async function moveCardToList(cardId: string, listId: string, boardId?: string) {
@@ -92,14 +100,6 @@ export async function archiveCard(cardId: string) {
 	return makeRequest('put', `https://api.trello.com/1/cards/${cardId}`, {
 		closed: true,
 	})
-}
-
-export async function getMemberInfo(username?: string): Promise<{ id: string; organizations: { name: string }[] }> {
-	const response = await makeRequest('get', `https://api.trello.com/1/members/${username}`, {
-		organizations: 'all',
-	})
-
-	return response?.data
 }
 
 export async function createCard(
