@@ -85,7 +85,7 @@ export async function getPullRequestRequestedReviewers() {
 }
 
 export async function createComment(shortUrl: string) {
-	logger.log('Creating PR comment', shortUrl)
+	logger.log('LINK: Creating PR comment', shortUrl)
 
 	await octokit.rest.issues.createComment({
 		owner,
@@ -96,7 +96,7 @@ export async function createComment(shortUrl: string) {
 }
 
 export async function updatePullRequestBody(newBody: string) {
-	logger.log('Updating PR body', newBody)
+	logger.log('LINK: Updating PR body', newBody)
 
 	await octokit.rest.issues.update({
 		owner,

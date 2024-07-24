@@ -12,11 +12,11 @@ export default async function addCardLinksToPullRequest(conf: Conf, cardIds: str
 	const unlinkedCardIds = cardIds.filter((id) => !linkedCardIds.includes(id))
 
 	if (!unlinkedCardIds.length) {
-		logger.log('Skipping card linking as all cards are already mentioned under the PR')
+		logger.log('LINK: Skipping card linking as all cards are already mentioned under the PR')
 
 		return
 	}
-	logger.log('Commenting Trello card URLs to PR', unlinkedCardIds)
+	logger.log('LINK: Commenting Trello card URLs to PR', unlinkedCardIds)
 
 	const cards = await Promise.all(unlinkedCardIds.map((id) => getCardInfo(id)))
 	const urls = cards.map((card) => card.shortUrl)

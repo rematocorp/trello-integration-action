@@ -9,7 +9,7 @@ export default function isPullRequestInDraft(pr: any) {
 	const isFauxDraft = Boolean(pr.title.match(titleDraftRegExp))
 
 	if (isFauxDraft) {
-		logger.log('This PR is in faux draft')
+		logger.log('UTIL: This PR is in faux draft')
 	}
 
 	return isRealDraft || isFauxDraft

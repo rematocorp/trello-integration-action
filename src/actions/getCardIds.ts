@@ -7,7 +7,7 @@ import isPullRequestInDraft from './utils/isPullRequestInDraft'
 import logger from './utils/logger'
 
 export default async function getCardIds(conf: Conf, pr: PR) {
-	logger.log('Searching for card IDs')
+	logger.log('LINK: Searching for card IDs')
 
 	const latestPRInfo = (await getPullRequest()) || pr
 	let cardIds = matchCardIds(conf, latestPRInfo.body || '')
@@ -43,11 +43,11 @@ export default async function getCardIds(conf: Conf, pr: PR) {
 	}
 
 	if (cardIds.length) {
-		logger.log('Found card IDs', cardIds)
+		logger.log('LINK: Found card IDs', cardIds)
 
 		return [...new Set(cardIds)]
 	} else {
-		logger.log('Could not find card IDs')
+		logger.log('LINK: Could not find card IDs')
 
 		if (conf.githubRequireTrelloCard) {
 			setFailed('The PR does not contain a link to a Trello card')
@@ -60,13 +60,13 @@ export default async function getCardIds(conf: Conf, pr: PR) {
 async function getCardIdsFromBranchName(conf: Conf, prHead?: PRHead) {
 	const branchName = prHead?.ref || (await getBranchName())
 
-	logger.log('Searching cards from branch name', branchName)
+	logger.log('LINK: Searching cards from branch name', branchName)
 
 	if (conf.githubAllowMultipleCardsInPrBranchName) {
 		const shortIdMatches = branchName.match(/(?<=^|\/)\d+(?:-\d+)+/gi)?.[0].split('-')
 
 		if (shortIdMatches && shortIdMatches.length > 1) {
-			logger.log('Matched multiple potential Trello short IDs from branch name', shortIdMatches)
+			logger.log('LINK: Matched multiple potential Trello short IDs from branch name', shortIdMatches)
 
 			const potentialCardIds = await Promise.all(
 				shortIdMatches.map((shortId: string) => getTrelloCardByShortId(shortId, conf.trelloBoardId)),
@@ -81,7 +81,7 @@ async function getCardIdsFromBranchName(conf: Conf, prHead?: PRHead) {
 	const matches = branchName.match(/(?<=^|\/)(\d+)-\S+/i)
 
 	if (matches) {
-		logger.log('Matched one potential card from branch name', matches)
+		logger.log('LINK: Matched one potential card from branch name', matches)
 
 		const cardsWithExactMatch = await searchTrelloCards(matches[0])
 
@@ -89,7 +89,7 @@ async function getCardIdsFromBranchName(conf: Conf, prHead?: PRHead) {
 			return [cardsWithExactMatch[0].shortLink]
 		}
 
-		logger.log('Could not find Trello card with branch name, trying only with short ID', matches[1])
+		logger.log('LINK: Could not find Trello card with branch name, trying only with short ID', matches[1])
 
 		const cardId = await getTrelloCardByShortId(matches[1])
 

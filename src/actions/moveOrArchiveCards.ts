@@ -14,28 +14,28 @@ export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], 
 
 	if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId)
-		logger.log('Moved cards to draft PR list')
+		logger.log('MOVE: Moved cards to draft PR list')
 
 		return
 	}
 
 	if (pr.state === 'open' && !isDraft && isChangesRequested && conf.trelloListIdPrChangesRequested) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrChangesRequested, conf.trelloBoardId)
-		logger.log('Moved cards to changes requested PR list')
+		logger.log('MOVE: Moved cards to changes requested PR list')
 
 		return
 	}
 
 	if (pr.state === 'open' && !isDraft && !isChangesRequested && isApproved && conf.trelloListIdPrApproved) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrApproved, conf.trelloBoardId)
-		logger.log('Moved cards to approved PR list')
+		logger.log('MOVE: Moved cards to approved PR list')
 
 		return
 	}
 
 	if (pr.state === 'open' && !isDraft && conf.trelloListIdPrOpen) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrOpen, conf.trelloBoardId)
-		logger.log('Moved cards to opened PR list')
+		logger.log('MOVE: Moved cards to opened PR list')
 
 		return
 	}
@@ -48,12 +48,12 @@ export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], 
 
 	if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrClosed, conf.trelloBoardId)
-		logger.log('Moved cards to closed PR list')
+		logger.log('MOVE: Moved cards to closed PR list')
 
 		return
 	}
 
-	logger.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged })
+	logger.log('MOVE: Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged })
 }
 
 async function moveCardsToList(cardIds: string[], listId: string, boardId?: string) {
