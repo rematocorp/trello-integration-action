@@ -1,4 +1,4 @@
-import { Card, Conf, PR } from '../types'
+import { Conf, PR } from '../types'
 import { getCommits, getPullRequest, getPullRequestRequestedReviewers, getPullRequestReviews } from './api/github'
 import { addMemberToCard, getCardInfo, getMemberInfo, removeMemberFromCard } from './api/trello'
 import isChangesRequestedInReview from './utils/isChangesRequestedInReview'
