@@ -200,7 +200,7 @@ Default: `true`
 
 #### 3. `trello-switch-members-in-review`
 
-Replaces Trello card members with PR reviewers when PR is opened. It reassigns the PR author, contributors and assignees when the card is moved away from trello-list-id-pr-open.
+Replaces Trello card members with PR reviewers when PR is opened. It reassigns the PR author, contributors and assignees when the card is moved away from `trello-list-id-pr-open`.
 
 Default: `false`
 
