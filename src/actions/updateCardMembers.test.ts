@@ -68,11 +68,47 @@ it('adds committer to the card', async () => {
 	expect(addMemberToCard).toHaveBeenCalledWith('card', 'john-id')
 })
 
+it('ignores incorrectly configured usernames mapping', async () => {
+	await updateCardMembers({ ...conf, githubUsersToTrelloUsers: 'phil' }, ['card'], pr)
+
+	expect(getMemberInfoMock).toHaveBeenCalledWith('phil')
+})
+
+it('removes only reviewers when unrelated members removing is turned off but switching members in review is on', async () => {
+	getPullRequestRequestedReviewersMock.mockResolvedValue({ users: [] })
+	getPullRequestReviewsMock.mockResolvedValue([{ state: 'ACTIVE', user: { login: 'amy' } }])
+	getMemberInfoMock.mockImplementation((username) => ({ id: username }))
+	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: ['amy', 'jones'] })
+
+	await updateCardMembers(
+		{ ...conf, trelloRemoveUnrelatedMembers: false, trelloSwitchMembersInReview: true },
+		['card'],
+		pr,
+	)
+
+	expect(removeMemberFromCard).toHaveBeenCalledWith('card', 'amy1993')
+})
+
 it('skips removing unrelated members when none found', async () => {
 	getMemberInfoMock.mockResolvedValue({ id: 'phil-id' })
 	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: [] })
 
 	await updateCardMembers(conf, ['card'], pr)
+
+	expect(removeMemberFromCard).not.toHaveBeenCalled()
+})
+
+it('skips removing reviewers when none found', async () => {
+	getPullRequestRequestedReviewersMock.mockResolvedValue({ users: [] })
+	getPullRequestReviewsMock.mockResolvedValue([])
+	getMemberInfoMock.mockImplementation((username) => ({ id: username }))
+	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: ['amy', 'jones'] })
+
+	await updateCardMembers(
+		{ ...conf, trelloRemoveUnrelatedMembers: false, trelloSwitchMembersInReview: true },
+		['card'],
+		pr,
+	)
 
 	expect(removeMemberFromCard).not.toHaveBeenCalled()
 })
@@ -93,12 +129,6 @@ it('skips adding when all members are already assigned to the card', async () =>
 	await updateCardMembers(conf, ['card'], pr)
 
 	expect(addMemberToCard).not.toHaveBeenCalled()
-})
-
-it('ignores incorrectly configured usernames mapping', async () => {
-	await updateCardMembers({ ...conf, githubUsersToTrelloUsers: 'phil' }, ['card'], pr)
-
-	expect(getMemberInfoMock).toHaveBeenCalledWith('phil')
 })
 
 it('skips adding when member not found with GitHub username', async () => {
@@ -140,7 +170,7 @@ describe('switching card members with reviewers when PR is in review', () => {
 		pr = { ...pr, draft: false }
 		conf = { ...conf, githubUsersToTrelloUsers: undefined, trelloSwitchMembersInReview: true }
 
-		getMemberInfoMock.mockImplementation((username) => ({ id: username }))
+		getMemberInfoMock.mockImplementation((username) => (username !== 'phil' ? { id: username } : null))
 		getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: ['phil'] })
 		getPullRequestRequestedReviewersMock.mockResolvedValue({ users: [{ login: 'amy' }] })
 		getPullRequestReviewsMock.mockResolvedValue([

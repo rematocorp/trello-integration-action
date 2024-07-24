@@ -56,19 +56,9 @@ async function assignReviewers(conf: Conf, cardIds: string[]) {
 			const cardInfo = await getCardInfo(cardId)
 
 			await removeMembers(cardId, cardInfo.idMembers)
-			await addMembers({ ...cardInfo, idMembers: [] }, memberIds)
+			await addMembers(cardId, memberIds)
 		}),
 	)
-}
-
-async function getReviewers() {
-	const reviews = await getPullRequestReviews()
-	const requestedReviewers = await getPullRequestRequestedReviewers()
-
-	return [
-		...reviews.filter((r) => r.state !== 'PENDING').map((r) => r.user?.login),
-		...requestedReviewers?.users?.map((u) => u.login),
-	].filter((username) => username) as string[]
 }
 
 async function assignContributors(conf: Conf, cardIds: string[]) {
@@ -89,10 +79,9 @@ async function assignContributors(conf: Conf, cardIds: string[]) {
 
 	return Promise.all(
 		cardIds.map(async (cardId) => {
-			const cardInfo = await getCardInfo(cardId)
-
-			await addMembers(cardInfo, memberIds)
-			await removeUnrelatedMembers(conf, cardInfo, memberIds)
+			await addMembers(cardId, memberIds)
+			await removeUnrelatedMembers(conf, cardId, memberIds)
+			await removeReviewers(conf, cardId)
 		}),
 	)
 }
@@ -121,6 +110,72 @@ async function getPullRequestContributors() {
 	}
 
 	return Array.from(contributors)
+}
+
+async function addMembers(cardId: string, memberIds: string[]) {
+	const cardInfo = await getCardInfo(cardId)
+	const filtered = memberIds.filter((id) => !cardInfo.idMembers.includes(id))
+
+	if (!filtered.length) {
+		logger.log('MEMBERS: All members are already assigned to the card')
+
+		return
+	}
+
+	return Promise.all(filtered.map((memberId) => addMemberToCard(cardInfo.id, memberId)))
+}
+
+async function removeUnrelatedMembers(conf: Conf, cardId: string, memberIds: string[]) {
+	if (!conf.trelloRemoveUnrelatedMembers) {
+		return
+	}
+	logger.log('MEMBERS: Starting to remove unrelated members')
+
+	const cardInfo = await getCardInfo(cardId)
+	const filtered = cardInfo.idMembers.filter((id) => !memberIds.includes(id))
+
+	if (!filtered.length) {
+		logger.log('MEMBERS: Did not find any unrelated members')
+
+		return
+	}
+
+	return removeMembers(cardInfo.id, filtered)
+}
+
+async function removeReviewers(conf: Conf, cardId: string) {
+	if (!conf.trelloSwitchMembersInReview) {
+		return
+	}
+
+	logger.log('MEMBERS: Starting to remove reviewers from the card')
+
+	const reviewers = await getReviewers()
+	const memberIds = await getTrelloMemberIds(conf, reviewers)
+	const cardInfo = await getCardInfo(cardId)
+	const filtered = memberIds.filter((id) => !cardInfo.idMembers.includes(id))
+
+	if (!filtered.length) {
+		logger.log('MEMBERS: Did not find any reviewers assigned to the card')
+
+		return
+	}
+
+	return removeMembers(cardInfo.id, filtered)
+}
+
+async function removeMembers(cardId: string, memberIds: string[]) {
+	return Promise.all(memberIds.map((memberId) => removeMemberFromCard(cardId, memberId)))
+}
+
+async function getReviewers() {
+	const reviews = await getPullRequestReviews()
+	const requestedReviewers = await getPullRequestRequestedReviewers()
+
+	return [
+		...reviews.filter((r) => r.state !== 'PENDING').map((r) => r.user?.login),
+		...requestedReviewers.users?.map((u) => u.login),
+	].filter((username) => username) as string[]
 }
 
 async function getTrelloMemberIds(conf: Conf, githubUsernames: string[]) {
@@ -182,37 +237,4 @@ function getTrelloUsername(conf: Conf, githubUsername?: string) {
 	}
 
 	return username
-}
-
-async function addMembers(cardInfo: Card, memberIds: string[]) {
-	const filtered = memberIds.filter((id) => !cardInfo.idMembers.includes(id))
-
-	if (!filtered.length) {
-		logger.log('MEMBERS: All members are already assigned to the card')
-
-		return
-	}
-
-	return Promise.all(filtered.map((memberId) => addMemberToCard(cardInfo.id, memberId)))
-}
-
-async function removeUnrelatedMembers(conf: Conf, cardInfo: Card, memberIds: string[]) {
-	if (!conf.trelloRemoveUnrelatedMembers) {
-		return
-	}
-	logger.log('MEMBERS: Starting to remove unrelated members')
-
-	const filtered = cardInfo.idMembers.filter((id: string) => !memberIds.includes(id))
-
-	if (!filtered.length) {
-		logger.log('MEMBERS: Did not find any unrelated members')
-
-		return
-	}
-
-	return removeMembers(cardInfo.id, filtered)
-}
-
-async function removeMembers(cardId: string, memberIds: string[]) {
-	return Promise.all(memberIds.map((memberId) => removeMemberFromCard(cardId, memberId)))
 }
