@@ -33960,15 +33960,16 @@ const trello_1 = __nccwpck_require__(9763);
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 const matchCardIds_1 = __importDefault(__nccwpck_require__(9812));
 async function addCardLinksToPullRequest(conf, cardIds) {
+    logger_1.default.log('--- ADD CARD LINKS TO PR ---');
     const bodyCardIds = await getCardIdsFromBody(conf);
     const commentsCardIds = await getCardIdsFromComments(conf);
     const linkedCardIds = [...bodyCardIds, ...commentsCardIds];
     const unlinkedCardIds = cardIds.filter((id) => !linkedCardIds.includes(id));
     if (!unlinkedCardIds.length) {
-        logger_1.default.log('LINK: Skipping card linking as all cards are already mentioned under the PR');
+        logger_1.default.log('Skipping card linking as all cards are already mentioned under the PR');
         return;
     }
-    logger_1.default.log('LINK: Commenting Trello card URLs to PR', unlinkedCardIds);
+    logger_1.default.log('Commenting Trello card URLs to PR', unlinkedCardIds);
     const cards = await Promise.all(unlinkedCardIds.map((id) => (0, trello_1.getCardInfo)(id)));
     const urls = cards.map((card) => card.shortUrl);
     const comment = conf.githubRequireKeywordPrefix ? `Closes ${urls.join(' ')}` : urls.join('\n');
@@ -34004,21 +34005,21 @@ const github_1 = __nccwpck_require__(2649);
 const trello_1 = __nccwpck_require__(9763);
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function addLabelToCards(conf, cardIds, head) {
+    logger_1.default.log('--- ADD LABEL TO CARDS ---');
     if (!conf.trelloAddLabelsToCards) {
-        logger_1.default.log('LABELS: Skipping label adding');
+        logger_1.default.log('Skipping label adding');
         return;
     }
-    logger_1.default.log('LABELS: Starting to add labels to cards');
     const branchLabel = await getBranchLabel(head);
     if (!branchLabel) {
-        logger_1.default.log('LABELS: Could not find branch label');
+        logger_1.default.log('Could not find branch label');
         return;
     }
     return Promise.all(cardIds.map(async (cardId) => {
         const cardInfo = await (0, trello_1.getCardInfo)(cardId);
         const hasConflictingLabel = cardInfo.labels.find((label) => conf.trelloConflictingLabels?.includes(label.name) || label.name === branchLabel);
         if (hasConflictingLabel) {
-            logger_1.default.log('LABELS: Skipping label adding to a card as it has a conflicting label', cardInfo.labels);
+            logger_1.default.log('Skipping label adding to a card as it has a conflicting label', cardInfo.labels);
             return;
         }
         const boardLabels = await (0, trello_1.getBoardLabels)(cardInfo.idBoard);
@@ -34027,7 +34028,7 @@ async function addLabelToCards(conf, cardIds, head) {
             await (0, trello_1.addLabelToCard)(cardId, matchingLabel.id);
         }
         else {
-            logger_1.default.log('LABELS: Could not find a matching label from the board', { branchLabel, boardLabels });
+            logger_1.default.log('Could not find a matching label from the board', { branchLabel, boardLabels });
         }
     }));
 }
@@ -34039,7 +34040,7 @@ async function getBranchLabel(prHead) {
         return matches[1];
     }
     else {
-        logger_1.default.log('LABELS: Did not find branch label', branchName);
+        logger_1.default.log('Did not find branch label', branchName);
     }
 }
 function findMatchingLabel(branchLabel, boardLabels) {
@@ -34047,7 +34048,7 @@ function findMatchingLabel(branchLabel, boardLabels) {
     if (match) {
         return match;
     }
-    logger_1.default.log('LABELS: Could not match the exact label name, trying to find partially matching label');
+    logger_1.default.log('Could not match the exact label name, trying to find partially matching label');
     return boardLabels.find((label) => branchLabel.startsWith(label.name));
 }
 
@@ -34066,11 +34067,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const trello_1 = __nccwpck_require__(9763);
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function addPullRequestLinkToCards(cardIds, pr) {
+    logger_1.default.log('--- ADD PR LINK TO CARDS ---');
     const link = pr.html_url || pr.url;
     return Promise.all(cardIds.map(async (cardId) => {
         const existingAttachments = await (0, trello_1.getCardAttachments)(cardId);
         if (existingAttachments?.some((it) => it.url.includes(link))) {
-            logger_1.default.log('LINK: Found existing attachment, skipping adding attachment', { cardId, link });
+            logger_1.default.log('Found existing attachment, skipping adding attachment', { cardId, link });
             return;
         }
         return (0, trello_1.addAttachmentToCard)(cardId, link);
@@ -34169,7 +34171,7 @@ async function getPullRequestRequestedReviewers() {
 }
 exports.getPullRequestRequestedReviewers = getPullRequestRequestedReviewers;
 async function createComment(shortUrl) {
-    logger_1.default.log('LINK: Creating PR comment', shortUrl);
+    logger_1.default.log('Creating PR comment', shortUrl);
     await octokit.rest.issues.createComment({
         owner,
         repo,
@@ -34179,7 +34181,7 @@ async function createComment(shortUrl) {
 }
 exports.createComment = createComment;
 async function updatePullRequestBody(newBody) {
-    logger_1.default.log('LINK: Updating PR body', newBody);
+    logger_1.default.log('Updating PR body', newBody);
     await octokit.rest.issues.update({
         owner,
         repo,
@@ -34258,7 +34260,7 @@ async function getCardAttachments(cardId) {
 }
 exports.getCardAttachments = getCardAttachments;
 async function addAttachmentToCard(cardId, link) {
-    logger_1.default.log('LINK: Adding attachment to the card', { cardId, link });
+    logger_1.default.log('Adding attachment to the card', { cardId, link });
     return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/attachments`, { url: link });
 }
 exports.addAttachmentToCard = addAttachmentToCard;
@@ -34270,21 +34272,21 @@ async function getBoardLabels(boardId) {
 }
 exports.getBoardLabels = getBoardLabels;
 async function addLabelToCard(cardId, labelId) {
-    logger_1.default.log('LABELS: Adding label to a card', { cardId, labelId });
+    logger_1.default.log('Adding label to a card', { cardId, labelId });
     return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idLabels`, {
         value: labelId,
     });
 }
 exports.addLabelToCard = addLabelToCard;
 async function addMemberToCard(cardId, memberId) {
-    logger_1.default.log('MEMBERS: Adding member to a card', { cardId, memberId });
+    logger_1.default.log('Adding member to a card', { cardId, memberId });
     return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idMembers`, {
         value: memberId,
     });
 }
 exports.addMemberToCard = addMemberToCard;
 async function removeMemberFromCard(cardId, memberId) {
-    logger_1.default.log('MEMBERS: Removing member from a card', { cardId, memberId });
+    logger_1.default.log('Removing member from a card', { cardId, memberId });
     return makeRequest('delete', `https://api.trello.com/1/cards/${cardId}/idMembers/${memberId}`);
 }
 exports.removeMemberFromCard = removeMemberFromCard;
@@ -34294,7 +34296,7 @@ async function getBoardLists(boardId) {
 }
 exports.getBoardLists = getBoardLists;
 async function moveCardToList(cardId, listId, boardId) {
-    logger_1.default.log('MOVE: Moving card to list', { cardId, listId, boardId });
+    logger_1.default.log('Moving card to list', { cardId, listId, boardId });
     return makeRequest('put', `https://api.trello.com/1/cards/${cardId}`, {
         pos: trelloCardPosition,
         idList: listId,
@@ -34310,7 +34312,7 @@ async function archiveCard(cardId) {
 }
 exports.archiveCard = archiveCard;
 async function createCard(listId, title, body) {
-    logger_1.default.log('LINK: Creating card based on PR info', { title, body });
+    logger_1.default.log('Creating card based on PR info', { title, body });
     const response = await makeRequest('post', `https://api.trello.com/1/cards`, {
         idList: listId,
         name: title,
@@ -34370,7 +34372,7 @@ const matchCardIds_1 = __importDefault(__nccwpck_require__(9812));
 const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3031));
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function getCardIds(conf, pr) {
-    logger_1.default.log('LINK: Searching for card IDs');
+    logger_1.default.log('--- FIND CARDS ---');
     const latestPRInfo = (await (0, github_1.getPullRequest)()) || pr;
     let cardIds = (0, matchCardIds_1.default)(conf, latestPRInfo.body || '');
     if (conf.githubIncludePrComments) {
@@ -34396,11 +34398,11 @@ async function getCardIds(conf, pr) {
         }
     }
     if (cardIds.length) {
-        logger_1.default.log('LINK: Found card IDs', cardIds);
+        logger_1.default.log('Found card IDs', cardIds);
         return [...new Set(cardIds)];
     }
     else {
-        logger_1.default.log('LINK: Could not find card IDs');
+        logger_1.default.log('Could not find card IDs');
         if (conf.githubRequireTrelloCard) {
             (0, core_1.setFailed)('The PR does not contain a link to a Trello card');
         }
@@ -34410,11 +34412,11 @@ async function getCardIds(conf, pr) {
 exports["default"] = getCardIds;
 async function getCardIdsFromBranchName(conf, prHead) {
     const branchName = prHead?.ref || (await (0, github_1.getBranchName)());
-    logger_1.default.log('LINK: Searching cards from branch name', branchName);
+    logger_1.default.log('Searching cards from branch name', branchName);
     if (conf.githubAllowMultipleCardsInPrBranchName) {
         const shortIdMatches = branchName.match(/(?<=^|\/)\d+(?:-\d+)+/gi)?.[0].split('-');
         if (shortIdMatches && shortIdMatches.length > 1) {
-            logger_1.default.log('LINK: Matched multiple potential Trello short IDs from branch name', shortIdMatches);
+            logger_1.default.log('Matched multiple potential Trello short IDs from branch name', shortIdMatches);
             const potentialCardIds = await Promise.all(shortIdMatches.map((shortId) => getTrelloCardByShortId(shortId, conf.trelloBoardId)));
             const cardIds = potentialCardIds.filter((c) => c);
             if (cardIds.length) {
@@ -34424,12 +34426,12 @@ async function getCardIdsFromBranchName(conf, prHead) {
     }
     const matches = branchName.match(/(?<=^|\/)(\d+)-\S+/i);
     if (matches) {
-        logger_1.default.log('LINK: Matched one potential card from branch name', matches);
+        logger_1.default.log('Matched one potential card from branch name', matches);
         const cardsWithExactMatch = await (0, trello_1.searchTrelloCards)(matches[0]);
         if (cardsWithExactMatch?.length) {
             return [cardsWithExactMatch[0].shortLink];
         }
-        logger_1.default.log('LINK: Could not find Trello card with branch name, trying only with short ID', matches[1]);
+        logger_1.default.log('Could not find Trello card with branch name, trying only with short ID', matches[1]);
         const cardId = await getTrelloCardByShortId(matches[1]);
         if (cardId) {
             return [cardId];
@@ -34501,28 +34503,29 @@ const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3031));
 const isPullRequestApproved_1 = __importDefault(__nccwpck_require__(4414));
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function moveOrArchiveCards(conf, cardIds, pr) {
+    logger_1.default.log('--- MOVE OR ARCHIVE CARDS ---');
     const isDraft = (0, isPullRequestInDraft_1.default)(pr);
     const isChangesRequested = await (0, isChangesRequestedInReview_1.default)();
     const isApproved = await (0, isPullRequestApproved_1.default)();
     const isMerged = await (0, github_1.isPullRequestMerged)();
     if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
         await moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId);
-        logger_1.default.log('MOVE: Moved cards to draft PR list');
+        logger_1.default.log('Moved cards to draft PR list');
         return;
     }
     if (pr.state === 'open' && !isDraft && isChangesRequested && conf.trelloListIdPrChangesRequested) {
         await moveCardsToList(cardIds, conf.trelloListIdPrChangesRequested, conf.trelloBoardId);
-        logger_1.default.log('MOVE: Moved cards to changes requested PR list');
+        logger_1.default.log('Moved cards to changes requested PR list');
         return;
     }
     if (pr.state === 'open' && !isDraft && !isChangesRequested && isApproved && conf.trelloListIdPrApproved) {
         await moveCardsToList(cardIds, conf.trelloListIdPrApproved, conf.trelloBoardId);
-        logger_1.default.log('MOVE: Moved cards to approved PR list');
+        logger_1.default.log('Moved cards to approved PR list');
         return;
     }
     if (pr.state === 'open' && !isDraft && conf.trelloListIdPrOpen) {
         await moveCardsToList(cardIds, conf.trelloListIdPrOpen, conf.trelloBoardId);
-        logger_1.default.log('MOVE: Moved cards to opened PR list');
+        logger_1.default.log('Moved cards to opened PR list');
         return;
     }
     if (pr.state === 'closed' && isMerged && conf.trelloArchiveOnMerge) {
@@ -34531,10 +34534,10 @@ async function moveOrArchiveCards(conf, cardIds, pr) {
     }
     if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
         await moveCardsToList(cardIds, conf.trelloListIdPrClosed, conf.trelloBoardId);
-        logger_1.default.log('MOVE: Moved cards to closed PR list');
+        logger_1.default.log('Moved cards to closed PR list');
         return;
     }
-    logger_1.default.log('MOVE: Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged });
+    logger_1.default.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged });
 }
 exports["default"] = moveOrArchiveCards;
 async function moveCardsToList(cardIds, listId, boardId) {
@@ -34574,8 +34577,9 @@ const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3031));
 const isPullRequestApproved_1 = __importDefault(__nccwpck_require__(4414));
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function updateCardMembers(conf, cardIds, pr) {
+    logger_1.default.log('--- UPDATE CARD MEMBERS ---');
     if (!conf.trelloAddMembersToCards) {
-        return logger_1.default.log('MEMBERS: Skipping members updating');
+        return logger_1.default.log('Skipping members updating');
     }
     const inReview = await isPullRequestInReview(conf, pr);
     if (inReview) {
@@ -34590,7 +34594,7 @@ async function isPullRequestInReview(conf, pr) {
     const isInDraft = (0, isPullRequestInDraft_1.default)(pr);
     const isChangesRequested = await (0, isChangesRequestedInReview_1.default)();
     const isApproved = await (0, isPullRequestApproved_1.default)();
-    logger_1.default.log('MEMBERS: Checking if PR is in review', { prState: pr.state, isInDraft, isChangesRequested, isApproved });
+    logger_1.default.log('Checking if PR is in review', { prState: pr.state, isInDraft, isChangesRequested, isApproved });
     if (!conf.trelloSwitchMembersInReview) {
         return false;
     }
@@ -34611,7 +34615,7 @@ async function isPullRequestInReview(conf, pr) {
 async function assignReviewers(conf, cardIds) {
     const reviewers = await getReviewers();
     const memberIds = await getTrelloMemberIds(conf, reviewers);
-    logger_1.default.log('MEMBERS: Removing contributors and assigning reviewers', { reviewers, memberIds });
+    logger_1.default.log('Removing contributors and assigning reviewers', { reviewers, memberIds });
     return Promise.all(cardIds.map(async (cardId) => {
         const cardInfo = await (0, trello_1.getCardInfo)(cardId);
         await removeMembers(cardId, cardInfo.idMembers);
@@ -34621,12 +34625,12 @@ async function assignReviewers(conf, cardIds) {
 async function assignContributors(conf, cardIds) {
     const contributors = await getPullRequestContributors();
     if (!contributors.length) {
-        logger_1.default.log('MEMBERS: No PR contributors found');
+        logger_1.default.log('No PR contributors found');
         return;
     }
     const memberIds = await getTrelloMemberIds(conf, contributors);
     if (!memberIds.length) {
-        logger_1.default.log('MEMBERS: No Trello members found based on PR contributors');
+        logger_1.default.log('No Trello members found based on PR contributors');
         return;
     }
     return Promise.all(cardIds.map(async (cardId) => {
@@ -34659,7 +34663,7 @@ async function addMembers(cardId, memberIds) {
     const cardInfo = await (0, trello_1.getCardInfo)(cardId);
     const filtered = memberIds.filter((id) => !cardInfo.idMembers.includes(id));
     if (!filtered.length) {
-        logger_1.default.log('MEMBERS: All members are already assigned to the card');
+        logger_1.default.log('All members are already assigned to the card');
         return;
     }
     return Promise.all(filtered.map((memberId) => (0, trello_1.addMemberToCard)(cardInfo.id, memberId)));
@@ -34668,11 +34672,11 @@ async function removeUnrelatedMembers(conf, cardId, memberIds) {
     if (!conf.trelloRemoveUnrelatedMembers) {
         return;
     }
-    logger_1.default.log('MEMBERS: Starting to remove unrelated members');
+    logger_1.default.log('Starting to remove unrelated members');
     const cardInfo = await (0, trello_1.getCardInfo)(cardId);
     const filtered = cardInfo.idMembers.filter((id) => !memberIds.includes(id));
     if (!filtered.length) {
-        logger_1.default.log('MEMBERS: Did not find any unrelated members');
+        logger_1.default.log('Did not find any unrelated members');
         return;
     }
     return removeMembers(cardInfo.id, filtered);
@@ -34681,13 +34685,13 @@ async function removeReviewers(conf, cardId) {
     if (!conf.trelloSwitchMembersInReview) {
         return;
     }
-    logger_1.default.log('MEMBERS: Starting to remove reviewers from the card');
+    logger_1.default.log('Starting to remove reviewers from the card');
     const reviewers = await getReviewers();
     const memberIds = await getTrelloMemberIds(conf, reviewers);
     const cardInfo = await (0, trello_1.getCardInfo)(cardId);
     const filtered = memberIds.filter((id) => !cardInfo.idMembers.includes(id));
     if (!filtered.length) {
-        logger_1.default.log('MEMBERS: Did not find any reviewers assigned to the card');
+        logger_1.default.log('Did not find any reviewers assigned to the card');
         return;
     }
     return removeMembers(cardInfo.id, filtered);
@@ -34706,16 +34710,16 @@ async function getReviewers() {
 async function getTrelloMemberIds(conf, githubUsernames) {
     const memberIds = await Promise.all(githubUsernames.map(async (githubUsername) => {
         const username = getTrelloUsername(conf, githubUsername);
-        logger_1.default.log('MEMBERS: Searching Trello member id by username', username);
+        logger_1.default.log('Searching Trello member id by username', username);
         const member = await (0, trello_1.getMemberInfo)(username);
         if (!member) {
             return;
         }
-        logger_1.default.log('MEMBERS: Found member id by username', { memberId: member.id, username });
+        logger_1.default.log('Found member id by username', { memberId: member.id, username });
         if (conf.trelloOrganizationName) {
             const hasAccess = member.organizations?.some((org) => org.name === conf.trelloOrganizationName);
             if (!hasAccess) {
-                logger_1.default.log('MEMBERS: The member has no access to the org', {
+                logger_1.default.log('The member has no access to the org', {
                     orgName: conf.trelloOrganizationName,
                     memberId: member.id,
                     username,
@@ -34736,7 +34740,7 @@ function getTrelloUsername(conf, githubUsername) {
     for (const line of usernamesMap.split(/[\r\n]/)) {
         const parts = line.trim().split(':');
         if (parts.length < 2) {
-            logger_1.default.error('MEMBERS: Mapping of Github user to Trello does not contain 2 usernames separated by ":"', line);
+            logger_1.default.error('Mapping of Github user to Trello does not contain 2 usernames separated by ":"', line);
             continue;
         }
         if (parts[0].trim() === githubUsername && parts[1].trim() !== '') {
@@ -34832,7 +34836,7 @@ function isPullRequestInDraft(pr) {
     const isRealDraft = pr.draft === true;
     const isFauxDraft = Boolean(pr.title.match(titleDraftRegExp));
     if (isFauxDraft) {
-        logger_1.default.log('UTIL: This PR is in faux draft');
+        logger_1.default.log('This PR is in faux draft');
     }
     return isRealDraft || isFauxDraft;
 }

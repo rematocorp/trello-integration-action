@@ -43,7 +43,7 @@ export async function getCardAttachments(cardId: string): Promise<{ url: string 
 }
 
 export async function addAttachmentToCard(cardId: string, link: string) {
-	logger.log('LINK: Adding attachment to the card', { cardId, link })
+	logger.log('Adding attachment to the card', { cardId, link })
 
 	return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/attachments`, { url: link })
 }
@@ -57,7 +57,7 @@ export async function getBoardLabels(boardId: string): Promise<BoardLabel[]> {
 }
 
 export async function addLabelToCard(cardId: string, labelId: string) {
-	logger.log('LABELS: Adding label to a card', { cardId, labelId })
+	logger.log('Adding label to a card', { cardId, labelId })
 
 	return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idLabels`, {
 		value: labelId,
@@ -65,7 +65,7 @@ export async function addLabelToCard(cardId: string, labelId: string) {
 }
 
 export async function addMemberToCard(cardId: string, memberId: string) {
-	logger.log('MEMBERS: Adding member to a card', { cardId, memberId })
+	logger.log('Adding member to a card', { cardId, memberId })
 
 	return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idMembers`, {
 		value: memberId,
@@ -73,7 +73,7 @@ export async function addMemberToCard(cardId: string, memberId: string) {
 }
 
 export async function removeMemberFromCard(cardId: string, memberId: string) {
-	logger.log('MEMBERS: Removing member from a card', { cardId, memberId })
+	logger.log('Removing member from a card', { cardId, memberId })
 
 	return makeRequest('delete', `https://api.trello.com/1/cards/${cardId}/idMembers/${memberId}`)
 }
@@ -85,7 +85,7 @@ export async function getBoardLists(boardId: string): Promise<{ id: string }[]> 
 }
 
 export async function moveCardToList(cardId: string, listId: string, boardId?: string) {
-	logger.log('MOVE: Moving card to list', { cardId, listId, boardId })
+	logger.log('Moving card to list', { cardId, listId, boardId })
 
 	return makeRequest('put', `https://api.trello.com/1/cards/${cardId}`, {
 		pos: trelloCardPosition,
@@ -107,7 +107,7 @@ export async function createCard(
 	title: string,
 	body?: string,
 ): Promise<{ id: string; url: string; shortLink: string }> {
-	logger.log('LINK: Creating card based on PR info', { title, body })
+	logger.log('Creating card based on PR info', { title, body })
 
 	const response = await makeRequest('post', `https://api.trello.com/1/cards`, {
 		idList: listId,
