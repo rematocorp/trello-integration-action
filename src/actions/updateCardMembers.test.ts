@@ -86,6 +86,7 @@ it('removes only reviewers when unrelated members removing is turned off but swi
 		pr,
 	)
 
+	expect(removeMemberFromCard).toHaveBeenCalledTimes(1)
 	expect(removeMemberFromCard).toHaveBeenCalledWith('card', 'amy1993')
 })
 
