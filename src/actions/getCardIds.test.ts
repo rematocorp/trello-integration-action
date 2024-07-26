@@ -1,6 +1,6 @@
 import { setFailed } from '@actions/core'
 import { getBranchName, getPullRequest, getPullRequestComments, updatePullRequestBody, getCommits } from './api/github'
-import { createCard, moveCardToList, searchTrelloCards } from './api/trello'
+import { createCard, moveCardToList, searchTrelloCards, getCardInfo } from './api/trello'
 import getCardIds from './getCardIds'
 
 jest.mock('@actions/core')
@@ -14,6 +14,7 @@ const getPullRequestCommentsMock = getPullRequestComments as jest.Mock
 const getBranchNameMock = getBranchName as jest.Mock
 const searchTrelloCardsMock = searchTrelloCards as jest.Mock
 const createCardMock = createCard as jest.Mock
+const getCardInfoMock = getCardInfo as jest.Mock
 
 const pr = { number: 0, state: 'open', title: 'Title' }
 
@@ -145,12 +146,37 @@ describe('Finding cards', () => {
 			expect(cardIds).toEqual(['card'])
 		})
 
+		it('finds card with title', async () => {
+			getBranchNameMock.mockResolvedValueOnce('1-funky-feature-title')
+			searchTrelloCardsMock.mockResolvedValueOnce([]).mockResolvedValueOnce([
+				{ id: '0', shortLink: 'card-0', idShort: 4, dateLastActivity: '2024-02-02', closed: true },
+				{ id: '1', shortLink: 'card-1', idShort: 3, dateLastActivity: '2023-01-01' },
+				{ id: '2', shortLink: 'card-2', idShort: 2, dateLastActivity: '2024-01-01' },
+			])
+			getCardInfoMock.mockImplementation((cardId) => {
+				if (cardId === '0') {
+					return { idShort: 4, shortLink: 'card-0', actions: [] }
+				} else if (cardId === '1') {
+					return { idShort: 3, shortLink: 'card-1', actions: [{ data: { card: { idShort: 1 } } }] }
+				} else if (cardId === '2') {
+					return { idShort: 2, shortLink: 'card-2', actions: [{ data: { card: { idShort: 2 } } }] }
+				}
+			})
+
+			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, pr)
+
+			expect(cardIds).toEqual(['card-1'])
+		})
+
 		it('finds card with short ID', async () => {
 			getBranchNameMock.mockResolvedValueOnce('1-nan')
-			searchTrelloCardsMock.mockResolvedValueOnce([]).mockResolvedValueOnce([
-				{ shortLink: 'card-1', idShort: 1, dateLastActivity: '2023-01-01' },
-				{ shortLink: 'card-2', idShort: 1, dateLastActivity: '2024-01-01' },
-			])
+			searchTrelloCardsMock
+				.mockResolvedValueOnce([])
+				.mockResolvedValueOnce([])
+				.mockResolvedValueOnce([
+					{ shortLink: 'card-1', idShort: 1, dateLastActivity: '2023-01-01' },
+					{ shortLink: 'card-2', idShort: 1, dateLastActivity: '2024-01-01' },
+				])
 
 			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, pr)
 
@@ -178,7 +204,49 @@ describe('Finding cards', () => {
 			expect(cardIds).toEqual(['1-card', '2-card'])
 		})
 
-		it('ignores branch names that look similar to Trello card name', async () => {
+		it('returns nothing when not correct card found', async () => {
+			getBranchNameMock.mockResolvedValueOnce('1-card')
+			searchTrelloCardsMock.mockResolvedValueOnce([]).mockResolvedValueOnce([])
+
+			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, pr)
+
+			expect(cardIds).toEqual([])
+		})
+
+		it('skips searching wider when card is already linked', async () => {
+			getBranchNameMock.mockResolvedValueOnce('1-feature-nan')
+			searchTrelloCardsMock
+				.mockResolvedValueOnce([])
+				.mockResolvedValueOnce([{ id: 'incorrect-card', shortLink: '1-incorrect-card', idShort: 1 }])
+			getCardInfoMock.mockImplementation((id) => {
+				if (id === 'card') {
+					return {
+						idShort: 2,
+						shortLink: 'card',
+						actions: [{ data: { card: { idShort: 1 } } }],
+					}
+				} else if (id === 'incorrect-card') {
+					return {
+						idShort: 1,
+						shortLink: '1-incorrect-card',
+						actions: [],
+					}
+				}
+			})
+
+			const cardIds = await getCardIds(
+				{ ...conf, githubIncludePrBranchName: true },
+				{ ...pr, body: 'https://trello.com/c/card/title' },
+			)
+
+			expect(cardIds).toEqual(['card'])
+		})
+
+		it('ignores closed cards', async () => {
+			// TODO
+		})
+
+		it('ignores branch names that looks similar to Trello card name', async () => {
 			getBranchNameMock.mockResolvedValueOnce('not-1-card')
 
 			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, pr)

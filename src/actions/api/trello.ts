@@ -1,6 +1,6 @@
 import axios from 'axios'
 import * as core from '@actions/core'
-import { BoardLabel } from '../../types'
+import { BoardLabel, Card } from '../../types'
 import logger from '../utils/logger'
 
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
@@ -10,7 +10,7 @@ const trelloCardPosition = core.getInput('trello-card-position')
 export async function searchTrelloCards(
 	query: string,
 	boardId?: string,
-): Promise<{ dateLastActivity: string; id: string; idShort: number; shortLink: string }[]> {
+): Promise<{ dateLastActivity: string; id: string; idShort: number; shortLink: string; closed: boolean }[]> {
 	const response = await makeRequest('get', `https://api.trello.com/1/search`, {
 		modelTypes: 'cards',
 		query,
@@ -20,9 +20,7 @@ export async function searchTrelloCards(
 	return response?.data?.cards || []
 }
 
-export async function getCardInfo(
-	cardId: string,
-): Promise<{ id: string; idBoard: string; labels: BoardLabel[]; shortUrl: string; idMembers: string[] }> {
+export async function getCardInfo(cardId: string): Promise<Card> {
 	const response = await makeRequest('get', `https://api.trello.com/1/cards/${cardId}`)
 
 	return response?.data
@@ -102,11 +100,7 @@ export async function archiveCard(cardId: string) {
 	})
 }
 
-export async function createCard(
-	listId: string,
-	title: string,
-	body?: string,
-): Promise<{ id: string; url: string; shortLink: string }> {
+export async function createCard(listId: string, title: string, body?: string): Promise<Card> {
 	logger.log('Creating card based on PR info', { title, body })
 
 	const response = await makeRequest('post', `https://api.trello.com/1/cards`, {
