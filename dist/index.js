@@ -34689,7 +34689,7 @@ async function removeReviewers(conf, cardId) {
     const reviewers = await getReviewers();
     const memberIds = await getTrelloMemberIds(conf, reviewers);
     const cardInfo = await (0, trello_1.getCardInfo)(cardId);
-    const filtered = memberIds.filter((id) => !cardInfo.idMembers.includes(id));
+    const filtered = memberIds.filter((id) => cardInfo.idMembers.includes(id));
     if (!filtered.length) {
         logger_1.default.log('Did not find any reviewers assigned to the card');
         return;

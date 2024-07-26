@@ -78,7 +78,7 @@ it('removes only reviewers when unrelated members removing is turned off but swi
 	getPullRequestRequestedReviewersMock.mockResolvedValue({ users: [] })
 	getPullRequestReviewsMock.mockResolvedValue([{ state: 'ACTIVE', user: { login: 'amy' } }])
 	getMemberInfoMock.mockImplementation((username) => ({ id: username }))
-	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: ['amy', 'jones'] })
+	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: ['amy1993', 'jones'] })
 
 	await updateCardMembers(
 		{ ...conf, trelloRemoveUnrelatedMembers: false, trelloSwitchMembersInReview: true },
