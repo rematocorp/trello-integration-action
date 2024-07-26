@@ -34388,7 +34388,7 @@ async function getCardIds(conf, pr) {
         }
     }
     if (conf.githubIncludePrBranchName) {
-        const cardIdsFromBranch = await getCardIdsFromBranchName(conf, pr.head);
+        const cardIdsFromBranch = await getCardIdsFromBranchName(conf, cardIds, pr.head);
         cardIds = [...cardIds, ...cardIdsFromBranch];
     }
     if (conf.githubIncludeNewCardCommand) {
@@ -34410,41 +34410,93 @@ async function getCardIds(conf, pr) {
     }
 }
 exports["default"] = getCardIds;
-async function getCardIdsFromBranchName(conf, prHead) {
+async function getCardIdsFromBranchName(conf, knownCardIds, prHead) {
     const branchName = prHead?.ref || (await (0, github_1.getBranchName)());
     logger_1.default.log('Searching cards from branch name', branchName);
+    // Try detecting multiple short IDs first
     if (conf.githubAllowMultipleCardsInPrBranchName) {
-        const shortIdMatches = branchName.match(/(?<=^|\/)\d+(?:-\d+)+/gi)?.[0].split('-');
-        if (shortIdMatches && shortIdMatches.length > 1) {
-            logger_1.default.log('Matched multiple potential Trello short IDs from branch name', shortIdMatches);
-            const potentialCardIds = await Promise.all(shortIdMatches.map((shortId) => getTrelloCardByShortId(shortId, conf.trelloBoardId)));
-            const cardIds = potentialCardIds.filter((c) => c);
-            if (cardIds.length) {
-                return cardIds;
-            }
+        const cardIds = await getMultipleCardIdsFromBranchName(conf, branchName);
+        if (cardIds?.length) {
+            return cardIds;
         }
     }
-    const matches = branchName.match(/(?<=^|\/)(\d+)-\S+/i);
+    // Try finding only one card with short ID and title (e.g. 123-feature-title)
+    const matches = branchName.match(/(?<=^|\/)(\d+)-(\S+)/i);
     if (matches) {
+        const shortId = matches[1];
+        const title = matches[2];
         logger_1.default.log('Matched one potential card from branch name', matches);
+        // Try finding the card with short ID and title together
         const cardsWithExactMatch = await (0, trello_1.searchTrelloCards)(matches[0]);
         if (cardsWithExactMatch?.length) {
             return [cardsWithExactMatch[0].shortLink];
         }
-        logger_1.default.log('Could not find Trello card with branch name, trying only with short ID', matches[1]);
-        const cardId = await getTrelloCardByShortId(matches[1]);
-        if (cardId) {
-            return [cardId];
+        // Make sure the card is not already linked before wider, more inaccurate search
+        const alreadyLinked = await isCardAlreadyLinked(knownCardIds, shortId);
+        if (alreadyLinked) {
+            logger_1.default.log('Card that is mentioned in the branch name is already linked', shortId);
+            return [];
         }
+        // Try finding only with the title in case short ID has changed with a move
+        const cardIdByTitle = await getTrelloCardByTitle(title, shortId);
+        if (cardIdByTitle) {
+            logger_1.default.log('Found a card with the title', { title, shortId });
+            return [cardIdByTitle];
+        }
+        // Our last hope is to find the card with just a short ID
+        const cardIdByShortId = await getTrelloCardByShortId(shortId);
+        if (cardIdByShortId) {
+            logger_1.default.log('Found a card with only the short ID', shortId);
+            return [cardIdByShortId];
+        }
+        logger_1.default.log('Could not find correct Trello card with branch name');
     }
     return [];
 }
+async function getMultipleCardIdsFromBranchName(conf, branchName) {
+    const shortIdMatches = branchName.match(/(?<=^|\/)\d+(?:-\d+)+/gi)?.[0].split('-');
+    if (shortIdMatches && shortIdMatches.length > 1) {
+        logger_1.default.log('Matched multiple potential Trello short IDs from branch name', shortIdMatches);
+        const potentialCardIds = await Promise.all(shortIdMatches.map((shortId) => getTrelloCardByShortId(shortId, conf.trelloBoardId)));
+        const cardIds = potentialCardIds.filter((c) => c);
+        if (cardIds.length) {
+            return cardIds;
+        }
+    }
+}
+async function isCardAlreadyLinked(cardIds, shortId) {
+    return cardIds.some(async (cardId) => {
+        const card = await (0, trello_1.getCardInfo)(cardId);
+        return card.actions.some((action) => action.data.card.idShort === parseInt(shortId));
+    });
+}
+/**
+ * Searches for a card with short ID ((from the branch name)) and then filters out cards
+ * that are closed, sorts by last active and matches only the card that has the correct short ID.
+ */
 async function getTrelloCardByShortId(shortId, boardId) {
     const cardsWithNumberMatch = await (0, trello_1.searchTrelloCards)(shortId, boardId);
     return cardsWithNumberMatch
-        ?.sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
+        ?.filter((card) => !card.closed)
+        .sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
         .find((card) => card.idShort === parseInt(shortId))?.shortLink;
 }
+/**
+ * Searches for a card with the branch title (e.g., add-new-feature-foo) and then filters out cards
+ * that are closed, sorts by last active and matches only the card that has the correct short id (from the branch name).
+ */
+async function getTrelloCardByTitle(title, shortId) {
+    const results = await (0, trello_1.searchTrelloCards)(title);
+    const cards = await Promise.all(results
+        ?.filter((card) => !card.closed)
+        .sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
+        .map((card) => (0, trello_1.getCardInfo)(card.id)));
+    return cards.find((card) => card.idShort === parseInt(shortId) ||
+        card.actions.some((action) => action.data.card.idShort === parseInt(shortId)))?.shortLink;
+}
+/**
+ * Creates a new card when user has written "/new-trello-card" to the PR description
+ */
 async function createNewCard(conf, pr) {
     const isDraft = (0, isPullRequestInDraft_1.default)(pr);
     const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen;

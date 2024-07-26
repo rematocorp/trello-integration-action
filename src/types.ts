@@ -41,6 +41,7 @@ export type Card = {
 	idBoard: string
 	idMembers: string[]
 	labels: BoardLabel[]
+	url: string
 	shortUrl: string
 	shortLink: string
 	actions: {
