@@ -1,19 +1,20 @@
 import { BoardLabel, Conf, PRHead } from '../types'
 import { getBranchName } from './api/github'
 import { addLabelToCard, getBoardLabels, getCardInfo } from './api/trello'
+import logger from './utils/logger'
 
 export default async function addLabelToCards(conf: Conf, cardIds: string[], head?: PRHead) {
+	logger.log('--- ADD LABEL TO CARDS ---')
+
 	if (!conf.trelloAddLabelsToCards) {
-		console.log('Skipping label adding')
+		logger.log('Skipping label adding')
 
 		return
 	}
-	console.log('Starting to add labels to cards')
-
 	const branchLabel = await getBranchLabel(head)
 
 	if (!branchLabel) {
-		console.log('Could not find branch label')
+		logger.log('Could not find branch label')
 
 		return
 	}
@@ -26,7 +27,7 @@ export default async function addLabelToCards(conf: Conf, cardIds: string[], hea
 			)
 
 			if (hasConflictingLabel) {
-				console.log('Skipping label adding to a card because it has a conflicting label', cardInfo.labels)
+				logger.log('Skipping label adding to a card as it has a conflicting label', cardInfo.labels)
 
 				return
 			}
@@ -36,7 +37,7 @@ export default async function addLabelToCards(conf: Conf, cardIds: string[], hea
 			if (matchingLabel) {
 				await addLabelToCard(cardId, matchingLabel.id)
 			} else {
-				console.log('Could not find a matching label from the board', branchLabel, boardLabels)
+				logger.log('Could not find a matching label from the board', { branchLabel, boardLabels })
 			}
 		}),
 	)
@@ -49,7 +50,7 @@ async function getBranchLabel(prHead?: PRHead) {
 	if (matches) {
 		return matches[1]
 	} else {
-		console.log('Did not find branch label', branchName)
+		logger.log('Did not find branch label', branchName)
 	}
 }
 
@@ -59,7 +60,7 @@ function findMatchingLabel(branchLabel: string, boardLabels: BoardLabel[]) {
 	if (match) {
 		return match
 	}
-	console.log('Could not match the exact label name, trying to find partially matching label')
+	logger.log('Could not match the exact label name, trying to find partially matching label')
 
 	return boardLabels.find((label) => branchLabel.startsWith(label.name))
 }
