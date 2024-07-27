@@ -7,11 +7,11 @@ import isPullRequestApproved from './utils/isPullRequestApproved'
 import logger from './utils/logger'
 
 export default async function updateCardMembers(conf: Conf, cardIds: string[], pr: PR) {
-	logger.log('--- UPDATE CARD MEMBERS ---')
-
 	if (!conf.trelloAddMembersToCards) {
-		return logger.log('Skipping members updating')
+		return
 	}
+	logger.log('👩‍💻 UPDATE CARD MEMBERS')
+
 	const inReview = await isPullRequestInReview(conf, pr)
 
 	if (inReview) {
@@ -114,7 +114,7 @@ async function getPullRequestContributors() {
 	return Array.from(contributors)
 }
 
-async function addMembers(cardId: string, memberIds: string[]) {
+async function addMembers(cardId: CardId, memberIds: string[]) {
 	const cardInfo = await getCardInfo(cardId)
 	const filtered = memberIds.filter((id) => !cardInfo.idMembers.includes(id))
 
@@ -127,7 +127,7 @@ async function addMembers(cardId: string, memberIds: string[]) {
 	return Promise.all(filtered.map((memberId) => addMemberToCard(cardInfo.id, memberId)))
 }
 
-async function removeUnrelatedMembers(conf: Conf, cardId: string, memberIds: string[]) {
+async function removeUnrelatedMembers(conf: Conf, cardId: CardId, memberIds: string[]) {
 	if (!conf.trelloRemoveUnrelatedMembers) {
 		return
 	}
@@ -145,7 +145,7 @@ async function removeUnrelatedMembers(conf: Conf, cardId: string, memberIds: str
 	return removeMembers(cardInfo.id, filtered)
 }
 
-async function removeReviewers(conf: Conf, cardId: string) {
+async function removeReviewers(conf: Conf, cardId: CardId) {
 	if (!conf.trelloSwitchMembersInReview) {
 		return
 	}
@@ -166,7 +166,7 @@ async function removeReviewers(conf: Conf, cardId: string) {
 	return removeMembers(cardInfo.id, filtered)
 }
 
-async function removeMembers(cardId: string, memberIds: string[]) {
+async function removeMembers(cardId: CardId, memberIds: string[]) {
 	return Promise.all(memberIds.map((memberId) => removeMemberFromCard(cardId, memberId)))
 }
 

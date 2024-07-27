@@ -5,7 +5,7 @@ import logger from './utils/logger'
 import matchCardIds from './utils/matchCardIds'
 
 export default async function addCardLinksToPullRequest(conf: Conf, cardIds: string[]) {
-	logger.log('--- ADD CARD LINKS TO PR ---')
+	logger.log('🔗 ADD CARD LINKS TO PR')
 
 	const bodyCardIds = await getCardIdsFromBody(conf)
 	const commentsCardIds = await getCardIdsFromComments(conf)
@@ -18,8 +18,6 @@ export default async function addCardLinksToPullRequest(conf: Conf, cardIds: str
 
 		return
 	}
-	logger.log('Commenting Trello card URLs to PR', unlinkedCardIds)
-
 	const cards = await Promise.all(unlinkedCardIds.map((id) => getCardInfo(id)))
 	const urls = cards.map((card) => card.shortUrl)
 	const comment = conf.githubRequireKeywordPrefix ? `Closes ${urls.join(' ')}` : urls.join('\n')

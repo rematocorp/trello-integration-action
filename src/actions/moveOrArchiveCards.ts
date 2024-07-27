@@ -7,7 +7,7 @@ import isPullRequestApproved from './utils/isPullRequestApproved'
 import logger from './utils/logger'
 
 export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], pr: PR) {
-	logger.log('--- MOVE OR ARCHIVE CARDS ---')
+	logger.log('🕺 MOVE OR ARCHIVE CARDS')
 
 	const isDraft = isPullRequestInDraft(pr)
 	const isChangesRequested = await isChangesRequestedInReview()
