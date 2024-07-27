@@ -35,8 +35,9 @@ export type PRHead = { ref: string }
 
 export type BoardLabel = { id: string; name: string }
 
+export type CardId = string
 export type Card = {
-	id: string
+	id: CardId
 	idShort: number
 	idBoard: string
 	idMembers: string[]
