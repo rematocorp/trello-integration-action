@@ -1,7 +1,7 @@
 import { setFailed } from '@actions/core'
 import {
 	addCardLinksToPullRequest,
-	addLabelToCards,
+	addLabelsToCards,
 	addPullRequestLinkToCards,
 	getCardIds,
 	moveOrArchiveCards,
@@ -30,7 +30,7 @@ it('triggers all actions when cards found', async () => {
 	expect(addCardLinksToPullRequest).toHaveBeenCalledWith(conf, cardIds)
 	expect(addPullRequestLinkToCards).toHaveBeenCalledWith(cardIds, pr)
 	expect(moveOrArchiveCards).toHaveBeenCalledWith(conf, cardIds, pr)
-	expect(addLabelToCards).toHaveBeenCalledWith(conf, cardIds, pr.head)
+	expect(addLabelsToCards).toHaveBeenCalledWith(conf, cardIds, pr.head)
 	expect(updateCardMembers).toHaveBeenCalledWith(conf, cardIds, pr)
 })
 

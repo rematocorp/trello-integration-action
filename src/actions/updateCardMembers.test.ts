@@ -23,7 +23,7 @@ const getCardInfoMock = getCardInfo as jest.Mock
 
 let pr = { title: 'Test PR', state: 'open', draft: true }
 let conf: Conf = {
-	githubUsersToTrelloUsers: 'jack: jones\namy: amy1993',
+	githubUsersToTrelloUsers: ['jack:jones\namy:amy1993'],
 	trelloAddMembersToCards: true,
 	trelloRemoveUnrelatedMembers: true,
 }
@@ -69,7 +69,7 @@ it('adds committer to the card', async () => {
 })
 
 it('ignores incorrectly configured usernames mapping', async () => {
-	await updateCardMembers({ ...conf, githubUsersToTrelloUsers: 'phil' }, ['card'], pr)
+	await updateCardMembers({ ...conf, githubUsersToTrelloUsers: ['phil'] }, ['card'], pr)
 
 	expect(getMemberInfoMock).toHaveBeenCalledWith('phil')
 })
