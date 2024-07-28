@@ -38,6 +38,22 @@ inputs:
             github-users-to-trello-users: |-
               GithubUser1:TrelloUser1
               GithubUser2:TrelloUser2
+    github-add-labels-to-pr:
+        description: Adds first mentioned Trello card labels to the PR. Labels must have same names in Trello and GitHub repository.
+        default: false
+    github-conflicting-labels:
+        description: |-
+            List of label names separated by semicolon that should not coexist together (e.g. "feature;bug;chore"). If PR has one and the card has another one, then the card label is ignored.
+            Example:
+            github-conflicting-labels: |-
+              feature;bug;chore
+              foo;bar
+    github-labels-to-trello-labels:
+        description: |-
+            Newline-separated list of mapping between Github labels and Trello labels. Example:
+            github-labels-to-trello-labels: |-
+              bugfix:bug
+              foo:bar
     trello-api-key:
         description: Trello API key, visit https://trello.com/app-key for key.
         required: true
@@ -59,10 +75,21 @@ inputs:
     trello-list-id-pr-closed:
         description: Trello list ID for closed pull request.
     trello-add-labels-to-cards:
-        description: Enable or disable the automatic addition of labels to cards.
+        description: Enables the automatic addition of labels to cards.
+        default: true
+    trello-add-pr-labels:
+        description: Adds GitHub PR labels to cards.
+        default: false
+    trello-add-branch-category-label:
+        description: Adds branch category (e.g. feature/foo) label to cards.
         default: true
     trello-conflicting-labels:
-        description: When a card has one of these labels, branch category label is not assigned.
+        description: |-
+            List of label names separated by semicolon that should not coexist together (e.g. "feature;bug;chore"). If card has one and the PR has another one, then the PR label is ignored.
+            Example:
+            trello-conflicting-labels: |-
+              feature;bug;chore
+              foo;bar
     trello-card-position:
         description: Position of the card after being moved to a list. Can be "top" or "bottom".
         default: 'top'

@@ -50,6 +50,25 @@ export async function getCommits() {
 	return response.data
 }
 
+export async function getRepoLabels() {
+	const response = await octokit.rest.issues.listLabelsForRepo({
+		owner,
+		repo,
+	})
+
+	return response.data
+}
+
+export async function getLabels() {
+	const response = await octokit.rest.issues.listLabelsOnIssue({
+		owner,
+		repo,
+		issue_number: issueNumber,
+	})
+
+	return response.data
+}
+
 export async function isPullRequestMerged() {
 	try {
 		await octokit.rest.pulls.checkIfMerged({
@@ -104,4 +123,17 @@ export async function updatePullRequestBody(newBody: string) {
 		issue_number: issueNumber,
 		body: newBody,
 	})
+}
+
+export async function addLabels(labels: string[]) {
+	logger.log('Adding labels to PR', labels)
+
+	const response = await octokit.rest.issues.addLabels({
+		owner,
+		repo,
+		issue_number: issueNumber,
+		labels,
+	})
+
+	return response.data
 }

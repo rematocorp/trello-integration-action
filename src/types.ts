@@ -9,20 +9,25 @@ export interface Conf {
 	githubIncludePrBranchName?: boolean
 	githubAllowMultipleCardsInPrBranchName?: boolean
 	githubIncludeNewCardCommand?: boolean
-	githubUsersToTrelloUsers?: string
+	githubUsersToTrelloUsers?: string[]
+	githubAddLabelsToPr?: boolean
+	githubConflictingLabels?: string[]
+	githubLabelsToTrelloLabels?: string[]
 	trelloOrganizationName?: string
+	trelloBoardId?: string
 	trelloListIdPrDraft?: string
 	trelloListIdPrOpen?: string
 	trelloListIdPrChangesRequested?: string
 	trelloListIdPrApproved?: string
 	trelloListIdPrClosed?: string
-	trelloBoardId?: string
-	trelloConflictingLabels?: string[]
-	trelloAddLabelsToCards?: boolean
+	trelloArchiveOnMerge?: boolean
 	trelloAddMembersToCards?: boolean
 	trelloSwitchMembersInReview?: boolean
 	trelloRemoveUnrelatedMembers?: boolean
-	trelloArchiveOnMerge?: boolean
+	trelloConflictingLabels?: string[]
+	trelloAddLabelsToCards?: boolean
+	trelloAddPrLabels?: boolean
+	trelloAddBranchCategoryLabel?: boolean
 }
 
 export type PR = Omit<

@@ -9,8 +9,8 @@ import logger from './utils/logger'
 export default async function getCardIds(conf: Conf, pr: PR) {
 	logger.log('🔎 FIND CARDS')
 
-	const latestPRInfo = (await getPullRequest()) || pr
-	let cardIds = matchCardIds(conf, latestPRInfo.body || '')
+	const latestPrInfo = (await getPullRequest()) || pr
+	let cardIds = matchCardIds(conf, latestPrInfo.body || '')
 
 	if (conf.githubIncludePrComments) {
 		const comments = await getPullRequestComments()
@@ -35,7 +35,7 @@ export default async function getCardIds(conf: Conf, pr: PR) {
 	}
 
 	if (conf.githubIncludeNewCardCommand) {
-		const createdCardId = await createNewCard(conf, latestPRInfo)
+		const createdCardId = await createNewCard(conf, latestPrInfo)
 
 		if (createdCardId) {
 			cardIds = [...cardIds, createdCardId]

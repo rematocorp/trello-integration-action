@@ -1,6 +1,6 @@
 import axios from 'axios'
 import * as core from '@actions/core'
-import { BoardLabel, Card } from '../../types'
+import { BoardLabel, Card, CardId } from '../../types'
 import logger from '../utils/logger'
 
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
@@ -20,7 +20,7 @@ export async function searchTrelloCards(
 	return response?.data?.cards || []
 }
 
-export async function getCardInfo(cardId: string): Promise<Card> {
+export async function getCardInfo(cardId: CardId): Promise<Card> {
 	const response = await makeRequest('get', `https://api.trello.com/1/cards/${cardId}`)
 
 	return response?.data
@@ -34,13 +34,13 @@ export async function getMemberInfo(username?: string): Promise<{ id: string; or
 	return response?.data
 }
 
-export async function getCardAttachments(cardId: string): Promise<{ url: string }[]> {
+export async function getCardAttachments(cardId: CardId): Promise<{ url: string }[]> {
 	const response = await makeRequest('get', `https://api.trello.com/1/cards/${cardId}/attachments`)
 
 	return response?.data || null
 }
 
-export async function addAttachmentToCard(cardId: string, link: string) {
+export async function addAttachmentToCard(cardId: CardId, link: string) {
 	logger.log('Adding attachment to the card', { cardId, link })
 
 	return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/attachments`, { url: link })
@@ -54,7 +54,7 @@ export async function getBoardLabels(boardId: string): Promise<BoardLabel[]> {
 	return response?.data?.filter((label: { name: string }) => label.name)
 }
 
-export async function addLabelToCard(cardId: string, labelId: string) {
+export async function addLabelToCard(cardId: CardId, labelId: string) {
 	logger.log('Adding label to a card', { cardId, labelId })
 
 	return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idLabels`, {
@@ -62,7 +62,7 @@ export async function addLabelToCard(cardId: string, labelId: string) {
 	})
 }
 
-export async function addMemberToCard(cardId: string, memberId: string) {
+export async function addMemberToCard(cardId: CardId, memberId: string) {
 	logger.log('Adding member to a card', { cardId, memberId })
 
 	return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idMembers`, {
@@ -70,7 +70,7 @@ export async function addMemberToCard(cardId: string, memberId: string) {
 	})
 }
 
-export async function removeMemberFromCard(cardId: string, memberId: string) {
+export async function removeMemberFromCard(cardId: CardId, memberId: string) {
 	logger.log('Removing member from a card', { cardId, memberId })
 
 	return makeRequest('delete', `https://api.trello.com/1/cards/${cardId}/idMembers/${memberId}`)
@@ -82,7 +82,7 @@ export async function getBoardLists(boardId: string): Promise<{ id: string }[]> 
 	return response?.data
 }
 
-export async function moveCardToList(cardId: string, listId: string, boardId?: string) {
+export async function moveCardToList(cardId: CardId, listId: string, boardId?: string) {
 	logger.log('Moving card to list', { cardId, listId, boardId })
 
 	return makeRequest('put', `https://api.trello.com/1/cards/${cardId}`, {
@@ -92,7 +92,7 @@ export async function moveCardToList(cardId: string, listId: string, boardId?: s
 	})
 }
 
-export async function archiveCard(cardId: string) {
+export async function archiveCard(cardId: CardId) {
 	logger.log('ARCHIVE: Archiving card', { cardId })
 
 	return makeRequest('put', `https://api.trello.com/1/cards/${cardId}`, {

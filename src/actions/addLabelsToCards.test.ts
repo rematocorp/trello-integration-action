@@ -1,4 +1,4 @@
-import addLabelToCards from './addLabelToCards'
+import addLabelToCards from './addLabelsToCards'
 import { addLabelToCard, getBoardLabels, getCardInfo } from './api/trello'
 import { getBranchName } from './api/github'
 

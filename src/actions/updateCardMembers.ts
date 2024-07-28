@@ -1,4 +1,4 @@
-import { Conf, PR } from '../types'
+import { CardId, Conf, PR } from '../types'
 import { getCommits, getPullRequest, getPullRequestRequestedReviewers, getPullRequestReviews } from './api/github'
 import { addMemberToCard, getCardInfo, getMemberInfo, removeMemberFromCard } from './api/trello'
 import isChangesRequestedInReview from './utils/isChangesRequestedInReview'
@@ -217,13 +217,8 @@ async function getTrelloMemberIds(conf: Conf, githubUsernames: string[]) {
 
 function getTrelloUsername(conf: Conf, githubUsername?: string) {
 	const username = githubUsername?.replace('-', '_')
-	const usernamesMap = conf.githubUsersToTrelloUsers?.trim()
 
-	if (!usernamesMap) {
-		return username
-	}
-
-	for (const line of usernamesMap.split(/[\r\n]/)) {
+	for (const line of conf.githubUsersToTrelloUsers || []) {
 		const parts = line.trim().split(':')
 
 		if (parts.length < 2) {

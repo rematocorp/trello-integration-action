@@ -2,7 +2,8 @@ import { setFailed } from '@actions/core'
 import { Conf, PR } from './types'
 import {
 	addCardLinksToPullRequest,
-	addLabelToCards,
+	addLabelsToCards,
+	addLabelsToPullRequest,
 	addPullRequestLinkToCards,
 	getCardIds,
 	moveOrArchiveCards,
@@ -17,7 +18,8 @@ export async function run(pr: PR, conf: Conf) {
 			await addCardLinksToPullRequest(conf, cardIds)
 			await addPullRequestLinkToCards(cardIds, pr)
 			await moveOrArchiveCards(conf, cardIds, pr)
-			await addLabelToCards(conf, cardIds, pr.head)
+			await addLabelsToCards(conf, cardIds, pr.head)
+			await addLabelsToPullRequest(conf, cardIds)
 			await updateCardMembers(conf, cardIds, pr)
 		}
 	} catch (error: any) {
