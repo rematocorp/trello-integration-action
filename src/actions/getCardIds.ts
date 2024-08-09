@@ -137,11 +137,11 @@ async function getMultipleCardIdsFromBranchName(conf: Conf, branchName: string) 
 	}
 }
 
-async function isCardAlreadyLinked(cardIds: string[], shortId: string) {
+async function isCardAlreadyLinked(cardIds: string[], shortId: string): Promise<boolean> {
 	return cardIds.some(async (cardId) => {
 		const card = await getCardInfo(cardId)
 
-		return card.actions.some((action) => action.data.card.idShort === parseInt(shortId))
+		return card.actions?.some((action) => action.data.card.idShort === parseInt(shortId)) ?? false
 	})
 }
 
@@ -174,7 +174,7 @@ async function getTrelloCardByTitle(title: string, shortId: string) {
 	return cards.find(
 		(card) =>
 			card.idShort === parseInt(shortId) ||
-			card.actions.some((action) => action.data.card.idShort === parseInt(shortId)),
+			(card.actions?.some((action) => action.data.card.idShort === parseInt(shortId)) ?? false),
 	)?.shortLink
 }
 

@@ -44,7 +44,7 @@ export type Card = {
 	url: string
 	shortUrl: string
 	shortLink: string
-	actions: {
+	actions?: {
 		data: {
 			card: {
 				idShort: number
