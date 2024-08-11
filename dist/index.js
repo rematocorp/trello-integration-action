@@ -34467,7 +34467,7 @@ async function getMultipleCardIdsFromBranchName(conf, branchName) {
 async function isCardAlreadyLinked(cardIds, shortId) {
     return cardIds.some(async (cardId) => {
         const card = await (0, trello_1.getCardInfo)(cardId);
-        return card.actions.some((action) => action.data.card.idShort === parseInt(shortId));
+        return card.actions?.some((action) => action.data.card.idShort === parseInt(shortId)) ?? false;
     });
 }
 /**
@@ -34492,7 +34492,7 @@ async function getTrelloCardByTitle(title, shortId) {
         .sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
         .map((card) => (0, trello_1.getCardInfo)(card.id)));
     return cards.find((card) => card.idShort === parseInt(shortId) ||
-        card.actions.some((action) => action.data.card.idShort === parseInt(shortId)))?.shortLink;
+        (card.actions?.some((action) => action.data.card.idShort === parseInt(shortId)) ?? false))?.shortLink;
 }
 /**
  * Creates a new card when user has written "/new-trello-card" to the PR description
