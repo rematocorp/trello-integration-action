@@ -1,7 +1,7 @@
 import { setFailed } from '@actions/core'
 import { Conf, PR, PRHead } from '../types'
 import { getBranchName, getCommits, getPullRequest, getPullRequestComments, updatePullRequestBody } from './api/github'
-import { createCard, getCardInfo, searchTrelloCards } from './api/trello'
+import { createCard, getCardActions, getCardInfo, searchTrelloCards } from './api/trello'
 import matchCardIds from './utils/matchCardIds'
 import isPullRequestInDraft from './utils/isPullRequestInDraft'
 import logger from './utils/logger'
@@ -137,11 +137,11 @@ async function getMultipleCardIdsFromBranchName(conf: Conf, branchName: string) 
 	}
 }
 
-async function isCardAlreadyLinked(cardIds: string[], shortId: string): Promise<boolean> {
+async function isCardAlreadyLinked(cardIds: string[], shortId: string) {
 	return cardIds.some(async (cardId) => {
-		const card = await getCardInfo(cardId)
+		const cardActions = await getCardActions(cardId)
 
-		return card.actions?.some((action) => action.data.card.idShort === parseInt(shortId)) ?? false
+		return cardActions.some((action) => action.data.card.idShort === parseInt(shortId))
 	})
 }
 
@@ -168,13 +168,18 @@ async function getTrelloCardByTitle(title: string, shortId: string) {
 		results
 			?.filter((card) => !card.closed)
 			.sort((a, b) => new Date(b.dateLastActivity).getTime() - new Date(a.dateLastActivity).getTime())
-			.map((card) => getCardInfo(card.id)),
+			.map(async (card) => {
+				const cardInfo = await getCardInfo(card.id)
+				const cardActions = await getCardActions(card.id)
+
+				return { ...cardInfo, actions: cardActions }
+			}),
 	)
 
 	return cards.find(
 		(card) =>
 			card.idShort === parseInt(shortId) ||
-			(card.actions?.some((action) => action.data.card.idShort === parseInt(shortId)) ?? false),
+			card.actions.some((action) => action.data.card.idShort === parseInt(shortId)),
 	)?.shortLink
 }
 

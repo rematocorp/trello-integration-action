@@ -1,6 +1,6 @@
 import axios from 'axios'
 import * as core from '@actions/core'
-import { BoardLabel, Card } from '../../types'
+import { BoardLabel, Card, CardActions } from '../../types'
 import logger from '../utils/logger'
 
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
@@ -22,6 +22,12 @@ export async function searchTrelloCards(
 
 export async function getCardInfo(cardId: string): Promise<Card> {
 	const response = await makeRequest('get', `https://api.trello.com/1/cards/${cardId}`)
+
+	return response?.data
+}
+
+export async function getCardActions(cardId: string): Promise<CardActions> {
+	const response = await makeRequest('get', `https://api.trello.com/1/cards/${cardId}/actions`)
 
 	return response?.data
 }

@@ -1,6 +1,6 @@
 import { setFailed } from '@actions/core'
 import { getBranchName, getPullRequest, getPullRequestComments, updatePullRequestBody, getCommits } from './api/github'
-import { createCard, moveCardToList, searchTrelloCards, getCardInfo } from './api/trello'
+import { createCard, moveCardToList, searchTrelloCards, getCardInfo, getCardActions } from './api/trello'
 import getCardIds from './getCardIds'
 
 jest.mock('@actions/core')
@@ -15,8 +15,13 @@ const getBranchNameMock = getBranchName as jest.Mock
 const searchTrelloCardsMock = searchTrelloCards as jest.Mock
 const createCardMock = createCard as jest.Mock
 const getCardInfoMock = getCardInfo as jest.Mock
+const getCardActionsMock = getCardActions as jest.Mock
 
 const pr = { number: 0, state: 'open', title: 'Title' }
+
+beforeEach(() => {
+	getCardActionsMock.mockResolvedValue([])
+})
 
 it('fails the job when no cards found and githubRequireTrelloCard is enabled', async () => {
 	await getCardIds({ githubRequireTrelloCard: true }, pr)
@@ -155,12 +160,21 @@ describe('Finding cards', () => {
 			])
 			getCardInfoMock.mockImplementation((cardId) => {
 				if (cardId === '0') {
-					return { idShort: 4, shortLink: 'card-0', actions: [] }
+					return { idShort: 4, shortLink: 'card-0' }
 				} else if (cardId === '1') {
-					return { idShort: 3, shortLink: 'card-1', actions: [{ data: { card: { idShort: 1 } } }] }
+					return { idShort: 3, shortLink: 'card-1' }
 				} else if (cardId === '2') {
-					return { idShort: 2, shortLink: 'card-2', actions: [{ data: { card: { idShort: 2 } } }] }
+					return { idShort: 2, shortLink: 'card-2' }
 				}
+			})
+			getCardActionsMock.mockImplementation((cardId) => {
+				if (cardId === '1') {
+					return [{ data: { card: { idShort: 1 } } }]
+				} else if (cardId === '2') {
+					return [{ data: { card: { idShort: 2 } } }]
+				}
+
+				return []
 			})
 
 			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, pr)
@@ -218,19 +232,11 @@ describe('Finding cards', () => {
 			searchTrelloCardsMock
 				.mockResolvedValueOnce([])
 				.mockResolvedValueOnce([{ id: 'incorrect-card', shortLink: '1-incorrect-card', idShort: 1 }])
-			getCardInfoMock.mockImplementation((id) => {
+			getCardActionsMock.mockImplementation((id) => {
 				if (id === 'card') {
-					return {
-						idShort: 2,
-						shortLink: 'card',
-						actions: [{ data: { card: { idShort: 1 } } }],
-					}
+					return [{ data: { card: { idShort: 1 } } }]
 				} else if (id === 'incorrect-card') {
-					return {
-						idShort: 1,
-						shortLink: '1-incorrect-card',
-						actions: [],
-					}
+					return []
 				}
 			})
 
@@ -242,8 +248,18 @@ describe('Finding cards', () => {
 			expect(cardIds).toEqual(['card'])
 		})
 
-		it('ignores closed cards', async () => {
-			// TODO
+		it('ignores closed card when looking card with short ID', async () => {
+			getBranchNameMock.mockResolvedValueOnce('1-nan')
+			searchTrelloCardsMock
+				.mockResolvedValueOnce([])
+				.mockResolvedValueOnce([])
+				.mockResolvedValueOnce([
+					{ shortLink: 'card-1', idShort: 1, dateLastActivity: '2023-01-01', closed: true },
+				])
+
+			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, pr)
+
+			expect(cardIds).toEqual([])
 		})
 
 		it('ignores branch names that looks similar to Trello card name', async () => {

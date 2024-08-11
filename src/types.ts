@@ -44,11 +44,12 @@ export type Card = {
 	url: string
 	shortUrl: string
 	shortLink: string
-	actions?: {
-		data: {
-			card: {
-				idShort: number
-			}
-		}
-	}[]
 }
+
+export type CardActions = {
+	data: {
+		card: {
+			idShort: number
+		}
+	}
+}[]
