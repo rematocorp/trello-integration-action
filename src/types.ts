@@ -53,3 +53,10 @@ export type CardActions = {
 		}
 	}
 }[]
+
+export type TrelloMember = {
+	id: string
+	organizations: {
+		name: string
+	}[]
+}

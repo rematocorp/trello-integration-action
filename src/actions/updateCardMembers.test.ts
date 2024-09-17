@@ -133,10 +133,19 @@ it('skips adding when all members are already assigned to the card', async () =>
 })
 
 it('skips adding when member not found with GitHub username', async () => {
-	getMemberInfoMock.mockResolvedValue(undefined)
+	getMemberInfoMock.mockRejectedValue({ response: { status: 404 } })
 
 	await updateCardMembers(conf, ['card'], pr)
 
+	expect(addMemberToCard).not.toHaveBeenCalled()
+})
+
+it('throws error when unexpected rejection comes from Trello', async () => {
+	const error = { response: { status: 500 } }
+
+	getMemberInfoMock.mockRejectedValue(error)
+
+	await expect(updateCardMembers(conf, ['card'], pr)).rejects.toMatchObject(error)
 	expect(addMemberToCard).not.toHaveBeenCalled()
 })
 
