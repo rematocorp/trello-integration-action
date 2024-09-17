@@ -1,4 +1,4 @@
-import { Conf, PR } from '../types'
+import { Conf, PR, TrelloMember } from '../types'
 import { getCommits, getPullRequest, getPullRequestRequestedReviewers, getPullRequestReviews } from './api/github'
 import { addMemberToCard, getCardInfo, getMemberInfo, removeMemberFromCard } from './api/trello'
 import isChangesRequestedInReview from './utils/isChangesRequestedInReview'
@@ -187,7 +187,16 @@ async function getTrelloMemberIds(conf: Conf, githubUsernames: string[]) {
 
 			logger.log('Searching Trello member id by username', username)
 
-			const member = await getMemberInfo(username)
+			let member: TrelloMember | null = null
+
+			try {
+				member = await getMemberInfo(username)
+			} catch (error: any) {
+				// Throw error unless Trello API returns 404 which means member doesn't exist with the requested username
+				if (error.response?.status !== 404) {
+					throw error
+				}
+			}
 
 			if (!member) {
 				return
