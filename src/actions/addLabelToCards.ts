@@ -35,7 +35,15 @@ export default async function addLabelToCards(conf: Conf, cardIds: string[], hea
 			const matchingLabel = findMatchingLabel(branchLabel, boardLabels)
 
 			if (matchingLabel) {
-				await addLabelToCard(cardId, matchingLabel.id)
+				try {
+					await addLabelToCard(cardId, matchingLabel.id)
+				} catch (error: any) {
+					if (error.response?.data === 'that label is already on the card') {
+						logger.log('Label already exists on the card', cardId, matchingLabel)
+					} else {
+						throw error
+					}
+				}
 			} else {
 				logger.log('Could not find a matching label from the board', { branchLabel, boardLabels })
 			}

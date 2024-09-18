@@ -10,6 +10,7 @@ jest.mock('./api/trello')
 const getCardInfoMock = getCardInfo as jest.Mock
 const getBoardLabelsMock = getBoardLabels as jest.Mock
 const getBranchNameMock = getBranchName as jest.Mock
+const addLabelToCardMock = addLabelToCard as jest.Mock
 
 const head = { ref: 'chore/clean-code' }
 const conf = { trelloAddLabelsToCards: true }
@@ -76,6 +77,23 @@ it('skips when correct label is already assigned', async () => {
 	await addLabelToCards(conf, ['card'], head)
 
 	expect(addLabelToCard).not.toHaveBeenCalled()
+})
+
+it('skips when correct label was just assigned moments ago', async () => {
+	getCardInfoMock.mockResolvedValueOnce({ id: 'card', labels: [] })
+	getBoardLabelsMock.mockResolvedValueOnce([{ id: 'chore-id', name: 'chore' }])
+	addLabelToCardMock.mockRejectedValue({ response: { data: 'that label is already on the card' } })
+
+	await addLabelToCards(conf, ['card'], head)
+})
+
+it('throws error when unexpected rejection comes from Trello', async () => {
+	getCardInfoMock.mockResolvedValueOnce({ id: 'card', labels: [] })
+	getBoardLabelsMock.mockResolvedValueOnce([{ id: 'chore-id', name: 'chore' }])
+
+	addLabelToCardMock.mockRejectedValue({ response: { status: 500 } })
+
+	await expect(addLabelToCards(conf, ['card'], head)).rejects.toMatchObject({ response: { status: 500 } })
 })
 
 it('skips when turned off', async () => {
