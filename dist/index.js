@@ -34025,7 +34025,17 @@ async function addLabelToCards(conf, cardIds, head) {
         const boardLabels = await (0, trello_1.getBoardLabels)(cardInfo.idBoard);
         const matchingLabel = findMatchingLabel(branchLabel, boardLabels);
         if (matchingLabel) {
-            await (0, trello_1.addLabelToCard)(cardId, matchingLabel.id);
+            try {
+                await (0, trello_1.addLabelToCard)(cardId, matchingLabel.id);
+            }
+            catch (error) {
+                if (error.response?.data === 'that label is already on the card') {
+                    logger_1.default.log('Label already exists on the card', cardId, matchingLabel);
+                }
+                else {
+                    throw error;
+                }
+            }
         }
         else {
             logger_1.default.log('Could not find a matching label from the board', { branchLabel, boardLabels });
@@ -34342,7 +34352,7 @@ async function makeRequest(method, url, params) {
     }
     catch (error) {
         const errorMessage = {
-            message: 'Failed to make a request',
+            message: 'Trello request was rejected',
             method,
             url,
             params,

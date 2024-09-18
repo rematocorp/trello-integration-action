@@ -134,7 +134,7 @@ async function makeRequest(method: 'get' | 'put' | 'post' | 'delete', url: strin
 		return response
 	} catch (error: any) {
 		const errorMessage = {
-			message: 'Failed to make a request',
+			message: 'Trello request was rejected',
 			method,
 			url,
 			params,
