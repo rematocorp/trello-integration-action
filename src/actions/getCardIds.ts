@@ -6,11 +6,19 @@ import matchCardIds from './utils/matchCardIds'
 import isPullRequestInDraft from './utils/isPullRequestInDraft'
 import logger from './utils/logger'
 
-export default async function getCardIds(conf: Conf, pr: PR) {
-	logger.log('--- FIND CARDS ---')
+export default async function getCardIds(conf: Conf, head?: PRHead) {
+	logger.logStep('FIND CARDS')
 
-	const latestPRInfo = (await getPullRequest()) || pr
-	let cardIds = matchCardIds(conf, latestPRInfo.body || '')
+	const pr = await getPullRequest()
+	let cardIds = matchCardIds(conf, pr.body || '')
+
+	if (conf.githubIncludeNewCardCommand) {
+		const createdCardId = await createNewCard(conf, pr)
+
+		if (createdCardId) {
+			cardIds = [...cardIds, createdCardId]
+		}
+	}
 
 	if (conf.githubIncludePrComments) {
 		const comments = await getPullRequestComments()
@@ -29,17 +37,9 @@ export default async function getCardIds(conf: Conf, pr: PR) {
 	}
 
 	if (conf.githubIncludePrBranchName) {
-		const cardIdsFromBranch = await getCardIdsFromBranchName(conf, cardIds, pr.head)
+		const cardIdsFromBranch = await getCardIdsFromBranchName(conf, cardIds, head)
 
 		cardIds = [...cardIds, ...cardIdsFromBranch]
-	}
-
-	if (conf.githubIncludeNewCardCommand) {
-		const createdCardId = await createNewCard(conf, latestPRInfo)
-
-		if (createdCardId) {
-			cardIds = [...cardIds, createdCardId]
-		}
 	}
 
 	if (cardIds.length) {
@@ -55,6 +55,28 @@ export default async function getCardIds(conf: Conf, pr: PR) {
 
 		return []
 	}
+}
+
+/**
+ * Creates a new card when user has written "/new-trello-card" to the PR description
+ */
+async function createNewCard(conf: Conf, pr: PR) {
+	const isDraft = isPullRequestInDraft(pr)
+	const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen
+	const commandRegex = /(^|\s)\/new-trello-card(\s|$)/ // Avoids matching URLs
+
+	if (listId && pr.body && commandRegex.test(pr.body)) {
+		await updatePullRequestBody(pr.body.replace('/new-trello-card', '/creating-new-trello-card..'))
+
+		const card = await createCard(listId, pr.title, pr.body.replace('/new-trello-card', ''))
+		const body = conf.githubRequireKeywordPrefix ? `Closes ${card.url}` : card.url
+
+		await updatePullRequestBody(pr.body.replace('/new-trello-card', body))
+
+		return card.shortLink
+	}
+
+	return
 }
 
 async function getCardIdsFromBranchName(conf: Conf, knownCardIds: string[], prHead?: PRHead) {
@@ -181,24 +203,4 @@ async function getTrelloCardByTitle(title: string, shortId: string) {
 			card.idShort === parseInt(shortId) ||
 			card.actions.some((action) => action.data.card.idShort === parseInt(shortId)),
 	)?.shortLink
-}
-
-/**
- * Creates a new card when user has written "/new-trello-card" to the PR description
- */
-async function createNewCard(conf: Conf, pr: PR) {
-	const isDraft = isPullRequestInDraft(pr)
-	const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen
-	const commandRegex = /(^|\s)\/new-trello-card(\s|$)/ // Avoids matching URLs
-
-	if (listId && pr.body && commandRegex.test(pr.body)) {
-		const card = await createCard(listId, pr.title, pr.body.replace('/new-trello-card', ''))
-		const body = conf.githubRequireKeywordPrefix ? `Closes ${card.url}` : card.url
-
-		await updatePullRequestBody(pr.body.replace('/new-trello-card', body))
-
-		return card.shortLink
-	}
-
-	return
 }

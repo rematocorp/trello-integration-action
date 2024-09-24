@@ -11,7 +11,7 @@ import {
 
 export async function run(pr: PR, conf: Conf) {
 	try {
-		const cardIds = await getCardIds(conf, pr)
+		const cardIds = await getCardIds(conf, pr.head)
 
 		if (cardIds.length) {
 			await addCardLinksToPullRequest(conf, cardIds)

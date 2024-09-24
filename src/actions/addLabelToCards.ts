@@ -4,7 +4,7 @@ import { addLabelToCard, getBoardLabels, getCardInfo } from './api/trello'
 import logger from './utils/logger'
 
 export default async function addLabelToCards(conf: Conf, cardIds: string[], head?: PRHead) {
-	logger.log('--- ADD LABEL TO CARDS ---')
+	logger.logStep('ADD LABEL TO CARDS')
 
 	if (!conf.trelloAddLabelsToCards) {
 		logger.log('Skipping label adding')

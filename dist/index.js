@@ -33960,7 +33960,7 @@ const trello_1 = __nccwpck_require__(9763);
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 const matchCardIds_1 = __importDefault(__nccwpck_require__(9812));
 async function addCardLinksToPullRequest(conf, cardIds) {
-    logger_1.default.log('--- ADD CARD LINKS TO PR ---');
+    logger_1.default.logStep('ADD CARD LINKS TO PR');
     const bodyCardIds = await getCardIdsFromBody(conf);
     const commentsCardIds = await getCardIdsFromComments(conf);
     const linkedCardIds = [...bodyCardIds, ...commentsCardIds];
@@ -34005,7 +34005,7 @@ const github_1 = __nccwpck_require__(2649);
 const trello_1 = __nccwpck_require__(9763);
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function addLabelToCards(conf, cardIds, head) {
-    logger_1.default.log('--- ADD LABEL TO CARDS ---');
+    logger_1.default.logStep('ADD LABEL TO CARDS');
     if (!conf.trelloAddLabelsToCards) {
         logger_1.default.log('Skipping label adding');
         return;
@@ -34077,7 +34077,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const trello_1 = __nccwpck_require__(9763);
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function addPullRequestLinkToCards(cardIds, pr) {
-    logger_1.default.log('--- ADD PR LINK TO CARDS ---');
+    logger_1.default.logStep('ADD PR LINK TO CARDS');
     const link = pr.html_url || pr.url;
     return Promise.all(cardIds.map(async (cardId) => {
         const existingAttachments = await (0, trello_1.getCardAttachments)(cardId);
@@ -34386,10 +34386,16 @@ const trello_1 = __nccwpck_require__(9763);
 const matchCardIds_1 = __importDefault(__nccwpck_require__(9812));
 const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3031));
 const logger_1 = __importDefault(__nccwpck_require__(2358));
-async function getCardIds(conf, pr) {
-    logger_1.default.log('--- FIND CARDS ---');
-    const latestPRInfo = (await (0, github_1.getPullRequest)()) || pr;
-    let cardIds = (0, matchCardIds_1.default)(conf, latestPRInfo.body || '');
+async function getCardIds(conf, head) {
+    logger_1.default.logStep('FIND CARDS');
+    const pr = await (0, github_1.getPullRequest)();
+    let cardIds = (0, matchCardIds_1.default)(conf, pr.body || '');
+    if (conf.githubIncludeNewCardCommand) {
+        const createdCardId = await createNewCard(conf, pr);
+        if (createdCardId) {
+            cardIds = [...cardIds, createdCardId];
+        }
+    }
     if (conf.githubIncludePrComments) {
         const comments = await (0, github_1.getPullRequestComments)();
         for (const comment of comments) {
@@ -34403,14 +34409,8 @@ async function getCardIds(conf, pr) {
         }
     }
     if (conf.githubIncludePrBranchName) {
-        const cardIdsFromBranch = await getCardIdsFromBranchName(conf, cardIds, pr.head);
+        const cardIdsFromBranch = await getCardIdsFromBranchName(conf, cardIds, head);
         cardIds = [...cardIds, ...cardIdsFromBranch];
-    }
-    if (conf.githubIncludeNewCardCommand) {
-        const createdCardId = await createNewCard(conf, latestPRInfo);
-        if (createdCardId) {
-            cardIds = [...cardIds, createdCardId];
-        }
     }
     if (cardIds.length) {
         logger_1.default.log('Found card IDs', cardIds);
@@ -34425,6 +34425,22 @@ async function getCardIds(conf, pr) {
     }
 }
 exports["default"] = getCardIds;
+/**
+ * Creates a new card when user has written "/new-trello-card" to the PR description
+ */
+async function createNewCard(conf, pr) {
+    const isDraft = (0, isPullRequestInDraft_1.default)(pr);
+    const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen;
+    const commandRegex = /(^|\s)\/new-trello-card(\s|$)/; // Avoids matching URLs
+    if (listId && pr.body && commandRegex.test(pr.body)) {
+        await (0, github_1.updatePullRequestBody)(pr.body.replace('/new-trello-card', '/creating-new-trello-card..'));
+        const card = await (0, trello_1.createCard)(listId, pr.title, pr.body.replace('/new-trello-card', ''));
+        const body = conf.githubRequireKeywordPrefix ? `Closes ${card.url}` : card.url;
+        await (0, github_1.updatePullRequestBody)(pr.body.replace('/new-trello-card', body));
+        return card.shortLink;
+    }
+    return;
+}
 async function getCardIdsFromBranchName(conf, knownCardIds, prHead) {
     const branchName = prHead?.ref || (await (0, github_1.getBranchName)());
     logger_1.default.log('Searching cards from branch name', branchName);
@@ -34513,21 +34529,6 @@ async function getTrelloCardByTitle(title, shortId) {
     return cards.find((card) => card.idShort === parseInt(shortId) ||
         card.actions.some((action) => action.data.card.idShort === parseInt(shortId)))?.shortLink;
 }
-/**
- * Creates a new card when user has written "/new-trello-card" to the PR description
- */
-async function createNewCard(conf, pr) {
-    const isDraft = (0, isPullRequestInDraft_1.default)(pr);
-    const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen;
-    const commandRegex = /(^|\s)\/new-trello-card(\s|$)/; // Avoids matching URLs
-    if (listId && pr.body && commandRegex.test(pr.body)) {
-        const card = await (0, trello_1.createCard)(listId, pr.title, pr.body.replace('/new-trello-card', ''));
-        const body = conf.githubRequireKeywordPrefix ? `Closes ${card.url}` : card.url;
-        await (0, github_1.updatePullRequestBody)(pr.body.replace('/new-trello-card', body));
-        return card.shortLink;
-    }
-    return;
-}
 
 
 /***/ }),
@@ -34574,7 +34575,7 @@ const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3031));
 const isPullRequestApproved_1 = __importDefault(__nccwpck_require__(4414));
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function moveOrArchiveCards(conf, cardIds, pr) {
-    logger_1.default.log('--- MOVE OR ARCHIVE CARDS ---');
+    logger_1.default.logStep('MOVE OR ARCHIVE CARDS');
     const isDraft = (0, isPullRequestInDraft_1.default)(pr);
     const isChangesRequested = await (0, isChangesRequestedInReview_1.default)();
     const isApproved = await (0, isPullRequestApproved_1.default)();
@@ -34648,7 +34649,7 @@ const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3031));
 const isPullRequestApproved_1 = __importDefault(__nccwpck_require__(4414));
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function updateCardMembers(conf, cardIds, pr) {
-    logger_1.default.log('--- UPDATE CARD MEMBERS ---');
+    logger_1.default.logStep('UPDATE CARD MEMBERS');
     if (!conf.trelloAddMembersToCards) {
         return logger_1.default.log('Skipping members updating');
     }
@@ -34932,9 +34933,14 @@ exports["default"] = isPullRequestInDraft;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports["default"] = {
-    log: (...message) => {
+    logStep: (...message) => {
         if (!process.env.JEST_WORKER_ID) {
             console.log(...message); // eslint-disable-line no-console
+        }
+    },
+    log: (...message) => {
+        if (!process.env.JEST_WORKER_ID) {
+            console.log('\t', ...message); // eslint-disable-line no-console
         }
     },
     error: (...message) => {
@@ -35058,7 +35064,7 @@ const core_1 = __nccwpck_require__(2186);
 const actions_1 = __nccwpck_require__(6535);
 async function run(pr, conf) {
     try {
-        const cardIds = await (0, actions_1.getCardIds)(conf, pr);
+        const cardIds = await (0, actions_1.getCardIds)(conf, pr.head);
         if (cardIds.length) {
             await (0, actions_1.addCardLinksToPullRequest)(conf, cardIds);
             await (0, actions_1.addPullRequestLinkToCards)(cardIds, pr);

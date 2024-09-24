@@ -5,7 +5,7 @@ import logger from './utils/logger'
 import matchCardIds from './utils/matchCardIds'
 
 export default async function addCardLinksToPullRequest(conf: Conf, cardIds: string[]) {
-	logger.log('--- ADD CARD LINKS TO PR ---')
+	logger.logStep('ADD CARD LINKS TO PR')
 
 	const bodyCardIds = await getCardIdsFromBody(conf)
 	const commentsCardIds = await getCardIdsFromComments(conf)

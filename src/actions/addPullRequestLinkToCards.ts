@@ -3,7 +3,7 @@ import { addAttachmentToCard, getCardAttachments } from './api/trello'
 import logger from './utils/logger'
 
 export default async function addPullRequestLinkToCards(cardIds: string[], pr: PR) {
-	logger.log('--- ADD PR LINK TO CARDS ---')
+	logger.logStep('ADD PR LINK TO CARDS')
 
 	const link = pr.html_url || pr.url
 
