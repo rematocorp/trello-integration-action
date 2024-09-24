@@ -1,3 +1,4 @@
+import { startGroup } from '@actions/core'
 import { Conf, PR } from '../types'
 import { isPullRequestMerged } from './api/github'
 import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/trello'
@@ -7,7 +8,7 @@ import isPullRequestApproved from './utils/isPullRequestApproved'
 import logger from './utils/logger'
 
 export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], pr: PR) {
-	logger.log('🕺 MOVE OR ARCHIVE CARDS')
+	startGroup('🕺 MOVE OR ARCHIVE CARDS')
 
 	const isDraft = isPullRequestInDraft(pr)
 	const isChangesRequested = await isChangesRequestedInReview()

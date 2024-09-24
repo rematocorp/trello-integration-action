@@ -54,7 +54,6 @@
 		"collectCoverageFrom": [
 			"src/**",
 			"!src/index.ts",
-			"!src/actions/utils/logger.ts",
 			"!src/actions/api/**"
 		]
 	},

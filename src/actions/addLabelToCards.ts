@@ -1,3 +1,4 @@
+import { startGroup } from '@actions/core'
 import { BoardLabel, Conf, PRHead } from '../types'
 import { getBranchName } from './api/github'
 import { addLabelToCard, getBoardLabels, getCardInfo } from './api/trello'
@@ -7,7 +8,7 @@ export default async function addLabelToCards(conf: Conf, cardIds: string[], hea
 	if (!conf.trelloAddLabelsToCards) {
 		return
 	}
-	logger.log('🏷️ ADD LABELS TO CARDS')
+	startGroup('🏷️ ADD LABELS TO CARDS')
 
 	const branchLabel = await getBranchLabel(head)
 

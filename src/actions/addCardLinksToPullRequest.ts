@@ -1,3 +1,4 @@
+import { startGroup } from '@actions/core'
 import { Conf } from '../types'
 import { createComment, getPullRequest, getPullRequestComments } from './api/github'
 import { getCardInfo } from './api/trello'
@@ -5,7 +6,7 @@ import logger from './utils/logger'
 import matchCardIds from './utils/matchCardIds'
 
 export default async function addCardLinksToPullRequest(conf: Conf, cardIds: string[]) {
-	logger.log('🔗 ADD CARD LINKS TO PR')
+	startGroup('🔗 ADD CARD LINKS TO PR')
 
 	const bodyCardIds = await getCardIdsFromBody(conf)
 	const commentsCardIds = await getCardIdsFromComments(conf)

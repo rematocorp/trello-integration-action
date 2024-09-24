@@ -33955,12 +33955,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(2649);
 const trello_1 = __nccwpck_require__(9763);
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 const matchCardIds_1 = __importDefault(__nccwpck_require__(9812));
 async function addCardLinksToPullRequest(conf, cardIds) {
-    logger_1.default.log('🔗 ADD CARD LINKS TO PR');
+    (0, core_1.startGroup)('🔗 ADD CARD LINKS TO PR');
     const bodyCardIds = await getCardIdsFromBody(conf);
     const commentsCardIds = await getCardIdsFromComments(conf);
     const linkedCardIds = [...bodyCardIds, ...commentsCardIds];
@@ -34001,6 +34002,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(2649);
 const trello_1 = __nccwpck_require__(9763);
 const logger_1 = __importDefault(__nccwpck_require__(2358));
@@ -34008,7 +34010,7 @@ async function addLabelToCards(conf, cardIds, head) {
     if (!conf.trelloAddLabelsToCards) {
         return;
     }
-    logger_1.default.log('🏷️ ADD LABELS TO CARDS');
+    (0, core_1.startGroup)('🏷️ ADD LABELS TO CARDS');
     const branchLabel = await getBranchLabel(head);
     if (!branchLabel) {
         logger_1.default.log('Could not find branch label');
@@ -34073,10 +34075,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core_1 = __nccwpck_require__(2186);
 const trello_1 = __nccwpck_require__(9763);
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function addPullRequestLinkToCards(cardIds, pr) {
-    logger_1.default.log('🔗 ADD PR LINK TO CARDS');
+    (0, core_1.startGroup)('🔗 ADD PR LINK TO CARDS');
     const link = pr.html_url || pr.url;
     return Promise.all(cardIds.map(async (cardId) => {
         const existingAttachments = await (0, trello_1.getCardAttachments)(cardId);
@@ -34386,7 +34389,7 @@ const matchCardIds_1 = __importDefault(__nccwpck_require__(9812));
 const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3031));
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function getCardIds(conf, head) {
-    logger_1.default.log('🔎 FIND CARDS');
+    (0, core_1.startGroup)('🔎 FIND CARDS');
     const pr = await (0, github_1.getPullRequest)();
     let cardIds = (0, matchCardIds_1.default)(conf, pr.body || '');
     if (conf.githubIncludeNewCardCommand) {
@@ -34567,6 +34570,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(2649);
 const trello_1 = __nccwpck_require__(9763);
 const isChangesRequestedInReview_1 = __importDefault(__nccwpck_require__(4028));
@@ -34574,7 +34578,7 @@ const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3031));
 const isPullRequestApproved_1 = __importDefault(__nccwpck_require__(4414));
 const logger_1 = __importDefault(__nccwpck_require__(2358));
 async function moveOrArchiveCards(conf, cardIds, pr) {
-    logger_1.default.log('🕺 MOVE OR ARCHIVE CARDS');
+    (0, core_1.startGroup)('🕺 MOVE OR ARCHIVE CARDS');
     const isDraft = (0, isPullRequestInDraft_1.default)(pr);
     const isChangesRequested = await (0, isChangesRequestedInReview_1.default)();
     const isApproved = await (0, isPullRequestApproved_1.default)();
@@ -34641,6 +34645,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(2649);
 const trello_1 = __nccwpck_require__(9763);
 const isChangesRequestedInReview_1 = __importDefault(__nccwpck_require__(4028));
@@ -34651,7 +34656,7 @@ async function updateCardMembers(conf, cardIds, pr) {
     if (!conf.trelloAddMembersToCards) {
         return;
     }
-    logger_1.default.log('👩‍💻 UPDATE CARD MEMBERS');
+    (0, core_1.startGroup)('👩‍💻 UPDATE CARD MEMBERS');
     const inReview = await isPullRequestInReview(conf, pr);
     if (inReview) {
         await assignReviewers(conf, cardIds);
@@ -34662,10 +34667,8 @@ async function updateCardMembers(conf, cardIds, pr) {
 }
 exports["default"] = updateCardMembers;
 async function isPullRequestInReview(conf, pr) {
-    const isInDraft = (0, isPullRequestInDraft_1.default)(pr);
     const isChangesRequested = await (0, isChangesRequestedInReview_1.default)();
     const isApproved = await (0, isPullRequestApproved_1.default)();
-    logger_1.default.log('Checking if PR is in review', { prState: pr.state, isInDraft, isChangesRequested, isApproved });
     if (!conf.trelloSwitchMembersInReview) {
         return false;
     }

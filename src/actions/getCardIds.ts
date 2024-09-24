@@ -1,4 +1,4 @@
-import { setFailed } from '@actions/core'
+import { setFailed, startGroup } from '@actions/core'
 import { Conf, PR, PRHead } from '../types'
 import { getBranchName, getCommits, getPullRequest, getPullRequestComments, updatePullRequestBody } from './api/github'
 import { createCard, getCardActions, getCardInfo, searchTrelloCards } from './api/trello'
@@ -7,7 +7,7 @@ import isPullRequestInDraft from './utils/isPullRequestInDraft'
 import logger from './utils/logger'
 
 export default async function getCardIds(conf: Conf, head?: PRHead) {
-	logger.log('🔎 FIND CARDS')
+	startGroup('🔎 FIND CARDS')
 
 	const pr = await getPullRequest()
 	let cardIds = matchCardIds(conf, pr.body || '')
