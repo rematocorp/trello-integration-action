@@ -7,11 +7,11 @@ import isPullRequestApproved from './utils/isPullRequestApproved'
 import logger from './utils/logger'
 
 export default async function updateCardMembers(conf: Conf, cardIds: string[], pr: PR) {
-	logger.logStep('UPDATE CARD MEMBERS')
-
 	if (!conf.trelloAddMembersToCards) {
-		return logger.log('Skipping members updating')
+		return
 	}
+	logger.log('👩‍💻 UPDATE CARD MEMBERS')
+
 	const inReview = await isPullRequestInReview(conf, pr)
 
 	if (inReview) {

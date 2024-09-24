@@ -7,7 +7,7 @@ import isPullRequestInDraft from './utils/isPullRequestInDraft'
 import logger from './utils/logger'
 
 export default async function getCardIds(conf: Conf, head?: PRHead) {
-	logger.logStep('FIND CARDS')
+	logger.log('🔎 FIND CARDS')
 
 	const pr = await getPullRequest()
 	let cardIds = matchCardIds(conf, pr.body || '')
