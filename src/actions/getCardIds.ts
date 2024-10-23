@@ -1,6 +1,13 @@
 import { setFailed, startGroup } from '@actions/core'
 import { Conf, PR, PRHead } from '../types'
-import { getBranchName, getCommits, getPullRequest, getPullRequestComments, updatePullRequestBody } from './api/github'
+import {
+	getBranchName,
+	getCommits,
+	getPullRequest,
+	getPullRequestComments,
+	isPullRequestMerged,
+	updatePullRequestBody,
+} from './api/github'
 import { createCard, getCardActions, getCardInfo, searchTrelloCards } from './api/trello'
 import matchCardIds from './utils/matchCardIds'
 import isPullRequestInDraft from './utils/isPullRequestInDraft'
@@ -13,7 +20,7 @@ export default async function getCardIds(conf: Conf, head?: PRHead) {
 	let cardIds = matchCardIds(conf, pr.body || '')
 
 	if (conf.githubIncludeNewCardCommand) {
-		const createdCardId = await createNewCard(conf, pr)
+		const createdCardId = await createNewCardOnCommand(conf, pr)
 
 		if (createdCardId) {
 			cardIds = [...cardIds, createdCardId]
@@ -42,6 +49,14 @@ export default async function getCardIds(conf: Conf, head?: PRHead) {
 		cardIds = [...cardIds, ...cardIdsFromBranch]
 	}
 
+	if (conf.githubCreateNewCardOnMerge && !cardIds.length) {
+		const createdCardId = await createNewCardOnMerge(conf, pr)
+
+		if (createdCardId) {
+			cardIds = [createdCardId]
+		}
+	}
+
 	if (cardIds.length) {
 		logger.log('Found card IDs', cardIds)
 
@@ -60,7 +75,7 @@ export default async function getCardIds(conf: Conf, head?: PRHead) {
 /**
  * Creates a new card when user has written "/new-trello-card" to the PR description
  */
-async function createNewCard(conf: Conf, pr: PR) {
+async function createNewCardOnCommand(conf: Conf, pr: PR) {
 	const isDraft = isPullRequestInDraft(pr)
 	const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen
 	const commandRegex = /(^|\s)\/new-trello-card(\s|$)/ // Avoids matching URLs
@@ -203,4 +218,28 @@ async function getTrelloCardByTitle(title: string, shortId: string) {
 			card.idShort === parseInt(shortId) ||
 			card.actions.some((action) => action.data.card.idShort === parseInt(shortId)),
 	)?.shortLink
+}
+
+/**
+ * Creates a new card when no cards found on PR merge
+ */
+async function createNewCardOnMerge(conf: Conf, pr: PR) {
+	const isMerged = await isPullRequestMerged()
+
+	if (!isMerged) {
+		return
+	}
+
+	if (!conf.trelloListIdPrClosed) {
+		logger.log('Could not create new card on merge as trelloListIdPrClosed is not configured')
+
+		return
+	}
+
+	const card = await createCard(conf.trelloListIdPrClosed, pr.title, pr.body || '')
+	const body = conf.githubRequireKeywordPrefix ? `Closes ${card.url}` : card.url
+
+	await updatePullRequestBody((pr.body ? pr.body + '\n' : '') + body)
+
+	return card.shortLink
 }

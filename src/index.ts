@@ -12,6 +12,7 @@ run((context.payload.pull_request || context.payload.issue) as PR, {
 	githubIncludePrCommitMessages: core.getBooleanInput('github-include-pr-commit-messages'),
 	githubAllowMultipleCardsInPrBranchName: core.getBooleanInput('github-allow-multiple-cards-in-pr-branch-name'),
 	githubIncludeNewCardCommand: core.getBooleanInput('github-include-new-card-command'),
+	githubCreateNewCardOnMerge: core.getBooleanInput('github-create-new-card-on-merge'),
 	githubUsersToTrelloUsers: core.getInput('github-users-to-trello-users'),
 	trelloOrganizationName: core.getInput('trello-organization-name'),
 	trelloListIdPrDraft: core.getInput('trello-list-id-pr-draft'),

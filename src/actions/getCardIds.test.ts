@@ -1,5 +1,12 @@
 import { setFailed } from '@actions/core'
-import { getBranchName, getPullRequest, getPullRequestComments, updatePullRequestBody, getCommits } from './api/github'
+import {
+	getBranchName,
+	getPullRequest,
+	getPullRequestComments,
+	updatePullRequestBody,
+	getCommits,
+	isPullRequestMerged,
+} from './api/github'
 import { createCard, moveCardToList, searchTrelloCards, getCardInfo, getCardActions } from './api/trello'
 import getCardIds from './getCardIds'
 
@@ -16,6 +23,7 @@ const searchTrelloCardsMock = searchTrelloCards as jest.Mock
 const createCardMock = createCard as jest.Mock
 const getCardInfoMock = getCardInfo as jest.Mock
 const getCardActionsMock = getCardActions as jest.Mock
+const isPullRequestMergedMock = isPullRequestMerged as jest.Mock
 
 const pr = { number: 0, state: 'open', title: 'Title' }
 const prHead = { ref: 'branch-name' }
@@ -269,7 +277,7 @@ describe('Finding cards', () => {
 	})
 })
 
-describe('Creating new card', () => {
+describe('Creating new card on command', () => {
 	const conf = {
 		trelloListIdPrOpen: 'open-list-id',
 		trelloListIdPrDraft: 'draft-list-id',
@@ -327,6 +335,72 @@ describe('Creating new card', () => {
 		getPullRequestMock.mockResolvedValue({ ...pr, body: '/new-trello-card Description' })
 
 		const cardIds = await getCardIds({ ...conf, githubIncludeNewCardCommand: false }, prHead)
+
+		expect(createCard).not.toHaveBeenCalled()
+		expect(cardIds).toEqual([])
+	})
+})
+
+describe('Creating new card on merge', () => {
+	const conf = {
+		trelloListIdPrClosed: 'closed-list-id',
+		githubCreateNewCardOnMerge: true,
+	}
+
+	it('adds new card, updates PR body and adds to card ids list', async () => {
+		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
+		getPullRequestMock.mockResolvedValue({ ...pr, body: 'Description' })
+		isPullRequestMergedMock.mockResolvedValue(true)
+
+		const cardIds = await getCardIds(conf, prHead)
+
+		expect(createCard).toHaveBeenCalledWith('closed-list-id', 'Title', 'Description')
+		expect(updatePullRequestBody).toHaveBeenLastCalledWith('Description\ncard-url')
+		expect(cardIds).toEqual(['card-id'])
+	})
+
+	it('adds new card with "Closes" keyword', async () => {
+		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
+		getPullRequestMock.mockResolvedValue({ ...pr, body: 'Description' })
+		isPullRequestMergedMock.mockResolvedValue(true)
+
+		await getCardIds({ ...conf, githubRequireKeywordPrefix: true }, prHead)
+
+		expect(updatePullRequestBody).toHaveBeenCalledWith('Description\nCloses card-url')
+	})
+
+	it('handles empty PR body nicely', async () => {
+		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
+		getPullRequestMock.mockResolvedValue({ ...pr, body: '' })
+		isPullRequestMergedMock.mockResolvedValue(true)
+
+		await getCardIds(conf, prHead)
+
+		expect(updatePullRequestBody).toHaveBeenCalledWith('card-url')
+	})
+
+	it('skips when PR is not merged', async () => {
+		isPullRequestMergedMock.mockResolvedValue(false)
+
+		const cardIds = await getCardIds(conf, prHead)
+
+		expect(createCard).not.toHaveBeenCalled()
+		expect(cardIds).toEqual([])
+	})
+
+	it('skips when list is missing', async () => {
+		isPullRequestMergedMock.mockResolvedValue(true)
+
+		const cardIds = await getCardIds({ ...conf, trelloListIdPrClosed: '' }, prHead)
+
+		expect(createCard).not.toHaveBeenCalled()
+		expect(cardIds).toEqual([])
+	})
+
+	it('skips when turned off', async () => {
+		isPullRequestMergedMock.mockResolvedValue(true)
+
+		const cardIds = await getCardIds({ ...conf, githubCreateNewCardOnMerge: false }, prHead)
 
 		expect(createCard).not.toHaveBeenCalled()
 		expect(cardIds).toEqual([])

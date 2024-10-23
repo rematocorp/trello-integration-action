@@ -32,6 +32,9 @@ inputs:
     github-include-new-card-command:
         description: Creates a new Trello card from PR details if "/new-trello-card" is written in the PR description. Replaces "/new-trello-card" with the card link.
         default: false
+    github-create-new-card-on-merge:
+        description: Creates a new Trello card from PR details if no card is linked and the PR is merged. Adds card link to the PR description.
+        default: false
     github-users-to-trello-users:
         description: |-
             Newline-separated list of mapping between Github username and Trello username. Example:

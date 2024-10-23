@@ -34393,7 +34393,7 @@ async function getCardIds(conf, head) {
     const pr = await (0, github_1.getPullRequest)();
     let cardIds = (0, matchCardIds_1.default)(conf, pr.body || '');
     if (conf.githubIncludeNewCardCommand) {
-        const createdCardId = await createNewCard(conf, pr);
+        const createdCardId = await createNewCardOnCommand(conf, pr);
         if (createdCardId) {
             cardIds = [...cardIds, createdCardId];
         }
@@ -34414,6 +34414,12 @@ async function getCardIds(conf, head) {
         const cardIdsFromBranch = await getCardIdsFromBranchName(conf, cardIds, head);
         cardIds = [...cardIds, ...cardIdsFromBranch];
     }
+    if (conf.githubCreateNewCardOnMerge && !cardIds.length) {
+        const createdCardId = await createNewCardOnMerge(conf, pr);
+        if (createdCardId) {
+            cardIds = [createdCardId];
+        }
+    }
     if (cardIds.length) {
         logger_1.default.log('Found card IDs', cardIds);
         return [...new Set(cardIds)];
@@ -34430,7 +34436,7 @@ exports["default"] = getCardIds;
 /**
  * Creates a new card when user has written "/new-trello-card" to the PR description
  */
-async function createNewCard(conf, pr) {
+async function createNewCardOnCommand(conf, pr) {
     const isDraft = (0, isPullRequestInDraft_1.default)(pr);
     const listId = pr.state === 'open' && isDraft ? conf.trelloListIdPrDraft : conf.trelloListIdPrOpen;
     const commandRegex = /(^|\s)\/new-trello-card(\s|$)/; // Avoids matching URLs
@@ -34530,6 +34536,23 @@ async function getTrelloCardByTitle(title, shortId) {
     }));
     return cards.find((card) => card.idShort === parseInt(shortId) ||
         card.actions.some((action) => action.data.card.idShort === parseInt(shortId)))?.shortLink;
+}
+/**
+ * Creates a new card when no cards found on PR merge
+ */
+async function createNewCardOnMerge(conf, pr) {
+    const isMerged = await (0, github_1.isPullRequestMerged)();
+    if (!isMerged) {
+        return;
+    }
+    if (!conf.trelloListIdPrClosed) {
+        logger_1.default.log('Could not create new card on merge as trelloListIdPrClosed is not configured');
+        return;
+    }
+    const card = await (0, trello_1.createCard)(conf.trelloListIdPrClosed, pr.title, pr.body || '');
+    const body = conf.githubRequireKeywordPrefix ? `Closes ${card.url}` : card.url;
+    await (0, github_1.updatePullRequestBody)((pr.body ? pr.body + '\n' : '') + body);
+    return card.shortLink;
 }
 
 
@@ -35031,6 +35054,7 @@ const main_1 = __nccwpck_require__(399);
     githubIncludePrCommitMessages: core.getBooleanInput('github-include-pr-commit-messages'),
     githubAllowMultipleCardsInPrBranchName: core.getBooleanInput('github-allow-multiple-cards-in-pr-branch-name'),
     githubIncludeNewCardCommand: core.getBooleanInput('github-include-new-card-command'),
+    githubCreateNewCardOnMerge: core.getBooleanInput('github-create-new-card-on-merge'),
     githubUsersToTrelloUsers: core.getInput('github-users-to-trello-users'),
     trelloOrganizationName: core.getInput('trello-organization-name'),
     trelloListIdPrDraft: core.getInput('trello-list-id-pr-draft'),

@@ -9,6 +9,7 @@ export interface Conf {
 	githubIncludePrBranchName?: boolean
 	githubAllowMultipleCardsInPrBranchName?: boolean
 	githubIncludeNewCardCommand?: boolean
+	githubCreateNewCardOnMerge?: boolean
 	githubUsersToTrelloUsers?: string
 	trelloOrganizationName?: string
 	trelloListIdPrDraft?: string

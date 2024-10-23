@@ -108,19 +108,27 @@ NB! Make sure you set `pull-requests: write` permission for the job. [Learn more
 
 Default: `false`
 
-#### 6. `github-require-keyword-prefix`
+#### 6. `github-create-new-card-on-merge`
+
+Creates a new Trello card from PR details if no card is linked and the PR is merged. Adds card link to the PR description.
+
+NB! Make sure you set `pull-requests: write` permission for the job. [Learn more.](https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs)
+
+Default: `false`
+
+#### 7. `github-require-keyword-prefix`
 
 Only matches Trello URLs prefixed with "Closes" etc. Just like [GitHub Issues + PR work.](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword)
 
 Default: `false`
 
-#### 7. `github-enable-related-keyword-prefix`
+#### 8. `github-enable-related-keyword-prefix`
 
 Ignores Trello URLs prefixed with "Related". Alternative approach when you don't want to use `github-require-keyword-prefix` but still want to link related cards for extra context.
 
 Default: `false`
 
-#### 8. `github-require-trello-card`
+#### 9. `github-require-trello-card`
 
 Throws an error if no Trello card can be found in the PR.
 
