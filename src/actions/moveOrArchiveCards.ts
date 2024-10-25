@@ -64,17 +64,23 @@ async function moveCardsToList(cardIds: string[], listId: string, boardId?: stri
 
 	return Promise.all(
 		cardIds.map(async (cardId) => {
-			if (listIds.length > 1) {
-				const { idBoard } = await getCardInfo(cardId)
-				const boardLists = await getBoardLists(idBoard)
+			try {
+				if (listIds.length > 1) {
+					const { idBoard } = await getCardInfo(cardId)
+					const boardLists = await getBoardLists(idBoard)
 
-				// Moves to the list on the board where the card is currently located
-				await moveCardToList(
-					cardId,
-					listIds.find((listId) => boardLists.some((list) => list.id === listId)) || listIds[0],
-				)
-			} else {
-				await moveCardToList(cardId, listId, boardId)
+					// Moves to the list on the board where the card is currently located
+					await moveCardToList(
+						cardId,
+						listIds.find((listId) => boardLists.some((list) => list.id === listId)) || listIds[0],
+					)
+				} else {
+					await moveCardToList(cardId, listId, boardId)
+				}
+			} catch (error: any) {
+				if (error.response?.data?.message !== 'The card has moved to a different board.') {
+					throw error
+				}
 			}
 		}),
 	)

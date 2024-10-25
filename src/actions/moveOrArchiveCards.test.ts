@@ -7,6 +7,7 @@ jest.mock('@actions/github')
 jest.mock('./api/github')
 jest.mock('./api/trello')
 
+const moveCardToListMock = moveCardToList as jest.Mock
 const getCardInfoMock = getCardInfo as jest.Mock
 const getBoardListsMock = getBoardLists as jest.Mock
 const archiveCardMock = archiveCard as jest.Mock
@@ -147,6 +148,20 @@ describe('Moving cards', () => {
 			await moveOrArchiveCards(conf, ['card'], pr)
 
 			expect(moveCardToList).not.toHaveBeenCalled()
+		})
+
+		it('skips move when someone has already moved the card', async () => {
+			moveCardToListMock.mockRejectedValue({
+				response: { data: { message: 'The card has moved to a different board.' } },
+			})
+
+			await expect(moveOrArchiveCards(conf, ['card'], pr)).resolves.not.toThrow()
+		})
+
+		it('throws error when move goes wrong for unknown reason', async () => {
+			moveCardToListMock.mockRejectedValue({ response: { status: 500 } })
+
+			await expect(moveOrArchiveCards(conf, ['card'], pr)).rejects.toMatchObject({ response: { status: 500 } })
 		})
 
 		it('skips move when list not configured', async () => {
