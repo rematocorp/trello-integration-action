@@ -122,7 +122,19 @@ async function addMembers(cardId: string, memberIds: string[]) {
 		return
 	}
 
-	return Promise.all(filtered.map((memberId) => addMemberToCard(cardInfo.id, memberId)))
+	return Promise.all(
+		filtered.map(async (memberId) => {
+			try {
+				await addMemberToCard(cardInfo.id, memberId)
+			} catch (error: any) {
+				if (error?.response?.data === 'member is already on the card') {
+					logger.log('Members already exists on the card', cardId, memberId)
+				} else {
+					throw error
+				}
+			}
+		}),
+	)
 }
 
 async function removeUnrelatedMembers(conf: Conf, cardId: string, memberIds: string[]) {

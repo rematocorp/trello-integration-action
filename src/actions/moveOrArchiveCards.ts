@@ -78,7 +78,9 @@ async function moveCardsToList(cardIds: string[], listId: string, boardId?: stri
 					await moveCardToList(cardId, listId, boardId)
 				}
 			} catch (error: any) {
-				if (error.response?.data?.message !== 'The card has moved to a different board.') {
+				if (error.response?.data?.message === 'The card has moved to a different board.') {
+					logger.log('Card has already been moved to board', cardId, boardId)
+				} else {
 					throw error
 				}
 			}

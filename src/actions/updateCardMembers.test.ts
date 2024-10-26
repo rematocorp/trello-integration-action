@@ -20,6 +20,7 @@ const getPullRequestRequestedReviewersMock = getPullRequestRequestedReviewers as
 const getCommitsMock = getCommits as jest.Mock
 const getMemberInfoMock = getMemberInfo as jest.Mock
 const getCardInfoMock = getCardInfo as jest.Mock
+const addMemberToCardMock = addMemberToCard as jest.Mock
 
 let pr = { title: 'Test PR', state: 'open', draft: true }
 let conf: Conf = {
@@ -140,13 +141,27 @@ it('skips adding when member not found with GitHub username', async () => {
 	expect(addMemberToCard).not.toHaveBeenCalled()
 })
 
-it('throws error when unexpected rejection comes from Trello', async () => {
-	const error = { response: { status: 500 } }
+it('skips adding when member is already assigned to the card', async () => {
+	getMemberInfoMock.mockResolvedValue({ id: 'phil-id' })
+	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: [] })
+	addMemberToCardMock.mockRejectedValue({ response: { data: 'member is already on the card' } })
 
-	getMemberInfoMock.mockRejectedValue(error)
+	await expect(updateCardMembers(conf, ['card'], pr)).resolves.not.toThrow()
+})
 
-	await expect(updateCardMembers(conf, ['card'], pr)).rejects.toMatchObject(error)
+it('throws error when fetching member info fails for unknown reason', async () => {
+	getMemberInfoMock.mockRejectedValue({ response: { status: 500 } })
+
+	await expect(updateCardMembers(conf, ['card'], pr)).rejects.toMatchObject({ response: { status: 500 } })
 	expect(addMemberToCard).not.toHaveBeenCalled()
+})
+
+it('throws error when assigning member fails for unknown reason', async () => {
+	getMemberInfoMock.mockResolvedValue({ id: 'phil-id' })
+	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: [] })
+	addMemberToCardMock.mockRejectedValue({ response: { status: 500 } })
+
+	await expect(updateCardMembers(conf, ['card'], pr)).rejects.toMatchObject({ response: { status: 500 } })
 })
 
 it('skips adding when member not part of the org', async () => {
