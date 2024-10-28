@@ -34653,7 +34653,10 @@ async function moveCardsToList(cardIds, listId, boardId) {
             }
         }
         catch (error) {
-            if (error.response?.data?.message !== 'The card has moved to a different board.') {
+            if (error.response?.data?.message === 'The card has moved to a different board.') {
+                logger_1.default.log('Card has already been moved to board', cardId, boardId);
+            }
+            else {
                 throw error;
             }
         }
@@ -34770,7 +34773,19 @@ async function addMembers(cardId, memberIds) {
         logger_1.default.log('All members are already assigned to the card');
         return;
     }
-    return Promise.all(filtered.map((memberId) => (0, trello_1.addMemberToCard)(cardInfo.id, memberId)));
+    return Promise.all(filtered.map(async (memberId) => {
+        try {
+            await (0, trello_1.addMemberToCard)(cardInfo.id, memberId);
+        }
+        catch (error) {
+            if (error?.response?.data === 'member is already on the card') {
+                logger_1.default.log('Members already exists on the card', cardId, memberId);
+            }
+            else {
+                throw error;
+            }
+        }
+    }));
 }
 async function removeUnrelatedMembers(conf, cardId, memberIds) {
     if (!conf.trelloRemoveUnrelatedMembers) {
@@ -34801,7 +34816,19 @@ async function removeReviewers(conf, cardId) {
     return removeMembers(cardInfo.id, filtered);
 }
 async function removeMembers(cardId, memberIds) {
-    return Promise.all(memberIds.map((memberId) => (0, trello_1.removeMemberFromCard)(cardId, memberId)));
+    return Promise.all(memberIds.map(async (memberId) => {
+        try {
+            await (0, trello_1.removeMemberFromCard)(cardId, memberId);
+        }
+        catch (error) {
+            if (error.response?.data === 'member is not on the card') {
+                logger_1.default.log('Member is already removed', cardId, memberId);
+            }
+            else {
+                throw error;
+            }
+        }
+    }));
 }
 async function getReviewers() {
     const reviews = await (0, github_1.getPullRequestReviews)();
