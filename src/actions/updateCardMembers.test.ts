@@ -21,6 +21,7 @@ const getCommitsMock = getCommits as jest.Mock
 const getMemberInfoMock = getMemberInfo as jest.Mock
 const getCardInfoMock = getCardInfo as jest.Mock
 const addMemberToCardMock = addMemberToCard as jest.Mock
+const removeMemberFromCardMock = removeMemberFromCard as jest.Mock
 
 let pr = { title: 'Test PR', state: 'open', draft: true }
 let conf: Conf = {
@@ -91,6 +92,29 @@ it('removes only reviewers when unrelated members removing is turned off but swi
 	expect(removeMemberFromCard).toHaveBeenCalledWith('card', 'amy1993')
 })
 
+it('throws error when fetching member info fails for unknown reason', async () => {
+	getMemberInfoMock.mockRejectedValue({ response: { status: 500 } })
+
+	await expect(updateCardMembers(conf, ['card'], pr)).rejects.toMatchObject({ response: { status: 500 } })
+	expect(addMemberToCard).not.toHaveBeenCalled()
+})
+
+it('throws error when assigning member fails for unknown reason', async () => {
+	getMemberInfoMock.mockResolvedValue({ id: 'phil-id' })
+	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: [] })
+	addMemberToCardMock.mockRejectedValue({ response: { status: 500 } })
+
+	await expect(updateCardMembers(conf, ['card'], pr)).rejects.toMatchObject({ response: { status: 500 } })
+})
+
+it('throws error when removing member fails for unknown reason', async () => {
+	getMemberInfoMock.mockResolvedValue({ id: 'phil-id' })
+	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: ['jones-id'] })
+	removeMemberFromCardMock.mockRejectedValue({ response: { status: 500 } })
+
+	await expect(updateCardMembers(conf, ['card'], pr)).rejects.toMatchObject({ response: { status: 500 } })
+})
+
 it('skips removing unrelated members when none found', async () => {
 	getMemberInfoMock.mockResolvedValue({ id: 'phil-id' })
 	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: [] })
@@ -149,19 +173,12 @@ it('skips adding when member is already assigned to the card', async () => {
 	await expect(updateCardMembers(conf, ['card'], pr)).resolves.not.toThrow()
 })
 
-it('throws error when fetching member info fails for unknown reason', async () => {
-	getMemberInfoMock.mockRejectedValue({ response: { status: 500 } })
-
-	await expect(updateCardMembers(conf, ['card'], pr)).rejects.toMatchObject({ response: { status: 500 } })
-	expect(addMemberToCard).not.toHaveBeenCalled()
-})
-
-it('throws error when assigning member fails for unknown reason', async () => {
+it('skips removing when member is already removed from the card', async () => {
 	getMemberInfoMock.mockResolvedValue({ id: 'phil-id' })
-	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: [] })
-	addMemberToCardMock.mockRejectedValue({ response: { status: 500 } })
+	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: ['jones-id'] })
+	removeMemberFromCardMock.mockRejectedValue({ response: { data: 'member is not on the card' } })
 
-	await expect(updateCardMembers(conf, ['card'], pr)).rejects.toMatchObject({ response: { status: 500 } })
+	await expect(updateCardMembers(conf, ['card'], pr)).resolves.not.toThrow()
 })
 
 it('skips adding when member not part of the org', async () => {

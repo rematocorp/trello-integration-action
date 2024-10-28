@@ -177,7 +177,19 @@ async function removeReviewers(conf: Conf, cardId: string) {
 }
 
 async function removeMembers(cardId: string, memberIds: string[]) {
-	return Promise.all(memberIds.map((memberId) => removeMemberFromCard(cardId, memberId)))
+	return Promise.all(
+		memberIds.map(async (memberId) => {
+			try {
+				await removeMemberFromCard(cardId, memberId)
+			} catch (error: any) {
+				if (error.response?.data === 'member is not on the card') {
+					logger.log('Member is already removed', cardId, memberId)
+				} else {
+					throw error
+				}
+			}
+		}),
+	)
 }
 
 async function getReviewers() {
