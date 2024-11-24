@@ -70,7 +70,7 @@ trello-auth-token: ${{ secrets.TRELLO_AUTH_TOKEN }}
 </details>
 
 <details>
-<summary>Linking Trello cards</summary>
+<summary>Linking Trello cards with GitHub PR</summary>
 
 #### 1. `github-include-pr-comments`
 
