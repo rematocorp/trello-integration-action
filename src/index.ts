@@ -20,6 +20,7 @@ run((context.payload.pull_request || context.payload.issue) as PR, {
 	trelloListIdPrChangesRequested: core.getInput('trello-list-id-pr-changes-requested'),
 	trelloListIdPrApproved: core.getInput('trello-list-id-pr-approved'),
 	trelloListIdPrClosed: core.getInput('trello-list-id-pr-closed'),
+	trelloListIdPrMerged: core.getInput('trello-list-id-pr-merged'),
 	trelloBoardId: core.getInput('trello-board-id'),
 	trelloConflictingLabels: core.getInput('trello-conflicting-labels')?.split(';'),
 	trelloAddLabelsToCards: core.getBooleanInput('trello-add-labels-to-cards'),

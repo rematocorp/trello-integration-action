@@ -17,6 +17,7 @@ export interface Conf {
 	trelloListIdPrChangesRequested?: string
 	trelloListIdPrApproved?: string
 	trelloListIdPrClosed?: string
+	trelloListIdPrMerged?: string
 	trelloBoardId?: string
 	trelloConflictingLabels?: string[]
 	trelloAddLabelsToCards?: boolean

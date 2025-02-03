@@ -183,6 +183,12 @@ Options: `'top' | 'bottom'`
 
 Default: `'top'`
 
+#### 9. `trello-list-id-pr-merged`
+
+Trello list ID for merged pull request. [How to find list ID.](https://stackoverflow.com/a/50908600/2311110)
+
+`trello-archive-on-merge` set to `true` will override this.
+
 </details>
 
 <details>

@@ -49,6 +49,12 @@ export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], 
 		return
 	}
 
+	if (pr.state === 'closed' && isMerged && conf.trelloListIdPrMerged && !conf.trelloArchiveOnMerge) {
+		await moveCardsToList(cardIds, conf.trelloListIdPrMerged, conf.trelloBoardId)
+
+		return 
+	}
+
 	if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrClosed, conf.trelloBoardId)
 		logger.log('Moved cards to closed PR list')
