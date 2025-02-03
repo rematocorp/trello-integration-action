@@ -159,35 +159,37 @@ Trello list ID for a pull request which has at least one approve and no reviews 
 
 NB! Add `pull_request_review` trigger and modify `pull_request` trigger with `review_requested` and `review_request_removed`. [Learn more.](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows)
 
-#### 5. `trello-list-id-pr-closed`
+#### 5. `trello-list-id-pr-merged`
+
+Trello list ID for merged pull request. [How to find list ID.](https://stackoverflow.com/a/50908600/2311110)
+
+NB! `trello-archive-on-merge` set to `true` will override this.
+
+#### 6. `trello-list-id-pr-closed`
 
 Trello list ID for closed pull request. [How to find list ID.](https://stackoverflow.com/a/50908600/2311110)
 
-#### 6. `trello-board-id`
+NB! If card is merged and `trello-list-id-pr-merged` is set, then it will override this.
+
+#### 7. `trello-board-id`
 
 Trello board ID where to move the cards. [How to find board ID.](https://stackoverflow.com/a/50908600/2311110) Useful when you want the action to move the card out from a backlog board.
 
 Separate board IDs with a semicolon to support multiple boards. [Learn more.](https://github.com/rematocorp/trello-integration-action/issues/68)
 
-#### 7. `trello-archive-on-merge`
+#### 8. `trello-archive-on-merge`
 
 Archives Trello cards when PR is merged.
 
 Default: `false`
 
-#### 8. `trello-card-position`
+#### 9. `trello-card-position`
 
 Position of the card after being moved to a list.
 
 Options: `'top' | 'bottom'`
 
 Default: `'top'`
-
-#### 9. `trello-list-id-pr-merged`
-
-Trello list ID for merged pull request. [How to find list ID.](https://stackoverflow.com/a/50908600/2311110)
-
-`trello-archive-on-merge` set to `true` will override this.
 
 </details>
 

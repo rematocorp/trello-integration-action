@@ -170,6 +170,23 @@ describe('Moving cards', () => {
 		})
 	})
 
+	describe('PR is merged', () => {
+		const pr = { ...basePR, state: 'closed', body: 'https://trello.com/c/card/title' }
+		const conf = { trelloListIdPrMerged: 'merged-list-id', trelloListIdPrClosed: 'closed-list-id' }
+
+		beforeEach(() => isPullRequestMergedMock.mockResolvedValueOnce(true))
+
+		it('moves the card to Merged list', async () => {
+			await moveOrArchiveCards(conf, ['card'], pr)
+			expect(moveCardToList).toHaveBeenCalledWith('card', 'merged-list-id', undefined)
+		})
+
+		it('skips move when list not configured', async () => {
+			await moveOrArchiveCards({}, ['card'], pr)
+			expect(moveCardToList).not.toHaveBeenCalled()
+		})
+	})
+
 	describe('PR is closed', () => {
 		const pr = { ...basePR, state: 'closed', body: 'https://trello.com/c/card/title' }
 		const conf = { trelloListIdPrClosed: 'closed-list-id' }
@@ -227,6 +244,13 @@ describe('Archiving cards on merge', () => {
 
 	it('archives cards and does not move to closed list', async () => {
 		await moveOrArchiveCards({ trelloListIdPrClosed: 'closed-list-id', trelloArchiveOnMerge: true }, ['card'], pr)
+
+		expect(archiveCardMock).toHaveBeenCalledWith('card')
+		expect(moveCardToList).not.toHaveBeenCalled()
+	})
+
+	it('archives cards and does not move to merged list', async () => {
+		await moveOrArchiveCards({ trelloListIdPrMerged: 'merged-list-id', trelloArchiveOnMerge: true }, ['card'], pr)
 
 		expect(archiveCardMock).toHaveBeenCalledWith('card')
 		expect(moveCardToList).not.toHaveBeenCalled()
