@@ -34630,6 +34630,10 @@ async function moveOrArchiveCards(conf, cardIds, pr) {
         await archiveCards(cardIds);
         return;
     }
+    if (pr.state === 'closed' && isMerged && conf.trelloListIdPrMerged && !conf.trelloArchiveOnMerge) {
+        await moveCardsToList(cardIds, conf.trelloListIdPrMerged, conf.trelloBoardId);
+        return;
+    }
     if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
         await moveCardsToList(cardIds, conf.trelloListIdPrClosed, conf.trelloBoardId);
         logger_1.default.log('Moved cards to closed PR list');
@@ -35096,6 +35100,7 @@ const main_1 = __nccwpck_require__(399);
     trelloListIdPrChangesRequested: core.getInput('trello-list-id-pr-changes-requested'),
     trelloListIdPrApproved: core.getInput('trello-list-id-pr-approved'),
     trelloListIdPrClosed: core.getInput('trello-list-id-pr-closed'),
+    trelloListIdPrMerged: core.getInput('trello-list-id-pr-merged'),
     trelloBoardId: core.getInput('trello-board-id'),
     trelloConflictingLabels: core.getInput('trello-conflicting-labels')?.split(';'),
     trelloAddLabelsToCards: core.getBooleanInput('trello-add-labels-to-cards'),
