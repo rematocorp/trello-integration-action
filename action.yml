@@ -61,6 +61,8 @@ inputs:
         description: Trello list ID for a pull request which has at least one approve and no reviews requesting for changes.
     trello-list-id-pr-closed:
         description: Trello list ID for closed pull request.
+    trello-list-id-pr-merged:
+        description: Trello list ID for merged pull request. If trello-archive-on-merge is set to true, the card is archived instead of moving to this list.
     trello-add-labels-to-cards:
         description: Enable or disable the automatic addition of labels to cards.
         default: true
