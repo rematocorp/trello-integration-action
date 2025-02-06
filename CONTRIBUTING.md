@@ -2,3 +2,4 @@
 -   Make sure your changes are [prettified](https://prettier.io/) (you can use `npm run prettier`)
 -   Run `npm run build` with Node v20 before committing your changes
 -   Feel free to write some unit tests
+-   [octokit docs](https://octokit.github.io/rest.js/v21/#usage)
