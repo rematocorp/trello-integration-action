@@ -11,6 +11,7 @@ export interface Conf {
 	githubIncludeNewCardCommand?: boolean
 	githubCreateNewCardOnMerge?: boolean
 	githubUsersToTrelloUsers?: string
+	githubProductionBranch?: string
 	trelloOrganizationName?: string
 	trelloListIdPrDraft?: string
 	trelloListIdPrOpen?: string
@@ -18,6 +19,7 @@ export interface Conf {
 	trelloListIdPrApproved?: string
 	trelloListIdPrClosed?: string
 	trelloListIdPrMerged?: string
+	trelloListIdPrMergedProd?: string
 	trelloBoardId?: string
 	trelloConflictingLabels?: string[]
 	trelloAddLabelsToCards?: boolean

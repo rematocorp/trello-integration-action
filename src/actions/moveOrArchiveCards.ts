@@ -1,6 +1,6 @@
 import { startGroup } from '@actions/core'
 import { Conf, PR } from '../types'
-import { isPullRequestMerged } from './api/github'
+import { isPullRequestMerged, getBaseBranchName } from './api/github'
 import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/trello'
 import isChangesRequestedInReview from './utils/isChangesRequestedInReview'
 import isPullRequestInDraft from './utils/isPullRequestInDraft'
@@ -14,45 +14,53 @@ export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], 
 	const isChangesRequested = await isChangesRequestedInReview()
 	const isApproved = await isPullRequestApproved()
 	const isMerged = await isPullRequestMerged()
+	const baseBranchName = await getBaseBranchName()
 
 	if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId)
 		logger.log('Moved cards to draft PR list')
-
+		
 		return
 	}
-
+	
 	if (pr.state === 'open' && !isDraft && isChangesRequested && conf.trelloListIdPrChangesRequested) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrChangesRequested, conf.trelloBoardId)
 		logger.log('Moved cards to changes requested PR list')
-
+		
 		return
 	}
-
+	
 	if (pr.state === 'open' && !isDraft && !isChangesRequested && isApproved && conf.trelloListIdPrApproved) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrApproved, conf.trelloBoardId)
 		logger.log('Moved cards to approved PR list')
-
+		
 		return
 	}
-
+	
 	if (pr.state === 'open' && !isDraft && conf.trelloListIdPrOpen) {
 		await moveCardsToList(cardIds, conf.trelloListIdPrOpen, conf.trelloBoardId)
 		logger.log('Moved cards to opened PR list')
+		
+		return
+	}
+
+	if (pr.state == 'closed' && isMerged && conf.trelloListIdPrMergedProd && !conf.trelloArchiveOnMerge && baseBranchName === conf.githubProductionBranch) {
+		await moveCardsToList(cardIds, conf.trelloListIdPrMergedProd, conf.trelloBoardId)
+		logger.log('Moved cards to prod PR list')
+
+		return
+	}
+	
+	if (pr.state === 'closed' && isMerged && conf.trelloListIdPrMerged && !conf.trelloArchiveOnMerge) {
+		await moveCardsToList(cardIds, conf.trelloListIdPrMerged, conf.trelloBoardId)
+		logger.log('Moved cards to merged PR list')
 
 		return
 	}
 
 	if (pr.state === 'closed' && isMerged && conf.trelloArchiveOnMerge) {
 		await archiveCards(cardIds)
-
-		return
-	}
-
-	if (pr.state === 'closed' && isMerged && conf.trelloListIdPrMerged && !conf.trelloArchiveOnMerge) {
-		await moveCardsToList(cardIds, conf.trelloListIdPrMerged, conf.trelloBoardId)
-		logger.log('Moved cards to merged PR list')
-
+		
 		return
 	}
 

@@ -1,4 +1,4 @@
-import { isPullRequestMerged, getPullRequestReviews, getPullRequestRequestedReviewers } from './api/github'
+import { isPullRequestMerged, getPullRequestReviews, getPullRequestRequestedReviewers, getBaseBranchName } from './api/github'
 import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/trello'
 import moveOrArchiveCards from './moveOrArchiveCards'
 
@@ -12,6 +12,7 @@ const getCardInfoMock = getCardInfo as jest.Mock
 const getBoardListsMock = getBoardLists as jest.Mock
 const archiveCardMock = archiveCard as jest.Mock
 const isPullRequestMergedMock = isPullRequestMerged as jest.Mock
+const getBaseBranchNameMock = getBaseBranchName as jest.Mock
 const getPullRequestReviewsMock = getPullRequestReviews as jest.Mock
 const getPullRequestRequestedReviewersMock = getPullRequestRequestedReviewers as jest.Mock
 
@@ -179,6 +180,24 @@ describe('Moving cards', () => {
 		it('moves the card to Merged list', async () => {
 			await moveOrArchiveCards(conf, ['card'], pr)
 			expect(moveCardToList).toHaveBeenCalledWith('card', 'merged-list-id', undefined)
+		})
+
+		it('skips move when list not configured', async () => {
+			await moveOrArchiveCards({}, ['card'], pr)
+			expect(moveCardToList).not.toHaveBeenCalled()
+		})
+	})
+	
+	describe('PR is merged to production', () => {
+		const pr = { ...basePR, state: 'closed', body: 'https://trello.com/c/card/title' }
+		const conf = { trelloListIdPrMergedProd: 'merged-prod-list-id', githubProductionBranch: 'prod' }
+
+		beforeEach(() => isPullRequestMergedMock.mockResolvedValueOnce(true))
+		beforeEach(() => getBaseBranchNameMock.mockResolvedValueOnce('prod'))
+
+		it('moves the card to merged prod list', async () => {
+			await moveOrArchiveCards(conf, ['card'], pr)
+			expect(moveCardToList).toHaveBeenCalledWith('card', 'merged-prod-list-id', undefined)
 		})
 
 		it('skips move when list not configured', async () => {

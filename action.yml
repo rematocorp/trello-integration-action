@@ -61,6 +61,10 @@ inputs:
         description: Trello list ID for a pull request which has at least one approve and no reviews requesting for changes.
     trello-list-id-pr-merged:
         description: Trello list ID for merged pull request. If trello-archive-on-merge is set to true, the card is archived instead of moving to this list.
+    github-production-branch:
+        description: Github production branch name. If set, and the PR's base branch matches this branch the card is moved to the trello-list-id-pr-merged-prod list when the PR is merged.
+    trello-list-id-pr-merged-prod:
+        description: Trello list ID for merged pull request to production branch. If trello-archive-on-merge is set to true, the card is archived instead of moving to this list.
     trello-list-id-pr-closed:
         description: Trello list ID for closed pull request. If trello-list-id-pr-merged is set and card is merged, then the card will be moved to merged list.
     trello-add-labels-to-cards:

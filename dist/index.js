@@ -34112,7 +34112,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updatePullRequestBody = exports.createComment = exports.getPullRequestRequestedReviewers = exports.getPullRequestReviews = exports.isPullRequestMerged = exports.getCommits = exports.getBranchName = exports.getPullRequest = exports.getPullRequestComments = void 0;
+exports.updatePullRequestBody = exports.createComment = exports.getPullRequestRequestedReviewers = exports.getPullRequestReviews = exports.isPullRequestMerged = exports.getCommits = exports.getBaseBranchName = exports.getBranchName = exports.getPullRequest = exports.getPullRequestComments = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const logger_1 = __importDefault(__nccwpck_require__(2358));
@@ -34149,6 +34149,15 @@ async function getBranchName() {
     return response.data.head.ref;
 }
 exports.getBranchName = getBranchName;
+async function getBaseBranchName() {
+    const response = await octokit.rest.pulls.get({
+        owner,
+        repo,
+        pull_number: issueNumber,
+    });
+    return response.data.base.ref;
+}
+exports.getBaseBranchName = getBaseBranchName;
 async function getCommits() {
     const response = await octokit.rest.pulls.listCommits({
         owner,
@@ -34614,6 +34623,7 @@ async function moveOrArchiveCards(conf, cardIds, pr) {
     const isChangesRequested = await (0, isChangesRequestedInReview_1.default)();
     const isApproved = await (0, isPullRequestApproved_1.default)();
     const isMerged = await (0, github_1.isPullRequestMerged)();
+    const baseBranchName = await (0, github_1.getBaseBranchName)();
     if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
         await moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId);
         logger_1.default.log('Moved cards to draft PR list');
@@ -34634,13 +34644,18 @@ async function moveOrArchiveCards(conf, cardIds, pr) {
         logger_1.default.log('Moved cards to opened PR list');
         return;
     }
-    if (pr.state === 'closed' && isMerged && conf.trelloArchiveOnMerge) {
-        await archiveCards(cardIds);
+    if (pr.state == 'closed' && isMerged && conf.trelloListIdPrMergedProd && !conf.trelloArchiveOnMerge && baseBranchName === conf.githubProductionBranch) {
+        await moveCardsToList(cardIds, conf.trelloListIdPrMergedProd, conf.trelloBoardId);
+        logger_1.default.log('Moved cards to prod PR list');
         return;
     }
     if (pr.state === 'closed' && isMerged && conf.trelloListIdPrMerged && !conf.trelloArchiveOnMerge) {
         await moveCardsToList(cardIds, conf.trelloListIdPrMerged, conf.trelloBoardId);
         logger_1.default.log('Moved cards to merged PR list');
+        return;
+    }
+    if (pr.state === 'closed' && isMerged && conf.trelloArchiveOnMerge) {
+        await archiveCards(cardIds);
         return;
     }
     if (pr.state === 'closed' && conf.trelloListIdPrClosed) {

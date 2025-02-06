@@ -40,6 +40,16 @@ export async function getBranchName() {
 	return response.data.head.ref
 }
 
+export async function getBaseBranchName() {
+	const response = await octokit.rest.pulls.get({
+		owner,
+		repo,
+		pull_number: issueNumber,
+	})
+
+	return response.data.base.ref
+}
+
 export async function getCommits() {
 	const response = await octokit.rest.pulls.listCommits({
 		owner,

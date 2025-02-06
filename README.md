@@ -165,25 +165,33 @@ Trello list ID for merged pull request. [How to find list ID.](https://stackover
 
 NB! `trello-archive-on-merge` set to `true` will override this.
 
-#### 6. `trello-list-id-pr-closed`
+#### 6. `github-production-branch`
+
+Github production branch name. Set this to the name of your production branch and set `trello-list-id-pr-merged-prod` to the Trello list ID of your prod Trello list. 
+
+#### 7. `trello-list-id-pr-merged-prod`
+
+Trello list ID for merged pull request in production. [How to find list ID.](https://stackoverflow.com/a/50908600/2311110)
+
+#### 8. `trello-list-id-pr-closed`
 
 Trello list ID for closed pull request. [How to find list ID.](https://stackoverflow.com/a/50908600/2311110)
 
 NB! If card is merged and `trello-list-id-pr-merged` is set, then it will override this.
 
-#### 7. `trello-board-id`
+#### 9. `trello-board-id`
 
 Trello board ID where to move the cards. [How to find board ID.](https://stackoverflow.com/a/50908600/2311110) Useful when you want the action to move the card out from a backlog board.
 
 Separate board IDs with a semicolon to support multiple boards. [Learn more.](https://github.com/rematocorp/trello-integration-action/issues/68)
 
-#### 8. `trello-archive-on-merge`
+#### 10. `trello-archive-on-merge`
 
 Archives Trello cards when PR is merged.
 
 Default: `false`
 
-#### 9. `trello-card-position`
+#### 11. `trello-card-position`
 
 Position of the card after being moved to a list.
 
