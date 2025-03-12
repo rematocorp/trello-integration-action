@@ -19,7 +19,7 @@
 		"axios": "^1.8.3"
 	},
 	"devDependencies": {
-		"@remato/eslint-config": "^2.1.0",
+		"@remato/eslint-config": "^2.1.1",
 		"@remato/prettier-config": "^1.1.0",
 		"@types/jest": "^29.5.12",
 		"@vercel/ncc": "^0.38.1",
