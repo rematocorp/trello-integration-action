@@ -1,5 +1,5 @@
 import addCardLinksToPullRequest from './addCardLinksToPullRequest'
-import { createComment, getPullRequestComments, getPullRequest } from './api/github'
+import { createComment, getPullRequest, getPullRequestComments } from './api/github'
 import { getCardInfo } from './api/trello'
 
 jest.mock('@actions/core')

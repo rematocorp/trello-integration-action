@@ -1,5 +1,6 @@
 import { getInput } from '@actions/core'
-import { getOctokit, context } from '@actions/github'
+import { context, getOctokit } from '@actions/github'
+
 import logger from '../utils/logger'
 
 const githubToken = getInput('github-token', { required: true })
@@ -59,7 +60,7 @@ export async function isPullRequestMerged() {
 		})
 
 		return true
-	} catch (e) {
+	} catch {
 		return false
 	}
 }

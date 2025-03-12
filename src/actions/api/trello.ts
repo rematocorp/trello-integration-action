@@ -1,5 +1,6 @@
-import axios from 'axios'
 import * as core from '@actions/core'
+import axios from 'axios'
+
 import { BoardLabel, Card, CardActions, TrelloMember } from '../../types'
 import logger from '../utils/logger'
 

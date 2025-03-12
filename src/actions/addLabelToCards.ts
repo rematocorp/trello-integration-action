@@ -1,4 +1,5 @@
 import { startGroup } from '@actions/core'
+
 import { BoardLabel, Conf, PRHead } from '../types'
 import { getBranchName } from './api/github'
 import { addLabelToCard, getBoardLabels, getCardInfo } from './api/trello'

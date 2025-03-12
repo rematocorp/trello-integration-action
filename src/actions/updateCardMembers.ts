@@ -1,10 +1,11 @@
 import { startGroup } from '@actions/core'
+
 import { Conf, PR, TrelloMember } from '../types'
 import { getCommits, getPullRequest, getPullRequestRequestedReviewers, getPullRequestReviews } from './api/github'
 import { addMemberToCard, getCardInfo, getMemberInfo, removeMemberFromCard } from './api/trello'
 import isChangesRequestedInReview from './utils/isChangesRequestedInReview'
-import isPullRequestInDraft from './utils/isPullRequestInDraft'
 import isPullRequestApproved from './utils/isPullRequestApproved'
+import isPullRequestInDraft from './utils/isPullRequestInDraft'
 import logger from './utils/logger'
 
 export default async function updateCardMembers(conf: Conf, cardIds: string[], pr: PR) {

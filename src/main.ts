@@ -1,5 +1,5 @@
 import { setFailed } from '@actions/core'
-import { Conf, PR } from './types'
+
 import {
 	addCardLinksToPullRequest,
 	addLabelToCards,
@@ -8,6 +8,7 @@ import {
 	moveOrArchiveCards,
 	updateCardMembers,
 } from './actions'
+import { Conf, PR } from './types'
 
 export async function run(pr: PR, conf: Conf) {
 	try {

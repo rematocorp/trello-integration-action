@@ -1,4 +1,5 @@
 import { startGroup } from '@actions/core'
+
 import { Conf } from '../types'
 import { createComment, getPullRequest, getPullRequestComments } from './api/github'
 import { getCardInfo } from './api/trello'
