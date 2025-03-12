@@ -6,7 +6,7 @@ export default {
 	},
 	error: (...message: any[]) => {
 		if (!process.env.JEST_WORKER_ID) {
-			console.error(...message) // eslint-disable-line no-console
+			console.error(...message)
 		}
 	},
 }

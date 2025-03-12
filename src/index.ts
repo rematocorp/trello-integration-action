@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
+
 import { run } from './main'
 import { PR } from './types'
 

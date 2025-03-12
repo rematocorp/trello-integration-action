@@ -1,6 +1,6 @@
 import addLabelToCards from './addLabelToCards'
-import { addLabelToCard, getBoardLabels, getCardInfo } from './api/trello'
 import { getBranchName } from './api/github'
+import { addLabelToCard, getBoardLabels, getCardInfo } from './api/trello'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')

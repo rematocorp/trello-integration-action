@@ -1,10 +1,11 @@
 import { startGroup } from '@actions/core'
+
 import { Conf, PR } from '../types'
 import { isPullRequestMerged } from './api/github'
 import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/trello'
 import isChangesRequestedInReview from './utils/isChangesRequestedInReview'
-import isPullRequestInDraft from './utils/isPullRequestInDraft'
 import isPullRequestApproved from './utils/isPullRequestApproved'
+import isPullRequestInDraft from './utils/isPullRequestInDraft'
 import logger from './utils/logger'
 
 export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], pr: PR) {

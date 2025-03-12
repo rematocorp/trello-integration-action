@@ -1,4 +1,5 @@
 import { startGroup } from '@actions/core'
+
 import { PR } from '../types'
 import { addAttachmentToCard, getCardAttachments } from './api/trello'
 import logger from './utils/logger'

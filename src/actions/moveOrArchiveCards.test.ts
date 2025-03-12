@@ -1,4 +1,4 @@
-import { isPullRequestMerged, getPullRequestReviews, getPullRequestRequestedReviewers } from './api/github'
+import { getPullRequestRequestedReviewers, getPullRequestReviews, isPullRequestMerged } from './api/github'
 import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/trello'
 import moveOrArchiveCards from './moveOrArchiveCards'
 

@@ -1,9 +1,10 @@
 import { Conf } from 'src/types'
+
 import { getCommits, getPullRequest, getPullRequestRequestedReviewers, getPullRequestReviews } from './api/github'
 import { addMemberToCard, getCardInfo, getMemberInfo, removeMemberFromCard } from './api/trello'
 import updateCardMembers from './updateCardMembers'
-import isPullRequestApproved from './utils/isPullRequestApproved'
 import isChangesRequestedInReview from './utils/isChangesRequestedInReview'
+import isPullRequestApproved from './utils/isPullRequestApproved'
 
 jest.mock('@actions/core')
 jest.mock('@actions/github')

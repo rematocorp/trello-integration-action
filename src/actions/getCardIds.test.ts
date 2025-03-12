@@ -1,13 +1,14 @@
 import { setFailed } from '@actions/core'
+
 import {
 	getBranchName,
+	getCommits,
 	getPullRequest,
 	getPullRequestComments,
-	updatePullRequestBody,
-	getCommits,
 	isPullRequestMerged,
+	updatePullRequestBody,
 } from './api/github'
-import { createCard, moveCardToList, searchTrelloCards, getCardInfo, getCardActions } from './api/trello'
+import { createCard, getCardActions, getCardInfo, moveCardToList, searchTrelloCards } from './api/trello'
 import getCardIds from './getCardIds'
 
 jest.mock('@actions/core')

@@ -1,8 +1,8 @@
-import getCardIds from './getCardIds'
 import addCardLinksToPullRequest from './addCardLinksToPullRequest'
-import addPullRequestLinkToCards from './addPullRequestLinkToCards'
-import moveOrArchiveCards from './moveOrArchiveCards'
 import addLabelToCards from './addLabelToCards'
+import addPullRequestLinkToCards from './addPullRequestLinkToCards'
+import getCardIds from './getCardIds'
+import moveOrArchiveCards from './moveOrArchiveCards'
 import updateCardMembers from './updateCardMembers'
 
 export {

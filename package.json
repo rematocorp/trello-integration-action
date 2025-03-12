@@ -19,13 +19,13 @@
 		"axios": "^1.7.2"
 	},
 	"devDependencies": {
-		"@remato/eslint-config": "^2.0.0",
-		"@remato/prettier-config": "^1.0.0",
+		"@remato/eslint-config": "^2.1.0",
+		"@remato/prettier-config": "^1.1.0",
 		"@types/jest": "^29.5.12",
 		"@vercel/ncc": "^0.38.1",
-		"eslint": "^8.57.0",
+		"eslint": "^9.22.0",
 		"jest": "^29.7.0",
-		"prettier": "^3.3.1",
+		"prettier": "^3.5.3",
 		"ts-jest": "^29.1.4",
 		"typescript": "^5.4.5"
 	},
@@ -57,14 +57,5 @@
 			"!src/actions/utils/logger.ts",
 			"!src/actions/api/**"
 		]
-	},
-	"eslintConfig": {
-		"extends": [
-			"@remato/eslint-config/typescript"
-		],
-		"ignorePatterns": [
-			"dist"
-		]
-	},
-	"packageManager": "yarn@4.1.0+sha512.5b7bc055cad63273dda27df1570a5d2eb4a9f03b35b394d3d55393c2a5560a17f5cef30944b11d6a48bcbcfc1c3a26d618aae77044774c529ba36cb771ad5b0f"
+	}
 }

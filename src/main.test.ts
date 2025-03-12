@@ -1,4 +1,5 @@
 import { setFailed } from '@actions/core'
+
 import {
 	addCardLinksToPullRequest,
 	addLabelToCards,
