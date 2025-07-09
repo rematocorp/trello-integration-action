@@ -1,61 +1,61 @@
 {
-	"name": "@remato/trello-integration-action",
-	"version": "9.9.0",
-	"license": "MIT",
-	"description": "GitHub Action to integrate Github pull requests with Trello cards",
-	"main": "dist/index.js",
-	"engines": {
-		"node": ">=20.0.0"
-	},
-	"scripts": {
-		"build": "ncc build src/index.ts",
-		"test": "jest",
-		"prettier": "prettier --list-different \"**/*.ts\"",
-		"lint": "eslint \"**/*.ts\""
-	},
-	"dependencies": {
-		"@actions/core": "^1.11.1",
-		"@actions/github": "^6.0.1",
-		"axios": "^1.10.0"
-	},
-	"devDependencies": {
-		"@remato/eslint-config": "^2.1.1",
-		"@remato/prettier-config": "^1.1.0",
-		"@types/jest": "^29.5.14",
-		"@vercel/ncc": "^0.38.3",
-		"eslint": "^9.29.0",
-		"jest": "^29.7.0",
-		"prettier": "^3.5.3",
-		"ts-jest": "^29.4.0",
-		"typescript": "^5.8.3"
-	},
-	"prettier": "@remato/prettier-config",
-	"jest": {
-		"preset": "ts-jest",
-		"verbose": true,
-		"resetMocks": true,
-		"clearMocks": true,
-		"testEnvironment": "node",
-		"moduleFileExtensions": [
-			"js",
-			"ts"
-		],
-		"testMatch": [
-			"**/*.test.ts"
-		],
-		"testPathIgnorePatterns": [
-			"/node_modules/",
-			"/dist/"
-		],
-		"transform": {
-			"^.+\\.ts$": "ts-jest"
-		},
-		"collectCoverage": true,
-		"collectCoverageFrom": [
-			"src/**",
-			"!src/index.ts",
-			"!src/actions/utils/logger.ts",
-			"!src/actions/api/**"
-		]
-	}
+  "name": "@remato/trello-integration-action",
+  "version": "9.9.0",
+  "license": "MIT",
+  "description": "GitHub Action to integrate Github pull requests with Trello cards",
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "ncc build src/index.ts",
+    "test": "jest",
+    "prettier": "prettier --list-different \"**/*.ts\"",
+    "lint": "eslint \"**/*.ts\""
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.1",
+    "axios": "^1.10.0"
+  },
+  "devDependencies": {
+    "@remato/eslint-config": "^2.1.1",
+    "@remato/prettier-config": "^1.1.0",
+    "@types/jest": "^29.5.14",
+    "@vercel/ncc": "^0.38.3",
+    "eslint": "^9.29.0",
+    "jest": "^30.0.0",
+    "prettier": "^3.5.3",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.8.3"
+  },
+  "prettier": "@remato/prettier-config",
+  "jest": {
+    "preset": "ts-jest",
+    "verbose": true,
+    "resetMocks": true,
+    "clearMocks": true,
+    "testEnvironment": "node",
+    "moduleFileExtensions": [
+      "js",
+      "ts"
+    ],
+    "testMatch": [
+      "**/*.test.ts"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
+    ],
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/**",
+      "!src/index.ts",
+      "!src/actions/utils/logger.ts",
+      "!src/actions/api/**"
+    ]
+  }
 }
