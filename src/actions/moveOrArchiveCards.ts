@@ -1,7 +1,7 @@
 import { startGroup } from '@actions/core'
 
 import { Conf, PR } from '../types'
-import { isPullRequestMerged } from './api/github'
+import { getTargetBranchName, isPullRequestMerged } from './api/github'
 import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/trello'
 import isChangesRequestedInReview from './utils/isChangesRequestedInReview'
 import isPullRequestApproved from './utils/isPullRequestApproved'
@@ -67,8 +67,13 @@ export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], 
 	logger.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged })
 }
 
+async function archiveCards(cardIds: string[]) {
+	return Promise.all(cardIds.map((cardId) => archiveCard(cardId)))
+}
+
 async function moveCardsToList(cardIds: string[], listId: string, boardId?: string) {
-	const listIds = listId.split(';')
+	const resolvedListId = await resolveListIdFromString(listId)
+	const listIds = resolvedListId.split(';')
 
 	return Promise.all(
 		cardIds.map(async (cardId) => {
@@ -83,7 +88,7 @@ async function moveCardsToList(cardIds: string[], listId: string, boardId?: stri
 						listIds.find((listId) => boardLists.some((list) => list.id === listId)) || listIds[0],
 					)
 				} else {
-					await moveCardToList(cardId, listId, boardId)
+					await moveCardToList(cardId, listIds[0], boardId)
 				}
 			} catch (error: any) {
 				if (error.response?.data?.message === 'The card has moved to a different board.') {
@@ -96,6 +101,44 @@ async function moveCardsToList(cardIds: string[], listId: string, boardId?: stri
 	)
 }
 
-async function archiveCards(cardIds: string[]) {
-	return Promise.all(cardIds.map((cardId) => archiveCard(cardId)))
+async function resolveListIdFromString(raw: string): Promise<string> {
+	const branchName = await getTargetBranchName()
+	const lines = raw
+		.split('\n')
+		.map((l) => l.trim())
+		.filter(Boolean)
+	const looksLikeMap = lines.some((l) => l.includes(':'))
+
+	if (!looksLikeMap) {
+		return raw.trim()
+	}
+
+	const pairs = parseMapString(lines)
+
+	for (const [pattern, value] of pairs) {
+		if (pattern !== '*' && wildcardMatch(pattern, branchName)) {
+			return value
+		}
+	}
+
+	const star = pairs.find(([p]) => p === '*')
+
+	if (star) {
+		return star[1]
+	}
+
+	throw new Error(`No matching Trello list ID for branch "${branchName}" and no "*" fallback provided.`)
+}
+
+function parseMapString(lines: string[]): Array<[string, string]> {
+	return lines
+		.map((line) => line.split(':'))
+		.filter(([key, val]) => key && val)
+		.map(([key, val]) => [key.trim(), val.trim()])
+}
+
+function wildcardMatch(pattern: string, text: string): boolean {
+	const escaped = pattern.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&').replace(/\*/g, '.*')
+
+	return new RegExp(`^${escaped}$`).test(text)
 }
