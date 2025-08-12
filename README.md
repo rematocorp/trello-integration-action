@@ -265,7 +265,7 @@ trello-conflicting-labels: 'feature;bug;chore'
 ## Advanced use cases
 
 <details>
-<summary>1. Move to different list depending on target branch</summary>
+<summary>Move to different list depending on target branch</summary>
 
 Map target branch names to Trello list IDs so cards move automatically to the right list. Use branch patterns (e.g. release/_, hotfix/_) to match multiple branches, and always define a \* fallback list to catch anything unmatched. [Learn more.](https://github.com/rematocorp/trello-integration-action/pull/140#issuecomment-2641019842)
 
@@ -278,7 +278,7 @@ trello-list-id-pr-closed: |-
 </details>
 
 <details>
-<summary>2. Move to list according to current board</summary>
+<summary>Move to list according to current board</summary>
 
 Separate list IDs with a semicolon to support multiple boards. [Learn more.](https://github.com/rematocorp/trello-integration-action/issues/68)
 
