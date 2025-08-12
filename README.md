@@ -278,7 +278,7 @@ trello-list-id-pr-closed: |-
 </details>
 
 <details>
-<summary>Move to list according to current board</summary>
+<summary>Move to different list according to Trello card's current board</summary>
 
 Separate list IDs with a semicolon to support multiple boards. [Learn more.](https://github.com/rematocorp/trello-integration-action/issues/68)
 
