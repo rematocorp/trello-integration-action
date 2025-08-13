@@ -1,4 +1,9 @@
-import { getPullRequestRequestedReviewers, getPullRequestReviews, isPullRequestMerged } from './api/github'
+import {
+	getPullRequestRequestedReviewers,
+	getPullRequestReviews,
+	getTargetBranchName,
+	isPullRequestMerged,
+} from './api/github'
 import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/trello'
 import moveOrArchiveCards from './moveOrArchiveCards'
 
@@ -14,6 +19,7 @@ const archiveCardMock = archiveCard as jest.Mock
 const isPullRequestMergedMock = isPullRequestMerged as jest.Mock
 const getPullRequestReviewsMock = getPullRequestReviews as jest.Mock
 const getPullRequestRequestedReviewersMock = getPullRequestRequestedReviewers as jest.Mock
+const getTargetBranchNameMock = getTargetBranchName as jest.Mock
 
 const basePR = { number: 0, state: 'open', title: 'Title' }
 
@@ -233,6 +239,37 @@ describe('Moving cards', () => {
 			await moveOrArchiveCards(conf, ['card'], pr)
 
 			expect(moveCardToList).toHaveBeenCalledWith('card', 'closed-list-id')
+		})
+	})
+
+	describe('list ids and branch names map', () => {
+		const pr = { ...basePR, state: 'closed', body: 'https://trello.com/c/card/title' }
+		const conf = { trelloListIdPrClosed: 'release/*:release-list-id\n*:merged-list-id' }
+
+		it('moves to the list according to target branch name', async () => {
+			getTargetBranchNameMock.mockResolvedValueOnce('release/21.19.0')
+
+			await moveOrArchiveCards(conf, ['card'], pr)
+
+			expect(moveCardToList).toHaveBeenCalledWith('card', 'release-list-id', undefined)
+		})
+
+		it('moves to fallback list', async () => {
+			getTargetBranchNameMock.mockResolvedValueOnce('develop')
+
+			await moveOrArchiveCards(conf, ['card'], pr)
+
+			expect(moveCardToList).toHaveBeenCalledWith('card', 'merged-list-id', undefined)
+		})
+
+		it('throws error when conf is incorrect', async () => {
+			getTargetBranchNameMock.mockResolvedValueOnce('develop')
+
+			await expect(
+				moveOrArchiveCards({ trelloListIdPrClosed: 'release/*:release-list-id' }, ['card'], pr),
+			).rejects.toThrow(
+				new Error('No matching Trello list ID for branch "develop" and no "*" fallback provided.'),
+			)
 		})
 	})
 })

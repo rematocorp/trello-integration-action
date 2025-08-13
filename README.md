@@ -7,16 +7,16 @@ This GitHub action integrates GitHub and Trello, automatically updating Trello c
 
 The action looks for:
 
--   Trello card URLs from PR description, comments and commit messages,
--   Trello card short ID from PR branch name,
+- Trello card URLs from PR description, comments and commit messages,
+- Trello card short ID from PR branch name,
 
 and:
 
--   links a PR to a Trello card and vice versa,
--   moves a Trello card when PR is opened, moved back to draft or closed,
--   adds a label to a Trello card based on the branch name (e.g. `feature/foo`),
--   assigns a PR author and fellow contributors to a Trello card,
--   and more...
+- links a PR to a Trello card and vice versa,
+- moves a Trello card when PR is opened, moved back to draft or closed,
+- adds a label to a Trello card based on the branch name (e.g. `feature/foo`),
+- assigns a PR author and fellow contributors to a Trello card,
+- and more...
 
 ## Basic configuration
 
@@ -180,8 +180,6 @@ NB! If card is merged and `trello-list-id-pr-merged` is set, then it will overri
 
 Trello board ID where to move the cards. [How to find board ID.](https://stackoverflow.com/a/50908600/2311110) Useful when you want the action to move the card out from a backlog board.
 
-Separate board IDs with a semicolon to support multiple boards. [Learn more.](https://github.com/rematocorp/trello-integration-action/issues/68)
-
 #### 8. `trello-archive-on-merge`
 
 Archives Trello cards when PR is merged.
@@ -260,6 +258,32 @@ Example:
 
 ```yaml
 trello-conflicting-labels: 'feature;bug;chore'
+```
+
+</details>
+
+## Advanced use cases
+
+<details>
+<summary>Move to different list depending on target branch</summary>
+
+Map target branch names to Trello list IDs so cards move automatically to the right list. Use branch patterns (e.g. release/_, hotfix/_) to match multiple branches, and always define a \* fallback list to catch anything unmatched. [Learn more.](https://github.com/rematocorp/trello-integration-action/pull/140#issuecomment-2641019842)
+
+```yaml
+trello-list-id-pr-closed: |-
+    release/*:65e9cd42133cce03db170000
+    *:65e9cd42133cce03db172222
+```
+
+</details>
+
+<details>
+<summary>Move to different list according to Trello card's current board</summary>
+
+Separate list IDs with a semicolon to support multiple boards. [Learn more.](https://github.com/rematocorp/trello-integration-action/issues/68)
+
+```yaml
+trello-list-id-pr-closed: 65e9cd42133cce03db170000;65e9cd42133cce03db172222
 ```
 
 </details>
