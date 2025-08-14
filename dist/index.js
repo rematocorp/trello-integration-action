@@ -36587,7 +36587,7 @@ const isChangesRequestedInReview_1 = __importDefault(__nccwpck_require__(1417));
 const isPullRequestApproved_1 = __importDefault(__nccwpck_require__(5134));
 const isPullRequestInDraft_1 = __importDefault(__nccwpck_require__(3611));
 const logger_1 = __importDefault(__nccwpck_require__(4933));
-async function moveOrArchiveCards(conf, cardIds, pr) {
+async function moveOrArchiveCards(conf, cardIds, pr, action) {
     (0, core_1.startGroup)('🕺 MOVE OR ARCHIVE CARDS');
     const isDraft = (0, isPullRequestInDraft_1.default)(pr);
     const isChangesRequested = await (0, isChangesRequestedInReview_1.default)();
@@ -36618,8 +36618,10 @@ async function moveOrArchiveCards(conf, cardIds, pr) {
         return;
     }
     if (pr.state === 'closed' && isMerged && conf.trelloListIdPrMerged && !conf.trelloArchiveOnMerge) {
-        await moveCardsToList(cardIds, conf.trelloListIdPrMerged, conf.trelloBoardId);
-        logger_1.default.log('Moved cards to merged PR list');
+        if (!conf.trelloMoveToMergedListOnlyOnMerge || action === 'closed') {
+            await moveCardsToList(cardIds, conf.trelloListIdPrMerged, conf.trelloBoardId);
+            logger_1.default.log('Moved cards to merged PR list');
+        }
         return;
     }
     if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
@@ -37113,7 +37115,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(7484));
 const github_1 = __nccwpck_require__(3228);
 const main_1 = __nccwpck_require__(1730);
-(0, main_1.run)((github_1.context.payload.pull_request || github_1.context.payload.issue), {
+(0, main_1.run)((github_1.context.payload.pull_request || github_1.context.payload.issue), github_1.context.payload.action, {
     githubRequireKeywordPrefix: core.getBooleanInput('github-require-keyword-prefix'),
     githubRequireTrelloCard: core.getBooleanInput('github-require-trello-card'),
     githubEnableRelatedKeywordPrefix: core.getBooleanInput('github-enable-related-keyword-prefix'),
@@ -37152,13 +37154,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
 const core_1 = __nccwpck_require__(7484);
 const actions_1 = __nccwpck_require__(79);
-async function run(pr, conf) {
+async function run(pr, action, conf) {
     try {
         const cardIds = await (0, actions_1.getCardIds)(conf, pr.head);
         if (cardIds.length) {
             await (0, actions_1.addCardLinksToPullRequest)(conf, cardIds);
             await (0, actions_1.addPullRequestLinkToCards)(cardIds, pr);
-            await (0, actions_1.moveOrArchiveCards)(conf, cardIds, pr);
+            await (0, actions_1.moveOrArchiveCards)(conf, cardIds, pr, action);
             await (0, actions_1.addLabelToCards)(conf, cardIds, pr.head);
             await (0, actions_1.updateCardMembers)(conf, cardIds, pr);
         }

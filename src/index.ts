@@ -2,9 +2,9 @@ import * as core from '@actions/core'
 import { context } from '@actions/github'
 
 import { run } from './main'
-import { PR } from './types'
+import { Action, PR } from './types'
 
-run((context.payload.pull_request || context.payload.issue) as PR, {
+run((context.payload.pull_request || context.payload.issue) as PR, context.payload.action as Action, {
 	githubRequireKeywordPrefix: core.getBooleanInput('github-require-keyword-prefix'),
 	githubRequireTrelloCard: core.getBooleanInput('github-require-trello-card'),
 	githubEnableRelatedKeywordPrefix: core.getBooleanInput('github-enable-related-keyword-prefix'),
