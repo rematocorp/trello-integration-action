@@ -164,29 +164,36 @@ Trello list ID for a pull request which has at least one approve and no reviews 
 
 NB! Add `pull_request_review` trigger and modify `pull_request` trigger with `review_requested` and `review_request_removed`. [Learn more.](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows)
 
-#### 5. `trello-list-id-pr-merged`
-
-Trello list ID for merged pull request. [How to find list ID.](https://stackoverflow.com/a/50908600/2311110)
-
-NB! `trello-archive-on-merge` set to `true` will override this.
-
-#### 6. `trello-list-id-pr-closed`
+#### 5. `trello-list-id-pr-closed`
 
 Trello list ID for closed pull request. [How to find list ID.](https://stackoverflow.com/a/50908600/2311110)
 
 NB! If card is merged and `trello-list-id-pr-merged` is set, then it will override this.
 
-#### 7. `trello-board-id`
+#### 6. `trello-list-id-pr-merged`
+
+Trello list ID for merged pull request. [How to find list ID.](https://stackoverflow.com/a/50908600/2311110)
+
+NB! `trello-archive-on-merge` set to `true` will override this.
+
+#### 7. `trello-move-to-merged-list-only-on-merge`
+
+When set to true, moves to `trello-list-id-pr-merged` only when the job was triggered by "closed" action.
+Useful when other automations are moving cards to subsequent lists, and you want to prevent this workflow from moving them back to trello-list-id-pr-merged in response to non-merge events (e.g., when someone adds a PR comment).
+
+Default: `false`
+
+#### 8. `trello-board-id`
 
 Trello board ID where to move the cards. [How to find board ID.](https://stackoverflow.com/a/50908600/2311110) Useful when you want the action to move the card out from a backlog board.
 
-#### 8. `trello-archive-on-merge`
+#### 9. `trello-archive-on-merge`
 
 Archives Trello cards when PR is merged.
 
 Default: `false`
 
-#### 9. `trello-card-position`
+#### 10. `trello-card-position`
 
 Position of the card after being moved to a list.
 

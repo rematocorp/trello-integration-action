@@ -20,17 +20,18 @@ const getCardIdsMock = getCardIds as jest.Mock
 
 const pr = { number: 0, state: 'open', title: 'Title', head: 'head' }
 const conf = { trelloListIdPrOpen: '123' }
+const action = 'closed'
 
 it('triggers all actions when cards found', async () => {
 	const cardIds = ['card-id-1', 'card-id-2']
 
 	getCardIdsMock.mockResolvedValueOnce(cardIds)
 
-	await run(pr, conf)
+	await run(pr, action, conf)
 
 	expect(addCardLinksToPullRequest).toHaveBeenCalledWith(conf, cardIds)
 	expect(addPullRequestLinkToCards).toHaveBeenCalledWith(cardIds, pr)
-	expect(moveOrArchiveCards).toHaveBeenCalledWith(conf, cardIds, pr)
+	expect(moveOrArchiveCards).toHaveBeenCalledWith(conf, cardIds, pr, action)
 	expect(addLabelToCards).toHaveBeenCalledWith(conf, cardIds, pr.head)
 	expect(updateCardMembers).toHaveBeenCalledWith(conf, cardIds, pr)
 })
@@ -38,7 +39,7 @@ it('triggers all actions when cards found', async () => {
 it('does nothing when no cards found', async () => {
 	getCardIdsMock.mockResolvedValueOnce([])
 
-	await run(pr, conf)
+	await run(pr, action, conf)
 
 	expect(addCardLinksToPullRequest).not.toHaveBeenCalled()
 })
@@ -48,7 +49,7 @@ it('sets job failed and throws error when error', async () => {
 
 	getCardIdsMock.mockRejectedValueOnce(error)
 
-	await expect(run(pr, conf)).rejects.toThrow(error)
+	await expect(run(pr, action, conf)).rejects.toThrow(error)
 	expect(setFailed).toHaveBeenCalledWith(error)
 	expect(addCardLinksToPullRequest).not.toHaveBeenCalled()
 })

@@ -1,6 +1,6 @@
 import { startGroup } from '@actions/core'
 
-import { Conf, PR } from '../types'
+import { Action, Conf, PR } from '../types'
 import { getTargetBranchName, isPullRequestMerged } from './api/github'
 import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/trello'
 import isChangesRequestedInReview from './utils/isChangesRequestedInReview'
@@ -8,7 +8,7 @@ import isPullRequestApproved from './utils/isPullRequestApproved'
 import isPullRequestInDraft from './utils/isPullRequestInDraft'
 import logger from './utils/logger'
 
-export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], pr: PR) {
+export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], pr: PR, action: Action) {
 	startGroup('🕺 MOVE OR ARCHIVE CARDS')
 
 	const isDraft = isPullRequestInDraft(pr)
@@ -51,8 +51,10 @@ export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], 
 	}
 
 	if (pr.state === 'closed' && isMerged && conf.trelloListIdPrMerged && !conf.trelloArchiveOnMerge) {
-		await moveCardsToList(cardIds, conf.trelloListIdPrMerged, conf.trelloBoardId)
-		logger.log('Moved cards to merged PR list')
+		if (!conf.trelloMoveToMergedListOnlyOnMerge || action === 'closed') {
+			await moveCardsToList(cardIds, conf.trelloListIdPrMerged, conf.trelloBoardId)
+			logger.log('Moved cards to merged PR list')
+		}
 
 		return
 	}

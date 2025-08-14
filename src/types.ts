@@ -18,6 +18,7 @@ export interface Conf {
 	trelloListIdPrApproved?: string
 	trelloListIdPrClosed?: string
 	trelloListIdPrMerged?: string
+	trelloMoveToMergedListOnlyOnMerge?: boolean
 	trelloBoardId?: string
 	trelloConflictingLabels?: string[]
 	trelloAddLabelsToCards?: boolean
@@ -26,6 +27,19 @@ export interface Conf {
 	trelloRemoveUnrelatedMembers?: boolean
 	trelloArchiveOnMerge?: boolean
 }
+
+export type Action =
+	| 'opened'
+	| 'edited'
+	| 'closed'
+	| 'reopened'
+	| 'ready_for_review'
+	| 'review_requested'
+	| 'review_request_removed'
+	| 'submitted'
+	| 'converted_to_draft'
+	| 'created'
+	| 'edited'
 
 export type PR = Omit<
 	Exclude<typeof context.payload.pull_request | typeof context.payload.issue, undefined>,
