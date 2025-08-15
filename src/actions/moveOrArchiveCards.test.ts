@@ -278,14 +278,12 @@ describe('Moving cards', () => {
 			expect(moveCardToList).toHaveBeenCalledWith('card', 'merged-list-id', undefined)
 		})
 
-		it('throws error when conf is incorrect', async () => {
+		it('does nothing when no fallback', async () => {
 			getTargetBranchNameMock.mockResolvedValueOnce('develop')
 
-			await expect(
-				moveOrArchiveCards({ trelloListIdPrClosed: 'release/*:release-list-id' }, ['card'], pr, action),
-			).rejects.toThrow(
-				new Error('No matching Trello list ID for branch "develop" and no "*" fallback provided.'),
-			)
+			await moveOrArchiveCards({ trelloListIdPrClosed: 'release/*:release-list-id' }, ['card'], pr, action)
+
+			expect(moveCardToList).not.toHaveBeenCalled()
 		})
 	})
 })

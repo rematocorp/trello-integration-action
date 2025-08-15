@@ -274,7 +274,7 @@ trello-conflicting-labels: 'feature;bug;chore'
 <details>
 <summary>Move to different list depending on target branch</summary>
 
-Map target branch names to Trello list IDs so cards move automatically to the right list. Use branch patterns (e.g. release/_, hotfix/_) to match multiple branches, and always define a \* fallback list to catch anything unmatched. [Learn more.](https://github.com/rematocorp/trello-integration-action/pull/140#issuecomment-2641019842)
+Map target branch names to Trello list IDs so cards move automatically to the right list. Use branch patterns (e.g. `release/*`, `hotfix/*`) to match multiple branches, and use `*` for fallback. [Learn more.](https://github.com/rematocorp/trello-integration-action/pull/140#issuecomment-2641019842)
 
 ```yaml
 trello-list-id-pr-closed: |-

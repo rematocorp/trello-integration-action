@@ -17,55 +17,30 @@ export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], 
 	const isMerged = await isPullRequestMerged()
 
 	if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
-		await moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId)
-		logger.log('Moved cards to draft PR list')
-
-		return
+		return moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId)
 	}
-
 	if (pr.state === 'open' && !isDraft && isChangesRequested && conf.trelloListIdPrChangesRequested) {
-		await moveCardsToList(cardIds, conf.trelloListIdPrChangesRequested, conf.trelloBoardId)
-		logger.log('Moved cards to changes requested PR list')
-
-		return
+		return moveCardsToList(cardIds, conf.trelloListIdPrChangesRequested, conf.trelloBoardId)
 	}
-
 	if (pr.state === 'open' && !isDraft && !isChangesRequested && isApproved && conf.trelloListIdPrApproved) {
-		await moveCardsToList(cardIds, conf.trelloListIdPrApproved, conf.trelloBoardId)
-		logger.log('Moved cards to approved PR list')
-
-		return
+		return moveCardsToList(cardIds, conf.trelloListIdPrApproved, conf.trelloBoardId)
 	}
-
 	if (pr.state === 'open' && !isDraft && conf.trelloListIdPrOpen) {
-		await moveCardsToList(cardIds, conf.trelloListIdPrOpen, conf.trelloBoardId)
-		logger.log('Moved cards to opened PR list')
-
-		return
+		return moveCardsToList(cardIds, conf.trelloListIdPrOpen, conf.trelloBoardId)
 	}
-
 	if (pr.state === 'closed' && isMerged && conf.trelloArchiveOnMerge) {
-		await archiveCards(cardIds)
-
-		return
+		return archiveCards(cardIds)
 	}
-
 	if (pr.state === 'closed' && isMerged && conf.trelloListIdPrMerged && !conf.trelloArchiveOnMerge) {
 		if (!conf.trelloMoveToMergedListOnlyOnMerge || action === 'closed') {
 			await moveCardsToList(cardIds, conf.trelloListIdPrMerged, conf.trelloBoardId)
-			logger.log('Moved cards to merged PR list')
 		}
 
 		return
 	}
-
 	if (pr.state === 'closed' && conf.trelloListIdPrClosed) {
-		await moveCardsToList(cardIds, conf.trelloListIdPrClosed, conf.trelloBoardId)
-		logger.log('Moved cards to closed PR list')
-
-		return
+		return moveCardsToList(cardIds, conf.trelloListIdPrClosed, conf.trelloBoardId)
 	}
-
 	logger.log('Skipping moving and archiving the cards', { state: pr.state, isDraft, isMerged })
 }
 
@@ -75,6 +50,12 @@ async function archiveCards(cardIds: string[]) {
 
 async function moveCardsToList(cardIds: string[], listId: string, boardId?: string) {
 	const resolvedListId = await resolveListIdFromString(listId)
+
+	if (!resolvedListId) {
+		logger.log('Skipping moving as no suitable list ID found', { listId })
+
+		return
+	}
 	const listIds = resolvedListId.split(';')
 
 	return Promise.all(
@@ -125,11 +106,7 @@ async function resolveListIdFromString(raw: string): Promise<string> {
 
 	const star = pairs.find(([p]) => p === '*')
 
-	if (star) {
-		return star[1]
-	}
-
-	throw new Error(`No matching Trello list ID for branch "${branchName}" and no "*" fallback provided.`)
+	return star ? star[1] : ''
 }
 
 function parseMapString(lines: string[]): Array<[string, string]> {
