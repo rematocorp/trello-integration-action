@@ -23,7 +23,7 @@
     "@remato/prettier-config": "^1.1.0",
     "@types/jest": "^30.0.0",
     "@vercel/ncc": "^0.38.3",
-    "eslint": "^9.33.0",
+    "eslint": "^9.34.0",
     "jest": "^30.0.5",
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.1",
