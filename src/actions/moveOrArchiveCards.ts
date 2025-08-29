@@ -33,8 +33,6 @@ export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], 
 	}
 	if (pr.state === 'closed' && isMerged && conf.trelloListIdPrMerged && !conf.trelloArchiveOnMerge) {
 		if (!conf.trelloMoveToMergedListOnlyOnMerge || action === 'closed') {
-			logger.log('DEBUG card moving', conf.trelloMoveToMergedListOnlyOnMerge, action)
-
 			await moveCardsToList(cardIds, conf.trelloListIdPrMerged, conf.trelloBoardId)
 		}
 

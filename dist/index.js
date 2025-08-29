@@ -36610,7 +36610,6 @@ async function moveOrArchiveCards(conf, cardIds, pr, action) {
     }
     if (pr.state === 'closed' && isMerged && conf.trelloListIdPrMerged && !conf.trelloArchiveOnMerge) {
         if (!conf.trelloMoveToMergedListOnlyOnMerge || action === 'closed') {
-            logger_1.default.log('DEBUG card moving', conf.trelloMoveToMergedListOnlyOnMerge, action);
             await moveCardsToList(cardIds, conf.trelloListIdPrMerged, conf.trelloBoardId);
         }
         return;
