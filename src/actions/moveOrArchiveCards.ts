@@ -16,9 +16,9 @@ export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], 
 	const isApproved = await isPullRequestApproved()
 	const isMerged = await isPullRequestMerged()
 
-  if (conf.trelloListIdOverride) {
-    return moveCardsToList(cardIds, conf.trelloListIdOverride, conf.trelloBoardId)
-  }
+	if (conf.trelloListIdOverride) {
+		return moveCardsToList(cardIds, conf.trelloListIdOverride, conf.trelloBoardId)
+	}
 	if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
 		return moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId)
 	}

@@ -47,7 +47,7 @@ it('adds manual labels as card labels', async () => {
 		['card'],
 		head,
 	)
-  
+
 	expect(addLabelsToCard).toHaveBeenCalledWith('card', ['someId', 'anotherId'])
 })
 
