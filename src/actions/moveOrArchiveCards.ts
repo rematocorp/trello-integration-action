@@ -1,6 +1,6 @@
 import { startGroup } from '@actions/core'
 
-import { Action, Conf, PR } from '../types'
+import type { Action, Conf, PR } from '../types'
 import { getTargetBranchName, isPullRequestMerged } from './api/github'
 import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/trello'
 import isChangesRequestedInReview from './utils/isChangesRequestedInReview'
@@ -16,6 +16,9 @@ export default async function moveOrArchiveCards(conf: Conf, cardIds: string[], 
 	const isApproved = await isPullRequestApproved()
 	const isMerged = await isPullRequestMerged()
 
+  if (conf.trelloListIdOverride) {
+    return moveCardsToList(cardIds, conf.trelloListIdOverride, conf.trelloBoardId)
+  }
 	if (pr.state === 'open' && isDraft && conf.trelloListIdPrDraft) {
 		return moveCardsToList(cardIds, conf.trelloListIdPrDraft, conf.trelloBoardId)
 	}

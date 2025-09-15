@@ -232,6 +232,17 @@ describe('Moving cards', () => {
 		})
 	})
 
+	describe('override list id', () => {
+		const action = 'closed'
+		const pr = { ...basePR, state: 'closed', body: 'https://trello.com/c/card/title' }
+		const conf = { trelloListIdOverride: 'override-list-id', trelloListIdPrClosed: 'closed-list-id' }
+
+		it('moves the card to the override list id', async () => {
+			await moveOrArchiveCards(conf, ['card'], pr, action)
+			expect(moveCardToList).toHaveBeenCalledWith('card', 'override-list-id', undefined)
+		})
+	})
+
 	describe('multiple list ids', () => {
 		const action = 'edited'
 		const pr = { ...basePR, state: 'closed', body: 'https://trello.com/c/card/title' }
