@@ -180,7 +180,7 @@ NB! `trello-archive-on-merge` set to `true` will override this.
 
 Manually move the card to this Trello list. [How to find list ID.](https://stackoverflow.com/a/50908600/2311110)
 
-NB! Will override any other list-id setting, ignoring pr state.
+NB! It will override any other list-id setting, ignoring PR state entirely.
 
 #### 8. `trello-move-to-merged-list-only-on-merge`
 
