@@ -69,6 +69,8 @@ inputs:
     trello-add-labels-to-cards:
         description: Enable or disable the automatic addition of labels to cards.
         default: true
+    trello-add-manual-labels-to-cards:
+        description: Add these semicolon-separated labels to the Trello card.
     trello-conflicting-labels:
         description: When a card has one of these labels, branch category label is not assigned.
     trello-card-position:

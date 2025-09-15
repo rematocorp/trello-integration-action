@@ -257,7 +257,17 @@ Assigns branch category (e.g. feature/foo) label to Trello card.
 
 Default: `true`
 
-#### 2. `trello-conflicting-labels`
+#### 2. `trello-add-manual-labels-to-cards`
+
+Manually assigns labels to Trello card.
+
+Example:
+
+```yaml
+trello-add-manual-labels-to-cards: 'v1;steve;urgent'
+```
+
+#### 3. `trello-conflicting-labels`
 
 When a card already has one of these labels then branch category label is not assigned.
 

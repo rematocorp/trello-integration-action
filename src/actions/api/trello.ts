@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import axios from 'axios'
 
-import { BoardLabel, Card, CardActions, TrelloMember } from '../../types'
+import type { BoardLabel, Card, CardActions, TrelloMember } from '../../types'
 import logger from '../utils/logger'
 
 const trelloApiKey = core.getInput('trello-api-key', { required: true })
@@ -61,12 +61,18 @@ export async function getBoardLabels(boardId: string): Promise<BoardLabel[]> {
 	return response?.data?.filter((label: { name: string }) => label.name)
 }
 
-export async function addLabelToCard(cardId: string, labelId: string) {
-	logger.log('Adding label to a card', { cardId, labelId })
+export async function addLabelsToCard(cardId: string, labelIds: string[]) {
+	logger.log('Adding labels to a card', { cardId, labelIds })
 
-	return makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idLabels`, {
-		value: labelId,
-	})
+	const results = await Promise.all(
+		labelIds.map((labelId) =>
+			makeRequest('post', `https://api.trello.com/1/cards/${cardId}/idLabels`, {
+				value: labelId,
+			}),
+		),
+	)
+
+	return results
 }
 
 export async function addMemberToCard(cardId: string, memberId: string) {
