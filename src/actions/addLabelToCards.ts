@@ -1,22 +1,28 @@
 import { startGroup } from '@actions/core'
 
-import { BoardLabel, Conf, PRHead } from '../types'
+import type { BoardLabel, Conf, PRHead } from '../types'
 import { getBranchName } from './api/github'
-import { addLabelToCard, getBoardLabels, getCardInfo } from './api/trello'
+import { addLabelsToCard, getBoardLabels, getCardInfo } from './api/trello'
 import logger from './utils/logger'
 
 export default async function addLabelToCards(conf: Conf, cardIds: string[], head?: PRHead) {
-	if (!conf.trelloAddLabelsToCards) {
+	const wantBranchLabel = !!conf.trelloAddLabelsToCards
+	const wantManualLabels = !!conf.trelloAddManualLabelsToCards
+
+	if (!wantBranchLabel && !wantManualLabels) {
 		return
 	}
 	startGroup('🏷️ ADD LABELS TO CARDS')
 
 	const branchLabel = await getBranchLabel(head)
+	const manualLabels = conf.trelloAddManualLabelsToCards
 
-	if (!branchLabel) {
+	if (wantBranchLabel && !branchLabel) {
 		logger.log('Could not find branch label')
 
-		return
+		if (!wantManualLabels) {
+			return
+		}
 	}
 
 	return Promise.all(
@@ -27,25 +33,36 @@ export default async function addLabelToCards(conf: Conf, cardIds: string[], hea
 			)
 
 			if (hasConflictingLabel) {
-				logger.log('Skipping label adding to a card as it has a conflicting label', cardInfo.labels)
+				logger.log('Skipping labels adding to a card as it has a conflicting label', cardInfo.labels)
 
 				return
 			}
 			const boardLabels = await getBoardLabels(cardInfo.idBoard)
-			const matchingLabel = findMatchingLabel(branchLabel, boardLabels)
+			const matchingLabels = findMatchingLabels(branchLabel, manualLabels, boardLabels)
 
-			if (matchingLabel) {
+			if (matchingLabels) {
 				try {
-					await addLabelToCard(cardId, matchingLabel.id)
+					await addLabelsToCard(
+						cardId,
+						matchingLabels.map((label) => label.id),
+					)
 				} catch (error: any) {
-					if (error.response?.data === 'that label is already on the card') {
-						logger.log('Label already exists on the card', cardId, matchingLabel)
+					const errors = Array.isArray(error) ? error : [error]
+					const allAlreadyOnCard = errors.every(
+						({ response }) => response?.data === 'that label is already on the card',
+					)
+					if (allAlreadyOnCard) {
+						logger.log('Label already exists on the card', cardId, matchingLabels)
 					} else {
 						throw error
 					}
 				}
 			} else {
-				logger.log('Could not find a matching label from the board', { branchLabel, boardLabels })
+				logger.log('Could not find a matching label from the board', {
+					branchLabel,
+					manualLabels,
+					boardLabels,
+				})
 			}
 		}),
 	)
@@ -53,7 +70,7 @@ export default async function addLabelToCards(conf: Conf, cardIds: string[], hea
 
 async function getBranchLabel(prHead?: PRHead) {
 	const branchName = prHead?.ref || (await getBranchName())
-	const matches = branchName.match(/^([^\/]*)\//)
+	const matches = branchName.match(/^([^/]*)\//)
 
 	if (matches) {
 		return matches[1]
@@ -62,13 +79,32 @@ async function getBranchLabel(prHead?: PRHead) {
 	}
 }
 
-function findMatchingLabel(branchLabel: string, boardLabels: BoardLabel[]) {
-	const match = boardLabels.find((label) => label.name === branchLabel)
+function findMatchingLabels(
+	branchLabel: string | undefined,
+	manualLabels: string[] | undefined,
+	boardLabels: BoardLabel[],
+) {
+	const matches: BoardLabel[] = []
 
-	if (match) {
-		return match
+	const branchMatch = boardLabels.find((label) => label.name === branchLabel)
+	if (branchMatch) {
+		matches.push(branchMatch)
 	}
-	logger.log('Could not match the exact label name, trying to find partially matching label')
 
-	return boardLabels.find((label) => branchLabel.startsWith(label.name))
+	const manualMatches = boardLabels.filter((label) => manualLabels?.includes(label.name))
+	if (manualMatches.length) {
+		matches.push(...manualMatches)
+	}
+
+	const uniqueMatches = Array.from(new Map(matches.map((label) => [label.id, label])).values())
+
+	if (uniqueMatches.length) {
+		return uniqueMatches
+	}
+
+	logger.log('Could not match an exact label name, trying to find a partially matching label')
+
+	const partialMatch = boardLabels.find((label) => branchLabel?.startsWith(label.name))
+
+	return partialMatch ? [partialMatch] : undefined
 }

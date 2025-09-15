@@ -176,24 +176,30 @@ Trello list ID for merged pull request. [How to find list ID.](https://stackover
 
 NB! `trello-archive-on-merge` set to `true` will override this.
 
-#### 7. `trello-move-to-merged-list-only-on-merge`
+#### 7. `trello-list-id-override`
+
+Manually move the card to this Trello list. [How to find list ID.](https://stackoverflow.com/a/50908600/2311110)
+
+NB! Will override any other list-id setting, ignoring pr state.
+
+#### 8. `trello-move-to-merged-list-only-on-merge`
 
 When set to true, moves to `trello-list-id-pr-merged` only when the job was triggered by "closed" action.
 Useful when other automations are moving cards to subsequent lists, and you want to prevent this workflow from moving them back to trello-list-id-pr-merged in response to non-merge events (e.g., when someone adds a PR comment).
 
 Default: `false`
 
-#### 8. `trello-board-id`
+#### 9. `trello-board-id`
 
 Trello board ID where to move the cards. [How to find board ID.](https://stackoverflow.com/a/50908600/2311110) Useful when you want the action to move the card out from a backlog board.
 
-#### 9. `trello-archive-on-merge`
+#### 10. `trello-archive-on-merge`
 
 Archives Trello cards when PR is merged.
 
 Default: `false`
 
-#### 10. `trello-card-position`
+#### 11. `trello-card-position`
 
 Position of the card after being moved to a list.
 
@@ -257,7 +263,17 @@ Assigns branch category (e.g. feature/foo) label to Trello card.
 
 Default: `true`
 
-#### 2. `trello-conflicting-labels`
+#### 2. `trello-add-manual-labels-to-cards`
+
+Manually assigns labels to Trello card.
+
+Example:
+
+```yaml
+trello-add-manual-labels-to-cards: 'v1;steve;urgent'
+```
+
+#### 3. `trello-conflicting-labels`
 
 When a card already has one of these labels then branch category label is not assigned.
 

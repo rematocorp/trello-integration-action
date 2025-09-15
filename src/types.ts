@@ -1,4 +1,4 @@
-import { context } from '@actions/github'
+import type { context } from '@actions/github'
 
 export interface Conf {
 	githubRequireKeywordPrefix?: boolean
@@ -18,10 +18,12 @@ export interface Conf {
 	trelloListIdPrApproved?: string
 	trelloListIdPrClosed?: string
 	trelloListIdPrMerged?: string
+	trelloListIdOverride?: string
 	trelloMoveToMergedListOnlyOnMerge?: boolean
 	trelloBoardId?: string
 	trelloConflictingLabels?: string[]
 	trelloAddLabelsToCards?: boolean
+	trelloAddManualLabelsToCards?: string[]
 	trelloAddMembersToCards?: boolean
 	trelloSwitchMembersInReview?: boolean
 	trelloRemoveUnrelatedMembers?: boolean

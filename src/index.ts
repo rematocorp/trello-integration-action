@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import { context } from '@actions/github'
 
 import { run } from './main'
-import { Action, PR } from './types'
+import type { Action, PR } from './types'
 
 run((context.payload.pull_request || context.payload.issue) as PR, context.payload.action as Action, {
 	githubRequireKeywordPrefix: core.getBooleanInput('github-require-keyword-prefix'),
@@ -23,9 +23,11 @@ run((context.payload.pull_request || context.payload.issue) as PR, context.paylo
 	trelloListIdPrApproved: core.getInput('trello-list-id-pr-approved'),
 	trelloListIdPrClosed: core.getInput('trello-list-id-pr-closed'),
 	trelloListIdPrMerged: core.getInput('trello-list-id-pr-merged'),
+	trelloListIdOverride: core.getInput('trello-list-id-override'),
 	trelloMoveToMergedListOnlyOnMerge: core.getBooleanInput('trello-move-to-merged-list-only-on-merge'),
 	trelloConflictingLabels: core.getInput('trello-conflicting-labels')?.split(';'),
 	trelloAddLabelsToCards: core.getBooleanInput('trello-add-labels-to-cards'),
+	trelloAddManualLabelsToCards: core.getInput('trello-add-manual-labels-to-cards')?.split(';'),
 	trelloAddMembersToCards: core.getBooleanInput('trello-add-members-to-cards'),
 	trelloSwitchMembersInReview: core.getBooleanInput('trello-switch-members-in-review'),
 	trelloRemoveUnrelatedMembers: core.getBooleanInput('trello-remove-unrelated-members'),
