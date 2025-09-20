@@ -51,6 +51,24 @@ it('adds manual labels as card labels', async () => {
 	expect(addLabelsToCard).toHaveBeenCalledWith('card', ['someId', 'anotherId'])
 })
 
+it('adds manual labels even when branch labels are enabled but not found', async () => {
+	getCardInfoMock.mockResolvedValueOnce({ id: 'card', labels: [] })
+	getBoardLabelsMock.mockResolvedValueOnce([
+		{ id: 'someId', name: 'some label' },
+		{ id: 'anotherId', name: 'another label' },
+	])
+	await addLabelToCards(
+		{
+			trelloAddLabelsToCards: true,
+			trelloAddManualLabelsToCards: ['some label', 'another label'],
+		},
+		['card'],
+		{ ref: 'branch-name' },
+	)
+
+	expect(addLabelsToCard).toHaveBeenCalledWith('card', ['someId', 'anotherId'])
+})
+
 it('adds partially matching branch category as a card label', async () => {
 	getCardInfoMock.mockResolvedValueOnce({ id: 'card', labels: [] })
 	getBoardLabelsMock.mockResolvedValueOnce([{ id: 'bug-id', name: 'bug' }])

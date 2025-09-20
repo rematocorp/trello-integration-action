@@ -143,7 +143,7 @@ describe('Finding cards', () => {
 
 			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, { ref: '1-card' })
 
-			expect(searchTrelloCards).toHaveBeenCalledWith('1-card')
+			expect(searchTrelloCards).toHaveBeenCalledWith('1-card', undefined)
 			expect(cardIds).toEqual(['card'])
 		})
 
@@ -153,7 +153,7 @@ describe('Finding cards', () => {
 
 			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true })
 
-			expect(searchTrelloCards).toHaveBeenCalledWith('1-card')
+			expect(searchTrelloCards).toHaveBeenCalledWith('1-card', undefined)
 			expect(cardIds).toEqual(['card'])
 		})
 
@@ -162,7 +162,7 @@ describe('Finding cards', () => {
 
 			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, { ref: 'feature/1-card' })
 
-			expect(searchTrelloCards).toHaveBeenCalledWith('1-card')
+			expect(searchTrelloCards).toHaveBeenCalledWith('1-card', undefined)
 			expect(cardIds).toEqual(['card'])
 		})
 
@@ -228,6 +228,40 @@ describe('Finding cards', () => {
 			expect(searchTrelloCards).toHaveBeenNthCalledWith(1, '1', 'board-id')
 			expect(searchTrelloCards).toHaveBeenNthCalledWith(2, '2', 'board-id')
 			expect(cardIds).toEqual(['1-card', '2-card'])
+		})
+
+		it('does not find multiple card ids from branch even when enabled', async () => {
+			searchTrelloCardsMock.mockResolvedValueOnce([{ shortLink: '1-card', idShort: 1 }])
+
+			const cardIds = await getCardIds(
+				{
+					...conf,
+					githubIncludePrBranchName: true,
+					githubAllowMultipleCardsInPrBranchName: true,
+				},
+				{ ref: '1-card' },
+			)
+
+			expect(searchTrelloCards).toHaveBeenCalledWith('1-card', undefined)
+			expect(cardIds).toEqual(['1-card'])
+		})
+
+		it('retries with trimmed query when search fails', async () => {
+			const longBranchRef = `1-${'a'.repeat(80)}` // > 50 chars after the "1-"
+			const expectedTrimmed = longBranchRef.slice(0, 50)
+
+			searchTrelloCardsMock
+				.mockRejectedValueOnce(new Error('Bad Trello query'))
+				.mockResolvedValueOnce([{ shortLink: 'card' }])
+
+			const cardIds = await getCardIds(
+				{ ...conf, githubIncludePrBranchName: true, trelloBoardId: 'board-id' },
+				{ ref: longBranchRef },
+			)
+
+			expect(searchTrelloCards).toHaveBeenNthCalledWith(1, longBranchRef, undefined)
+			expect(searchTrelloCards).toHaveBeenNthCalledWith(2, expectedTrimmed, undefined)
+			expect(cardIds).toEqual(['card'])
 		})
 
 		it('returns nothing when not correct card found', async () => {

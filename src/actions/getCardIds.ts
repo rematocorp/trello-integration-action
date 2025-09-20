@@ -119,7 +119,7 @@ async function getCardIdsFromBranchName(conf: Conf, knownCardIds: string[], prHe
 		logger.log('Matched one potential card from branch name', matches)
 
 		// Try finding the card with short ID and title together
-		const cardsWithExactMatch = await searchTrelloCards(matches[0])
+		const cardsWithExactMatch = await searchTrelloCardsWithFallback(matches[0])
 
 		if (cardsWithExactMatch?.length) {
 			return [cardsWithExactMatch[0].shortLink]
@@ -201,7 +201,7 @@ async function getTrelloCardByShortId(shortId: string, boardId?: string) {
  * that are closed, sorts by last active and matches only the card that has the correct short id (from the branch name).
  */
 async function getTrelloCardByTitle(title: string, shortId: string) {
-	const results = await searchTrelloCards(title)
+	const results = await searchTrelloCardsWithFallback(title)
 	const cards = await Promise.all(
 		results
 			?.filter((card) => !card.closed)
@@ -243,4 +243,19 @@ async function createNewCardOnMerge(conf: Conf, pr: PR) {
 	await updatePullRequestBody((pr.body ? pr.body + '\n' : '') + body)
 
 	return card.shortLink
+}
+
+/**
+ * Attempts to search Trello cards using the given query.
+ * If the initial search fails (e.g., Trello API rejects the query which happens sometimes),
+ * the function retries once with the query trimmed to 50 characters.
+ */
+async function searchTrelloCardsWithFallback(query: string, boardId?: string) {
+	try {
+		return await searchTrelloCards(query, boardId)
+	} catch (error) {
+		logger.warn('Initial search failed, retrying with trimmed query', error)
+
+		return await searchTrelloCards(query.slice(0, 50), boardId)
+	}
 }

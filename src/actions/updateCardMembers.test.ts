@@ -44,16 +44,16 @@ it('adds PR author and assignees to the card and removes unrelated members', asy
 	getCommitsMock.mockResolvedValue([{ author: { login: 'john' } }])
 	getMemberInfoMock.mockImplementation((username) => {
 		if (username === 'amy1993') {
-			return { id: 'amy-id' }
+			return { id: 'amy-id', organizations: [{ name: 'remato' }] }
 		} else if (username === 'john') {
-			return { id: 'john-id' }
+			return { id: 'john-id', organizations: [{ name: 'remato' }] }
 		} else {
-			return { id: 'phil-id' }
+			return { id: 'phil-id', organizations: [{ name: 'remato' }] }
 		}
 	})
 	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: ['jones-id'] })
 
-	await updateCardMembers(conf, ['card'], pr)
+	await updateCardMembers({ ...conf, trelloOrganizationName: 'remato' }, ['card'], pr)
 
 	expect(addMemberToCard).toHaveBeenCalledWith('card', 'phil-id')
 	expect(addMemberToCard).toHaveBeenCalledWith('card', 'amy-id')
