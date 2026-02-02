@@ -16,7 +16,7 @@
 	"dependencies": {
 		"@actions/core": "^2.0.2",
 		"@actions/github": "^7.0.0",
-		"axios": "^1.13.3"
+		"axios": "^1.13.4"
 	},
 	"devDependencies": {
 		"@remato/eslint-config": "^2.1.1",
