@@ -1,4 +1,4 @@
-import { Conf } from 'src/types'
+import { Conf } from '../../types'
 
 const CARD_URL_REGEX = 'https://trello\\.com/c/(\\w+)(?:/[^\\s,]*)?'
 const INCLUSION_KEYWORDS = ['close', 'closes', 'closed', 'fix', 'fixes', 'fixed', 'resolve', 'resolves', 'resolved']

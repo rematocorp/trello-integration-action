@@ -5,7 +5,6 @@
 		"module": "NodeNext",
 		"rootDir": "./src",
 		"moduleResolution": "NodeNext",
-		"baseUrl": "./",
 		"sourceMap": true,
 		"outDir": "./dist",
 		"noImplicitAny": true,
@@ -14,7 +13,8 @@
 		"forceConsistentCasingInFileNames": true,
 		"strict": true,
 		"skipLibCheck": true,
-		"newLine": "lf"
+		"newLine": "lf",
+		"types": ["node", "vitest/globals"]
 	},
-	"exclude": ["./dist", "./node_modules"]
+	"exclude": ["./dist", "./node_modules", "vitest.config.ts"]
 }

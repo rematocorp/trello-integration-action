@@ -7,19 +7,19 @@ import {
 import { archiveCard, getBoardLists, getCardInfo, moveCardToList } from './api/trello'
 import moveOrArchiveCards from './moveOrArchiveCards'
 
-jest.mock('@actions/core')
-jest.mock('@actions/github')
-jest.mock('./api/github')
-jest.mock('./api/trello')
+vi.mock('@actions/core')
+vi.mock('@actions/github')
+vi.mock('./api/github')
+vi.mock('./api/trello')
 
-const moveCardToListMock = moveCardToList as jest.Mock
-const getCardInfoMock = getCardInfo as jest.Mock
-const getBoardListsMock = getBoardLists as jest.Mock
-const archiveCardMock = archiveCard as jest.Mock
-const isPullRequestMergedMock = isPullRequestMerged as jest.Mock
-const getPullRequestReviewsMock = getPullRequestReviews as jest.Mock
-const getPullRequestRequestedReviewersMock = getPullRequestRequestedReviewers as jest.Mock
-const getTargetBranchNameMock = getTargetBranchName as jest.Mock
+const moveCardToListMock = vi.mocked<any>(moveCardToList)
+const getCardInfoMock = vi.mocked<any>(getCardInfo)
+const getBoardListsMock = vi.mocked<any>(getBoardLists)
+const archiveCardMock = vi.mocked<any>(archiveCard)
+const isPullRequestMergedMock = vi.mocked<any>(isPullRequestMerged)
+const getPullRequestReviewsMock = vi.mocked<any>(getPullRequestReviews)
+const getPullRequestRequestedReviewersMock = vi.mocked<any>(getPullRequestRequestedReviewers)
+const getTargetBranchNameMock = vi.mocked<any>(getTargetBranchName)
 
 const basePR = { number: 0, state: 'open', title: 'Title' }
 

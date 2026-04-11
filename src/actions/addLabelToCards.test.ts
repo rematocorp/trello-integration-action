@@ -2,15 +2,15 @@ import addLabelToCards from './addLabelToCards'
 import { getBranchName } from './api/github'
 import { addLabelsToCard, getBoardLabels, getCardInfo } from './api/trello'
 
-jest.mock('@actions/core')
-jest.mock('@actions/github')
-jest.mock('./api/github')
-jest.mock('./api/trello')
+vi.mock('@actions/core')
+vi.mock('@actions/github')
+vi.mock('./api/github')
+vi.mock('./api/trello')
 
-const getCardInfoMock = getCardInfo as jest.Mock
-const getBoardLabelsMock = getBoardLabels as jest.Mock
-const getBranchNameMock = getBranchName as jest.Mock
-const addLabelsToCardMock = addLabelsToCard as jest.Mock
+const getCardInfoMock = vi.mocked<any>(getCardInfo)
+const getBoardLabelsMock = vi.mocked<any>(getBoardLabels)
+const getBranchNameMock = vi.mocked<any>(getBranchName)
+const addLabelsToCardMock = vi.mocked<any>(addLabelsToCard)
 
 const head = { ref: 'chore/clean-code' }
 const conf = { trelloAddLabelsToCards: true }

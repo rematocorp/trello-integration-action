@@ -1,28 +1,27 @@
-import { Conf } from 'src/types'
-
+import { Conf } from '../types'
 import { getCommits, getPullRequest, getPullRequestRequestedReviewers, getPullRequestReviews } from './api/github'
 import { addMemberToCard, getCardInfo, getMemberInfo, removeMemberFromCard } from './api/trello'
 import updateCardMembers from './updateCardMembers'
 import isChangesRequestedInReview from './utils/isChangesRequestedInReview'
 import isPullRequestApproved from './utils/isPullRequestApproved'
 
-jest.mock('@actions/core')
-jest.mock('@actions/github')
-jest.mock('./api/github')
-jest.mock('./api/trello')
-jest.mock('./utils/isPullRequestApproved')
-jest.mock('./utils/isChangesRequestedInReview')
+vi.mock('@actions/core')
+vi.mock('@actions/github')
+vi.mock('./api/github')
+vi.mock('./api/trello')
+vi.mock('./utils/isPullRequestApproved')
+vi.mock('./utils/isChangesRequestedInReview')
 
-const getPullRequestMock = getPullRequest as jest.Mock
-const getPullRequestReviewsMock = getPullRequestReviews as jest.Mock
-const isPullRequestApprovedMock = isPullRequestApproved as jest.Mock
-const isChangesRequestedInReviewMock = isChangesRequestedInReview as jest.Mock
-const getPullRequestRequestedReviewersMock = getPullRequestRequestedReviewers as jest.Mock
-const getCommitsMock = getCommits as jest.Mock
-const getMemberInfoMock = getMemberInfo as jest.Mock
-const getCardInfoMock = getCardInfo as jest.Mock
-const addMemberToCardMock = addMemberToCard as jest.Mock
-const removeMemberFromCardMock = removeMemberFromCard as jest.Mock
+const getPullRequestMock = vi.mocked<any>(getPullRequest)
+const getPullRequestReviewsMock = vi.mocked<any>(getPullRequestReviews)
+const isPullRequestApprovedMock = vi.mocked<any>(isPullRequestApproved)
+const isChangesRequestedInReviewMock = vi.mocked<any>(isChangesRequestedInReview)
+const getPullRequestRequestedReviewersMock = vi.mocked<any>(getPullRequestRequestedReviewers)
+const getCommitsMock = vi.mocked<any>(getCommits)
+const getMemberInfoMock = vi.mocked<any>(getMemberInfo)
+const getCardInfoMock = vi.mocked<any>(getCardInfo)
+const addMemberToCardMock = vi.mocked<any>(addMemberToCard)
+const removeMemberFromCardMock = vi.mocked<any>(removeMemberFromCard)
 
 let pr = { title: 'Test PR', state: 'open', draft: true }
 let conf: Conf = {
@@ -42,7 +41,7 @@ beforeEach(() => {
 it('adds PR author and assignees to the card and removes unrelated members', async () => {
 	getPullRequestMock.mockResolvedValue({ ...prResponse, assignees: [{ login: 'amy' }] })
 	getCommitsMock.mockResolvedValue([{ author: { login: 'john' } }])
-	getMemberInfoMock.mockImplementation((username) => {
+	getMemberInfoMock.mockImplementation((username: string) => {
 		if (username === 'amy1993') {
 			return { id: 'amy-id', organizations: [{ name: 'remato' }] }
 		} else if (username === 'john') {
@@ -80,7 +79,7 @@ it('ignores incorrectly configured usernames mapping', async () => {
 it('removes only reviewers when unrelated members removing is turned off but switching members in review is on', async () => {
 	getPullRequestRequestedReviewersMock.mockResolvedValue({ users: [] })
 	getPullRequestReviewsMock.mockResolvedValue([{ state: 'ACTIVE', user: { login: 'amy' } }])
-	getMemberInfoMock.mockImplementation((username) => ({ id: username }))
+	getMemberInfoMock.mockImplementation((username: string) => ({ id: username }))
 	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: ['amy1993', 'jones'] })
 
 	await updateCardMembers(
@@ -128,7 +127,7 @@ it('skips removing unrelated members when none found', async () => {
 it('skips removing reviewers when none found', async () => {
 	getPullRequestRequestedReviewersMock.mockResolvedValue({ users: [] })
 	getPullRequestReviewsMock.mockResolvedValue([])
-	getMemberInfoMock.mockImplementation((username) => ({ id: username }))
+	getMemberInfoMock.mockImplementation((username: string) => ({ id: username }))
 	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: ['amy', 'jones'] })
 
 	await updateCardMembers(
@@ -213,7 +212,7 @@ describe('switching card members with reviewers when PR is in review', () => {
 		pr = { ...pr, draft: false }
 		conf = { ...conf, githubUsersToTrelloUsers: undefined, trelloSwitchMembersInReview: true }
 
-		getMemberInfoMock.mockImplementation((username) => (username !== 'phil' ? { id: username } : null))
+		getMemberInfoMock.mockImplementation((username: string) => (username !== 'phil' ? { id: username } : null))
 		getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: ['phil'] })
 		getPullRequestRequestedReviewersMock.mockResolvedValue({ users: [{ login: 'amy' }] })
 		getPullRequestReviewsMock.mockResolvedValue([

@@ -10,13 +10,13 @@ import {
 } from './actions'
 import { run } from './main'
 
-jest.mock('@actions/core')
-jest.mock('@actions/github')
-jest.mock('./actions/api/trello')
-jest.mock('./actions/api/github')
-jest.mock('./actions')
+vi.mock('@actions/core')
+vi.mock('@actions/github')
+vi.mock('./actions/api/trello')
+vi.mock('./actions/api/github')
+vi.mock('./actions')
 
-const getCardIdsMock = getCardIds as jest.Mock
+const getCardIdsMock = vi.mocked<any>(getCardIds)
 
 const pr = { number: 0, state: 'open', title: 'Title', head: 'head' }
 const conf = { trelloListIdPrOpen: '123' }

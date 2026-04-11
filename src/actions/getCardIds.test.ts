@@ -11,20 +11,20 @@ import {
 import { createCard, getCardActions, getCardInfo, moveCardToList, searchTrelloCards } from './api/trello'
 import getCardIds from './getCardIds'
 
-jest.mock('@actions/core')
-jest.mock('@actions/github')
-jest.mock('./api/github')
-jest.mock('./api/trello')
+vi.mock('@actions/core')
+vi.mock('@actions/github')
+vi.mock('./api/github')
+vi.mock('./api/trello')
 
-const getCommitsMock = getCommits as jest.Mock
-const getPullRequestMock = getPullRequest as jest.Mock
-const getPullRequestCommentsMock = getPullRequestComments as jest.Mock
-const getBranchNameMock = getBranchName as jest.Mock
-const searchTrelloCardsMock = searchTrelloCards as jest.Mock
-const createCardMock = createCard as jest.Mock
-const getCardInfoMock = getCardInfo as jest.Mock
-const getCardActionsMock = getCardActions as jest.Mock
-const isPullRequestMergedMock = isPullRequestMerged as jest.Mock
+const getCommitsMock = vi.mocked<any>(getCommits)
+const getPullRequestMock = vi.mocked<any>(getPullRequest)
+const getPullRequestCommentsMock = vi.mocked<any>(getPullRequestComments)
+const getBranchNameMock = vi.mocked<any>(getBranchName)
+const searchTrelloCardsMock = vi.mocked<any>(searchTrelloCards)
+const createCardMock = vi.mocked<any>(createCard)
+const getCardInfoMock = vi.mocked<any>(getCardInfo)
+const getCardActionsMock = vi.mocked<any>(getCardActions)
+const isPullRequestMergedMock = vi.mocked<any>(isPullRequestMerged)
 
 const pr = { number: 0, state: 'open', title: 'Title' }
 const prHead = { ref: 'branch-name' }
@@ -172,7 +172,7 @@ describe('Finding cards', () => {
 				{ id: '1', shortLink: 'card-1', idShort: 3, dateLastActivity: '2023-01-01' },
 				{ id: '2', shortLink: 'card-2', idShort: 2, dateLastActivity: '2024-01-01' },
 			])
-			getCardInfoMock.mockImplementation((cardId) => {
+			getCardInfoMock.mockImplementation((cardId: string) => {
 				if (cardId === '0') {
 					return { idShort: 4, shortLink: 'card-0' }
 				} else if (cardId === '1') {
@@ -181,7 +181,7 @@ describe('Finding cards', () => {
 					return { idShort: 2, shortLink: 'card-2' }
 				}
 			})
-			getCardActionsMock.mockImplementation((cardId) => {
+			getCardActionsMock.mockImplementation((cardId: string) => {
 				if (cardId === '1') {
 					return [{ data: { card: { idShort: 1 } } }]
 				} else if (cardId === '2') {
@@ -276,7 +276,7 @@ describe('Finding cards', () => {
 			searchTrelloCardsMock
 				.mockResolvedValueOnce([])
 				.mockResolvedValueOnce([{ id: 'incorrect-card', shortLink: '1-incorrect-card', idShort: 1 }])
-			getCardActionsMock.mockImplementation((id) => {
+			getCardActionsMock.mockImplementation((id: string) => {
 				if (id === 'card') {
 					return [{ data: { card: { idShort: 1 } } }]
 				} else if (id === 'incorrect-card') {

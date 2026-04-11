@@ -1,12 +1,12 @@
 import addPullRequestLinkToCards from './addPullRequestLinkToCards'
 import { addAttachmentToCard, getCardAttachments } from './api/trello'
 
-jest.mock('@actions/core')
-jest.mock('@actions/github')
-jest.mock('./api/github')
-jest.mock('./api/trello')
+vi.mock('@actions/core')
+vi.mock('@actions/github')
+vi.mock('./api/github')
+vi.mock('./api/trello')
 
-const getCardAttachmentsMock = getCardAttachments as jest.Mock
+const getCardAttachmentsMock = vi.mocked<any>(getCardAttachments)
 
 const pr = { number: 0, state: 'open', title: 'Title' }
 
