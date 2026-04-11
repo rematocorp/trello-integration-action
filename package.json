@@ -15,7 +15,7 @@
 	},
 	"dependencies": {
 		"@actions/core": "^2.0.2",
-		"@actions/github": "^7.0.0",
+		"@actions/github": "^9.1.0",
 		"axios": "^1.15.0"
 	},
 	"devDependencies": {
