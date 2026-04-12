@@ -11,7 +11,7 @@
 		"build": "esbuild src/index.ts --bundle --platform=node --target=node24 --outfile=dist/index.js",
 		"test": "vitest run",
 		"prettier": "prettier --list-different \"**/*.ts\"",
-		"lint": "eslint \"**/*.ts\"",
+		"lint": "oxlint",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -20,11 +20,10 @@
 		"axios": "^1.15.0"
 	},
 	"devDependencies": {
-		"@remato/eslint-config": "^2.1.1",
 		"@remato/prettier-config": "^1.1.0",
 		"@types/node": "^25.6.0",
 		"esbuild": "^0.28.0",
-		"eslint": "^9.39.2",
+		"oxlint": "^1.59.0",
 		"prettier": "^3.8.2",
 		"typescript": "^6.0.2",
 		"vitest": "^4.1.4"

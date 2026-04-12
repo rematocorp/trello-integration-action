@@ -1,7 +1,7 @@
 export default {
 	log: (...message: any[]) => {
 		if (!process.env.VITEST) {
-			console.log(...message) // eslint-disable-line no-console
+			console.log(...message) // oxlint-disable-line no-console
 		}
 	},
 	warn: (...message: any[]) => {
