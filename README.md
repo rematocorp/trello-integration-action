@@ -31,7 +31,7 @@ jobs:
     trello:
         runs-on: ubuntu-latest
         steps:
-            - uses: rematocorp/trello-integration-action@v9
+            - uses: rematocorp/trello-integration-action@v10
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
                   trello-api-key: ${{ secrets.TRELLO_API_KEY }}
