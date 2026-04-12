@@ -1,16 +1,16 @@
 export default {
 	log: (...message: any[]) => {
-		if (!process.env.JEST_WORKER_ID) {
-			console.log(...message) // eslint-disable-line no-console
+		if (!process.env.VITEST) {
+			console.log(...message) // oxlint-disable-line no-console
 		}
 	},
 	warn: (...message: any[]) => {
-		if (!process.env.JEST_WORKER_ID) {
-			console.warn(...message) // eslint-disable-line no-console
+		if (!process.env.VITEST) {
+			console.warn(...message)
 		}
 	},
 	error: (...message: any[]) => {
-		if (!process.env.JEST_WORKER_ID) {
+		if (!process.env.VITEST) {
 			console.error(...message)
 		}
 	},

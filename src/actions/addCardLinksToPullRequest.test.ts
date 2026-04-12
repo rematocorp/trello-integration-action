@@ -2,14 +2,14 @@ import addCardLinksToPullRequest from './addCardLinksToPullRequest'
 import { createComment, getPullRequest, getPullRequestComments } from './api/github'
 import { getCardInfo } from './api/trello'
 
-jest.mock('@actions/core')
-jest.mock('@actions/github')
-jest.mock('./api/github')
-jest.mock('./api/trello')
+vi.mock('@actions/core')
+vi.mock('@actions/github')
+vi.mock('./api/github')
+vi.mock('./api/trello')
 
-const getCardInfoMock = getCardInfo as jest.Mock
-const getPullRequestCommentsMock = getPullRequestComments as jest.Mock
-const getPullRequestMock = getPullRequest as jest.Mock
+const getCardInfoMock = vi.mocked<any>(getCardInfo)
+const getPullRequestCommentsMock = vi.mocked<any>(getPullRequestComments)
+const getPullRequestMock = vi.mocked<any>(getPullRequest)
 
 const conf = { githubIncludePrBranchName: true }
 const pr = { number: 0, state: 'open', title: 'Title' }
