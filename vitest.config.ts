@@ -5,8 +5,11 @@ export default defineConfig({
 		globals: true,
 		mockReset: true,
 		coverage: {
+			enabled: true,
+			provider: 'v8',
 			include: ['src/**'],
 			exclude: ['src/index.ts', 'src/actions/utils/logger.ts', 'src/actions/api/**'],
+			reporter: ['text', 'lcov'],
 		},
 	},
 })
