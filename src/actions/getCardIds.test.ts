@@ -45,9 +45,10 @@ describe('Finding cards', () => {
 	const conf = { trelloListIdPrOpen: 'open-list-id' }
 
 	it('finds card from description', async () => {
-		getPullRequestMock.mockResolvedValue({ ...pr, body: 'https://trello.com/c/card/title' })
+		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: 'https://trello.com/c/card/title' })
 
 		const cardIds = await getCardIds(conf, prHead)
+
 		expect(cardIds).toEqual(['card'])
 	})
 
@@ -60,7 +61,7 @@ describe('Finding cards', () => {
 	})
 
 	it('finds multiple cards', async () => {
-		getPullRequestMock.mockResolvedValue({
+		getPullRequestMock.mockResolvedValueOnce({
 			...pr,
 			body: 'https://trello.com/c/card1/title, https://trello.com/c/card2/title',
 		})
@@ -71,10 +72,7 @@ describe('Finding cards', () => {
 	})
 
 	it('finds card with keyword prefix', async () => {
-		getPullRequestMock.mockResolvedValue({
-			...pr,
-			body: 'Fixes https://trello.com/c/card/title',
-		})
+		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: 'Fixes https://trello.com/c/card/title' })
 
 		const cardIds = await getCardIds({ githubRequireKeywordPrefix: true }, prHead)
 
@@ -83,10 +81,7 @@ describe('Finding cards', () => {
 
 	describe('related cards', () => {
 		it('does not match related cards', async () => {
-			getPullRequestMock.mockResolvedValue({
-				...pr,
-				body: 'Related https://trello.com/c/card/title',
-			})
+			getPullRequestMock.mockResolvedValueOnce({ ...pr, body: 'Related https://trello.com/c/card/title' })
 
 			const cardIds = await getCardIds({ githubEnableRelatedKeywordPrefix: true }, prHead)
 
@@ -94,7 +89,7 @@ describe('Finding cards', () => {
 		})
 
 		it('does not match multiple related cards', async () => {
-			getPullRequestMock.mockResolvedValue({
+			getPullRequestMock.mockResolvedValueOnce({
 				...pr,
 				body: 'Relates to https://trello.com/c/card1/title https://trello.com/c/card2/title',
 			})
@@ -105,10 +100,7 @@ describe('Finding cards', () => {
 		})
 
 		it('matches related cards when feature is turned off', async () => {
-			getPullRequestMock.mockResolvedValue({
-				...pr,
-				body: 'Related https://trello.com/c/card/title',
-			})
+			getPullRequestMock.mockResolvedValueOnce({ ...pr, body: 'Related https://trello.com/c/card/title' })
 
 			const cardIds = await getCardIds({ githubEnableRelatedKeywordPrefix: false }, prHead)
 
@@ -273,6 +265,7 @@ describe('Finding cards', () => {
 		})
 
 		it('skips searching wider when card is already linked', async () => {
+			getPullRequestMock.mockResolvedValueOnce({ ...pr, body: 'https://trello.com/c/card/title' })
 			searchTrelloCardsMock
 				.mockResolvedValueOnce([])
 				.mockResolvedValueOnce([{ id: 'incorrect-card', shortLink: '1-incorrect-card', idShort: 1 }])
@@ -283,7 +276,6 @@ describe('Finding cards', () => {
 					return []
 				}
 			})
-			getPullRequestMock.mockResolvedValue({ ...pr, body: 'https://trello.com/c/card/title' })
 
 			const cardIds = await getCardIds({ ...conf, githubIncludePrBranchName: true }, { ref: '1-feature-nan' })
 
@@ -320,8 +312,8 @@ describe('Creating new card on command', () => {
 	}
 
 	it('adds new card, updates PR body and adds to card ids list', async () => {
+		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: '/new-trello-card Description' })
 		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
-		getPullRequestMock.mockResolvedValue({ ...pr, body: '/new-trello-card Description' })
 
 		const cardIds = await getCardIds(conf, prHead)
 
@@ -331,8 +323,8 @@ describe('Creating new card on command', () => {
 	})
 
 	it('adds new card to draft list', async () => {
+		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: '/new-trello-card Description', draft: true })
 		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
-		getPullRequestMock.mockResolvedValue({ ...pr, body: '/new-trello-card Description', draft: true })
 
 		await getCardIds(conf, prHead)
 
@@ -340,8 +332,8 @@ describe('Creating new card on command', () => {
 	})
 
 	it('adds new card with "Closes" keyword', async () => {
+		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: '/new-trello-card Description' })
 		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
-		getPullRequestMock.mockResolvedValue({ ...pr, body: '/new-trello-card Description' })
 
 		await getCardIds({ ...conf, githubRequireKeywordPrefix: true }, prHead)
 
@@ -349,7 +341,7 @@ describe('Creating new card on command', () => {
 	})
 
 	it('skips when no command found', async () => {
-		getPullRequestMock.mockResolvedValue({ ...pr, body: '' })
+		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: '' })
 
 		const cardIds = await getCardIds(conf, prHead)
 
@@ -358,7 +350,7 @@ describe('Creating new card on command', () => {
 	})
 
 	it('skips when list is missing', async () => {
-		getPullRequestMock.mockResolvedValue({ ...pr, body: '/new-trello-card Description' })
+		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: '/new-trello-card Description' })
 
 		const cardIds = await getCardIds({ ...conf, trelloListIdPrOpen: '' }, prHead)
 
@@ -367,7 +359,7 @@ describe('Creating new card on command', () => {
 	})
 
 	it('skips when turned off', async () => {
-		getPullRequestMock.mockResolvedValue({ ...pr, body: '/new-trello-card Description' })
+		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: '/new-trello-card Description' })
 
 		const cardIds = await getCardIds({ ...conf, githubIncludeNewCardCommand: false }, prHead)
 
@@ -383,8 +375,8 @@ describe('Creating new card on merge', () => {
 	}
 
 	it('adds new card, updates PR body and adds to card ids list', async () => {
+		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: 'Description' })
 		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
-		getPullRequestMock.mockResolvedValue({ ...pr, body: 'Description' })
 		isPullRequestMergedMock.mockResolvedValue(true)
 
 		const cardIds = await getCardIds(conf, prHead)
@@ -395,8 +387,8 @@ describe('Creating new card on merge', () => {
 	})
 
 	it('adds new card with "Closes" keyword', async () => {
+		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: 'Description' })
 		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
-		getPullRequestMock.mockResolvedValue({ ...pr, body: 'Description' })
 		isPullRequestMergedMock.mockResolvedValue(true)
 
 		await getCardIds({ ...conf, githubRequireKeywordPrefix: true }, prHead)
@@ -405,8 +397,8 @@ describe('Creating new card on merge', () => {
 	})
 
 	it('handles empty PR body nicely', async () => {
+		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: '' })
 		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
-		getPullRequestMock.mockResolvedValue({ ...pr, body: '' })
 		isPullRequestMergedMock.mockResolvedValue(true)
 
 		await getCardIds(conf, prHead)

@@ -10,16 +10,16 @@ import {
 } from './actions'
 import { Action, Conf, PR } from './types'
 
-export async function run(pr: PR, action: Action, conf: Conf) {
+export async function run({ head }: PR, action: Action, conf: Conf) {
 	try {
-		const cardIds = await getCardIds(conf, pr.head)
+		const cardIds = await getCardIds(conf, head)
 
 		if (cardIds.length) {
 			await addCardLinksToPullRequest(conf, cardIds)
-			await addPullRequestLinkToCards(cardIds, pr)
-			await moveOrArchiveCards(conf, cardIds, pr, action)
-			await addLabelToCards(conf, cardIds, pr.head)
-			await updateCardMembers(conf, cardIds, pr)
+			await addPullRequestLinkToCards(cardIds)
+			await moveOrArchiveCards(conf, cardIds, action)
+			await addLabelToCards(conf, cardIds, head)
+			await updateCardMembers(conf, cardIds)
 		}
 	} catch (error: any) {
 		setFailed(error)

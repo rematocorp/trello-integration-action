@@ -30,10 +30,10 @@ it('triggers all actions when cards found', async () => {
 	await run(pr, action, conf)
 
 	expect(addCardLinksToPullRequest).toHaveBeenCalledWith(conf, cardIds)
-	expect(addPullRequestLinkToCards).toHaveBeenCalledWith(cardIds, pr)
-	expect(moveOrArchiveCards).toHaveBeenCalledWith(conf, cardIds, pr, action)
+	expect(addPullRequestLinkToCards).toHaveBeenCalledWith(cardIds)
+	expect(moveOrArchiveCards).toHaveBeenCalledWith(conf, cardIds, action)
 	expect(addLabelToCards).toHaveBeenCalledWith(conf, cardIds, pr.head)
-	expect(updateCardMembers).toHaveBeenCalledWith(conf, cardIds, pr)
+	expect(updateCardMembers).toHaveBeenCalledWith(conf, cardIds)
 })
 
 it('does nothing when no cards found', async () => {

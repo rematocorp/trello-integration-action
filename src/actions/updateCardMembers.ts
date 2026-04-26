@@ -1,6 +1,6 @@
 import { startGroup } from '@actions/core'
 
-import { Conf, PR, TrelloMember } from '../types'
+import { Conf, TrelloMember } from '../types'
 import { getCommits, getPullRequest, getPullRequestRequestedReviewers, getPullRequestReviews } from './api/github'
 import { addMemberToCard, getCardInfo, getMemberInfo, removeMemberFromCard } from './api/trello'
 import isChangesRequestedInReview from './utils/isChangesRequestedInReview'
@@ -8,13 +8,13 @@ import isPullRequestApproved from './utils/isPullRequestApproved'
 import isPullRequestInDraft from './utils/isPullRequestInDraft'
 import logger from './utils/logger'
 
-export default async function updateCardMembers(conf: Conf, cardIds: string[], pr: PR) {
+export default async function updateCardMembers(conf: Conf, cardIds: string[]) {
 	if (!conf.trelloAddMembersToCards) {
 		return
 	}
 	startGroup('👩‍💻 UPDATE CARD MEMBERS')
 
-	const inReview = await isPullRequestInReview(conf, pr)
+	const inReview = await isPullRequestInReview(conf)
 
 	if (inReview) {
 		await assignReviewers(conf, cardIds)
@@ -23,13 +23,15 @@ export default async function updateCardMembers(conf: Conf, cardIds: string[], p
 	}
 }
 
-async function isPullRequestInReview(conf: Conf, pr: PR) {
+async function isPullRequestInReview(conf: Conf) {
 	const isChangesRequested = await isChangesRequestedInReview()
 	const isApproved = await isPullRequestApproved()
 
 	if (!conf.trelloSwitchMembersInReview) {
 		return false
 	}
+	const pr = await getPullRequest()
+
 	if (pr.state !== 'open') {
 		return false
 	}

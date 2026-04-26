@@ -30,9 +30,9 @@ export default async function addCardLinksToPullRequest(conf: Conf, cardIds: str
 }
 
 async function getCardIdsFromBody(conf: Conf) {
-	const pullRequest = await getPullRequest()
+	const pr = await getPullRequest()
 
-	return matchCardIds(conf, pullRequest.body || '')
+	return matchCardIds(conf, pr.body || '')
 }
 
 async function getCardIdsFromComments(conf: Conf) {
