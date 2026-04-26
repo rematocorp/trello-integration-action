@@ -91,5 +91,5 @@ inputs:
         description: Archives Trello cards when PR is merged.
         default: false
 runs:
-    using: node20
+    using: node24
     main: 'dist/index.js'
