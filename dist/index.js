@@ -29768,6 +29768,11 @@ var require_follow_redirects = __commonJS({
     } catch (error2) {
       useNativeURL = error2.code === "ERR_INVALID_URL";
     }
+    var sensitiveHeaders = [
+      "Authorization",
+      "Proxy-Authorization",
+      "Cookie"
+    ];
     var preservedUrlFields = [
       "auth",
       "host",
@@ -29832,6 +29837,7 @@ var require_follow_redirects = __commonJS({
           self2.emit("error", cause instanceof RedirectionError ? cause : new RedirectionError({ cause }));
         }
       };
+      this._headerFilter = new RegExp("^(?:" + sensitiveHeaders.concat(options.sensitiveHeaders).map(escapeRegex).join("|") + ")$", "i");
       this._performRequest();
     }
     RedirectableRequest.prototype = Object.create(Writable.prototype);
@@ -29969,6 +29975,9 @@ var require_follow_redirects = __commonJS({
       if (!options.headers) {
         options.headers = {};
       }
+      if (!isArray2(options.sensitiveHeaders)) {
+        options.sensitiveHeaders = [];
+      }
       if (options.host) {
         if (!options.hostname) {
           options.hostname = options.host;
@@ -30074,7 +30083,7 @@ var require_follow_redirects = __commonJS({
       this._isRedirect = true;
       spreadUrlObject(redirectUrl, this._options);
       if (redirectUrl.protocol !== currentUrlParts.protocol && redirectUrl.protocol !== "https:" || redirectUrl.host !== currentHost && !isSubdomain(redirectUrl.host, currentHost)) {
-        removeMatchingHeaders(/^(?:(?:proxy-)?authorization|cookie)$/i, this._options.headers);
+        removeMatchingHeaders(this._headerFilter, this._options.headers);
       }
       if (isFunction3(beforeRedirect)) {
         var responseDetails = {
@@ -30223,6 +30232,9 @@ var require_follow_redirects = __commonJS({
       var dot = subdomain.length - domain.length - 1;
       return dot > 0 && subdomain[dot] === "." && subdomain.endsWith(domain);
     }
+    function isArray2(value) {
+      return value instanceof Array;
+    }
     function isString2(value) {
       return typeof value === "string" || value instanceof String;
     }
@@ -30234,6 +30246,9 @@ var require_follow_redirects = __commonJS({
     }
     function isURL(value) {
       return URL2 && value instanceof URL2;
+    }
+    function escapeRegex(regex) {
+      return regex.replace(/[\]\\/()*+?.$]/g, "\\$&");
     }
     module2.exports = wrap({ http: http3, https: https2 });
     module2.exports.wrap = wrap;
@@ -38693,8 +38708,8 @@ async function addCardLinksToPullRequest(conf, cardIds) {
   await createComment(comment);
 }
 async function getCardIdsFromBody(conf) {
-  const pullRequest = await getPullRequest();
-  return matchCardIds(conf, pullRequest.body || "");
+  const pr = await getPullRequest();
+  return matchCardIds(conf, pr.body || "");
 }
 async function getCardIdsFromComments(conf) {
   let cardIds = [];
@@ -38816,9 +38831,8 @@ function isPullRequestInDraft(pr) {
 }
 
 // src/actions/getCardIds.ts
-async function getCardIds(conf, head) {
+async function getCardIds(pr, conf, head) {
   startGroup("\u{1F50E} FIND CARDS");
-  const pr = await getPullRequest();
   let cardIds = matchCardIds(conf, pr.body || "");
   if (conf.githubIncludeNewCardCommand) {
     const createdCardId = await createNewCardOnCommand(conf, pr);
@@ -39293,14 +39307,15 @@ function getTrelloUsername(conf, githubUsername) {
 }
 
 // src/main.ts
-async function run(pr, action, conf) {
+async function run({ head }, action, conf) {
   try {
-    const cardIds = await getCardIds(conf, pr.head);
+    const pr = await getPullRequest();
+    const cardIds = await getCardIds(pr, conf, head);
     if (cardIds.length) {
       await addCardLinksToPullRequest(conf, cardIds);
       await addPullRequestLinkToCards(cardIds, pr);
       await moveOrArchiveCards(conf, cardIds, pr, action);
-      await addLabelToCards(conf, cardIds, pr.head);
+      await addLabelToCards(conf, cardIds, head);
       await updateCardMembers(conf, cardIds, pr);
     }
   } catch (error2) {

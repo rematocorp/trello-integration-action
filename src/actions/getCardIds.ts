@@ -14,10 +14,9 @@ import isPullRequestInDraft from './utils/isPullRequestInDraft'
 import logger from './utils/logger'
 import matchCardIds from './utils/matchCardIds'
 
-export default async function getCardIds(conf: Conf, head?: PRHead) {
+export default async function getCardIds(pr: PR, conf: Conf, head?: PRHead) {
 	startGroup('🔎 FIND CARDS')
 
-	const pr = await getPullRequest()
 	let cardIds = matchCardIds(conf, pr.body || '')
 
 	if (conf.githubIncludeNewCardCommand) {

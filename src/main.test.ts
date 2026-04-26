@@ -8,6 +8,7 @@ import {
 	moveOrArchiveCards,
 	updateCardMembers,
 } from './actions'
+import { getPullRequest } from './actions/api/github'
 import { run } from './main'
 
 vi.mock('@actions/core')
@@ -17,10 +18,15 @@ vi.mock('./actions/api/github')
 vi.mock('./actions')
 
 const getCardIdsMock = vi.mocked<any>(getCardIds)
+const getPullRequestMock = vi.mocked<any>(getPullRequest)
 
 const pr = { number: 0, state: 'open', title: 'Title', head: 'head' }
 const conf = { trelloListIdPrOpen: '123' }
 const action = 'closed'
+
+beforeEach(() => {
+	getPullRequestMock.mockResolvedValue(pr)
+})
 
 it('triggers all actions when cards found', async () => {
 	const cardIds = ['card-id-1', 'card-id-2']
