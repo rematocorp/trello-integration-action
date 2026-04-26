@@ -9,19 +9,17 @@ import {
 	updateCardMembers,
 } from './actions'
 import { Action, Conf, PR } from './types'
-import { getPullRequest } from './actions/api/github'
 
 export async function run({ head }: PR, action: Action, conf: Conf) {
 	try {
-		const pr = await getPullRequest()
-		const cardIds = await getCardIds(pr, conf, head)
+		const cardIds = await getCardIds(conf, head)
 
 		if (cardIds.length) {
 			await addCardLinksToPullRequest(conf, cardIds)
-			await addPullRequestLinkToCards(cardIds, pr)
-			await moveOrArchiveCards(conf, cardIds, pr, action)
+			await addPullRequestLinkToCards(cardIds)
+			await moveOrArchiveCards(conf, cardIds, action)
 			await addLabelToCards(conf, cardIds, head)
-			await updateCardMembers(conf, cardIds, pr)
+			await updateCardMembers(conf, cardIds)
 		}
 	} catch (error: any) {
 		setFailed(error)

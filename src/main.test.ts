@@ -8,7 +8,6 @@ import {
 	moveOrArchiveCards,
 	updateCardMembers,
 } from './actions'
-import { getPullRequest } from './actions/api/github'
 import { run } from './main'
 
 vi.mock('@actions/core')
@@ -18,15 +17,10 @@ vi.mock('./actions/api/github')
 vi.mock('./actions')
 
 const getCardIdsMock = vi.mocked<any>(getCardIds)
-const getPullRequestMock = vi.mocked<any>(getPullRequest)
 
 const pr = { number: 0, state: 'open', title: 'Title', head: 'head' }
 const conf = { trelloListIdPrOpen: '123' }
 const action = 'closed'
-
-beforeEach(() => {
-	getPullRequestMock.mockResolvedValue(pr)
-})
 
 it('triggers all actions when cards found', async () => {
 	const cardIds = ['card-id-1', 'card-id-2']
@@ -36,10 +30,10 @@ it('triggers all actions when cards found', async () => {
 	await run(pr, action, conf)
 
 	expect(addCardLinksToPullRequest).toHaveBeenCalledWith(conf, cardIds)
-	expect(addPullRequestLinkToCards).toHaveBeenCalledWith(cardIds, pr)
-	expect(moveOrArchiveCards).toHaveBeenCalledWith(conf, cardIds, pr, action)
+	expect(addPullRequestLinkToCards).toHaveBeenCalledWith(cardIds)
+	expect(moveOrArchiveCards).toHaveBeenCalledWith(conf, cardIds, action)
 	expect(addLabelToCards).toHaveBeenCalledWith(conf, cardIds, pr.head)
-	expect(updateCardMembers).toHaveBeenCalledWith(conf, cardIds, pr)
+	expect(updateCardMembers).toHaveBeenCalledWith(conf, cardIds)
 })
 
 it('does nothing when no cards found', async () => {
