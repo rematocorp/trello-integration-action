@@ -38804,8 +38804,9 @@ function findMatchingLabels(branchLabel, manualLabels, boardLabels) {
 }
 
 // src/actions/addPullRequestLinkToCards.ts
-async function addPullRequestLinkToCards(cardIds, pr) {
+async function addPullRequestLinkToCards(cardIds) {
   startGroup("\u{1F517} ADD PR LINK TO CARDS");
+  const pr = await getPullRequest();
   const link = pr.html_url || pr.url;
   return Promise.all(
     cardIds.map(async (cardId) => {
@@ -38831,8 +38832,9 @@ function isPullRequestInDraft(pr) {
 }
 
 // src/actions/getCardIds.ts
-async function getCardIds(pr, conf, head) {
+async function getCardIds(conf, head) {
   startGroup("\u{1F50E} FIND CARDS");
+  const pr = await getPullRequest();
   let cardIds = matchCardIds(conf, pr.body || "");
   if (conf.githubIncludeNewCardCommand) {
     const createdCardId = await createNewCardOnCommand(conf, pr);
@@ -39006,12 +39008,13 @@ async function isPullRequestApproved() {
 }
 
 // src/actions/moveOrArchiveCards.ts
-async function moveOrArchiveCards(conf, cardIds, pr, action) {
+async function moveOrArchiveCards(conf, cardIds, action) {
   startGroup("\u{1F57A} MOVE OR ARCHIVE CARDS");
-  const isDraft = isPullRequestInDraft(pr);
   const isChangesRequested = await isChangesRequestedInReview();
   const isApproved = await isPullRequestApproved();
   const isMerged = await isPullRequestMerged();
+  const pr = await getPullRequest();
+  const isDraft = isPullRequestInDraft(pr);
   if (conf.trelloListIdOverride) {
     return moveCardsToList(cardIds, conf.trelloListIdOverride, conf.trelloBoardId);
   }
@@ -39099,24 +39102,25 @@ function wildcardMatch(pattern, text) {
 }
 
 // src/actions/updateCardMembers.ts
-async function updateCardMembers(conf, cardIds, pr) {
+async function updateCardMembers(conf, cardIds) {
   if (!conf.trelloAddMembersToCards) {
     return;
   }
   startGroup("\u{1F469}\u200D\u{1F4BB} UPDATE CARD MEMBERS");
-  const inReview = await isPullRequestInReview(conf, pr);
+  const inReview = await isPullRequestInReview(conf);
   if (inReview) {
     await assignReviewers(conf, cardIds);
   } else {
     await assignContributors(conf, cardIds);
   }
 }
-async function isPullRequestInReview(conf, pr) {
+async function isPullRequestInReview(conf) {
   const isChangesRequested = await isChangesRequestedInReview();
   const isApproved = await isPullRequestApproved();
   if (!conf.trelloSwitchMembersInReview) {
     return false;
   }
+  const pr = await getPullRequest();
   if (pr.state !== "open") {
     return false;
   }
@@ -39309,14 +39313,13 @@ function getTrelloUsername(conf, githubUsername) {
 // src/main.ts
 async function run({ head }, action, conf) {
   try {
-    const pr = await getPullRequest();
-    const cardIds = await getCardIds(pr, conf, head);
+    const cardIds = await getCardIds(conf, head);
     if (cardIds.length) {
       await addCardLinksToPullRequest(conf, cardIds);
-      await addPullRequestLinkToCards(cardIds, pr);
-      await moveOrArchiveCards(conf, cardIds, pr, action);
+      await addPullRequestLinkToCards(cardIds);
+      await moveOrArchiveCards(conf, cardIds, action);
       await addLabelToCards(conf, cardIds, head);
-      await updateCardMembers(conf, cardIds, pr);
+      await updateCardMembers(conf, cardIds);
     }
   } catch (error2) {
     setFailed(error2);
