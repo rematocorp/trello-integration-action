@@ -84,10 +84,9 @@ it('removes only reviewers when unrelated members removing is turned off but swi
 	getMemberInfoMock.mockImplementation((username: string) => ({ id: username }))
 	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: ['amy1993', 'jones'] })
 
-	await updateCardMembers(
-		{ ...conf, trelloRemoveUnrelatedMembers: false, trelloSwitchMembersInReview: true },
-		['card'],
-	)
+	await updateCardMembers({ ...conf, trelloRemoveUnrelatedMembers: false, trelloSwitchMembersInReview: true }, [
+		'card',
+	])
 
 	expect(removeMemberFromCard).toHaveBeenCalledTimes(1)
 	expect(removeMemberFromCard).toHaveBeenCalledWith('card', 'amy1993')
@@ -131,10 +130,9 @@ it('skips removing reviewers when none found', async () => {
 	getMemberInfoMock.mockImplementation((username: string) => ({ id: username }))
 	getCardInfoMock.mockResolvedValue({ id: 'card', idMembers: ['amy', 'jones'] })
 
-	await updateCardMembers(
-		{ ...conf, trelloRemoveUnrelatedMembers: false, trelloSwitchMembersInReview: true },
-		['card'],
-	)
+	await updateCardMembers({ ...conf, trelloRemoveUnrelatedMembers: false, trelloSwitchMembersInReview: true }, [
+		'card',
+	])
 
 	expect(removeMemberFromCard).not.toHaveBeenCalled()
 })
