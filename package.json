@@ -27,7 +27,7 @@
 		"oxlint": "^1.67.0",
 		"prettier": "^3.8.3",
 		"typescript": "^6.0.3",
-		"vitest": "^4.1.7"
+		"vitest": "^4.1.8"
 	},
 	"prettier": "@remato/prettier-config"
 }
