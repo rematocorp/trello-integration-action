@@ -11,6 +11,7 @@ import {
 } from './api/github'
 import { createCard, getCardActions, getCardInfo, searchTrelloCards } from './api/trello'
 import isPullRequestInDraft from './utils/isPullRequestInDraft'
+import resolveListIdFromString from './utils/resolveListIdFromString'
 import logger from './utils/logger'
 import matchCardIds from './utils/matchCardIds'
 
@@ -231,13 +232,25 @@ async function createNewCardOnMerge(conf: Conf, pr: PR) {
 		return
 	}
 
-	if (!conf.trelloListIdPrClosed) {
-		logger.log('Could not create new card on merge as trelloListIdPrClosed is not configured')
+	const listIdConf = conf.trelloListIdPrMerged || conf.trelloListIdPrClosed
+
+	if (!listIdConf) {
+		logger.log(
+			'Could not create new card on merge as trelloListIdPrMerged and trelloListIdPrClosed are not configured',
+		)
 
 		return
 	}
 
-	const card = await createCard(conf.trelloListIdPrClosed, pr.title, pr.body || '')
+	const listId = await resolveListIdFromString(listIdConf)
+
+	if (!listId) {
+		logger.log('Could not create new card on merge as no suitable list ID found', { listIdConf })
+
+		return
+	}
+
+	const card = await createCard(listId, pr.title, pr.body || '')
 	const body = conf.githubRequireKeywordPrefix ? `Closes ${card.url}` : card.url
 
 	await updatePullRequestBody((pr.body ? pr.body + '\n' : '') + body)

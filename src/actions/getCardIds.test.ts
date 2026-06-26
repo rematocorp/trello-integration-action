@@ -5,6 +5,7 @@ import {
 	getCommits,
 	getPullRequest,
 	getPullRequestComments,
+	getTargetBranchName,
 	isPullRequestMerged,
 	updatePullRequestBody,
 } from './api/github'
@@ -25,6 +26,7 @@ const createCardMock = vi.mocked<any>(createCard)
 const getCardInfoMock = vi.mocked<any>(getCardInfo)
 const getCardActionsMock = vi.mocked<any>(getCardActions)
 const isPullRequestMergedMock = vi.mocked<any>(isPullRequestMerged)
+const getTargetBranchNameMock = vi.mocked<any>(getTargetBranchName)
 
 const pr = { number: 0, state: 'open', title: 'Title' }
 const prHead = { ref: 'branch-name' }
@@ -386,6 +388,26 @@ describe('Creating new card on merge', () => {
 		expect(cardIds).toEqual(['card-id'])
 	})
 
+	it('uses trelloListIdPrMerged when configured', async () => {
+		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: 'Description' })
+		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
+		isPullRequestMergedMock.mockResolvedValue(true)
+
+		await getCardIds({ ...conf, trelloListIdPrMerged: 'merged-list-id' }, prHead)
+
+		expect(createCard).toHaveBeenCalledWith('merged-list-id', 'Title', 'Description')
+	})
+
+	it('prefers trelloListIdPrMerged over trelloListIdPrClosed when both are configured', async () => {
+		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: 'Description' })
+		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
+		isPullRequestMergedMock.mockResolvedValue(true)
+
+		await getCardIds({ ...conf, trelloListIdPrMerged: 'merged-list-id' }, prHead)
+
+		expect(createCard).toHaveBeenCalledWith('merged-list-id', 'Title', 'Description')
+	})
+
 	it('adds new card with "Closes" keyword', async () => {
 		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: 'Description' })
 		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
@@ -415,10 +437,31 @@ describe('Creating new card on merge', () => {
 		expect(cardIds).toEqual([])
 	})
 
-	it('skips when list is missing', async () => {
+	it('resolves list id from pattern config', async () => {
+		getPullRequestMock.mockResolvedValueOnce({ ...pr, body: 'Description' })
+		createCardMock.mockResolvedValueOnce({ shortLink: 'card-id', url: 'card-url' })
+		isPullRequestMergedMock.mockResolvedValue(true)
+		getTargetBranchNameMock.mockResolvedValue('main')
+
+		await getCardIds({ ...conf, trelloListIdPrClosed: 'release/*:release-list-id\n*:default-list-id' }, prHead)
+
+		expect(createCard).toHaveBeenCalledWith('default-list-id', 'Title', 'Description')
+	})
+
+	it('skips when pattern does not match any branch', async () => {
+		isPullRequestMergedMock.mockResolvedValue(true)
+		getTargetBranchNameMock.mockResolvedValue('main')
+
+		const cardIds = await getCardIds({ ...conf, trelloListIdPrClosed: 'release/*:release-list-id' }, prHead)
+
+		expect(createCard).not.toHaveBeenCalled()
+		expect(cardIds).toEqual([])
+	})
+
+	it('skips when neither trelloListIdPrMerged nor trelloListIdPrClosed is configured', async () => {
 		isPullRequestMergedMock.mockResolvedValue(true)
 
-		const cardIds = await getCardIds({ ...conf, trelloListIdPrClosed: '' }, prHead)
+		const cardIds = await getCardIds({ ...conf, trelloListIdPrClosed: '', trelloListIdPrMerged: '' }, prHead)
 
 		expect(createCard).not.toHaveBeenCalled()
 		expect(cardIds).toEqual([])
