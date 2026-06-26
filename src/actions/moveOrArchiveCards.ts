@@ -89,4 +89,3 @@ async function moveCardsToList(cardIds: string[], listId: string, boardId?: stri
 		}),
 	)
 }
-
