@@ -22,12 +22,12 @@
 	"devDependencies": {
 		"@remato/prettier-config": "^1.1.0",
 		"@types/node": "^26.5.1",
-		"@vitest/coverage-v8": "^4.1.11",
+		"@vitest/coverage-v8": "^5.0.2",
 		"esbuild": "^0.28.2",
 		"oxlint": "^1.82.0",
 		"prettier": "^3.9.8",
 		"typescript": "^7.0.2",
-		"vitest": "^4.1.11"
+		"vitest": "^5.0.2"
 	},
 	"prettier": "@remato/prettier-config"
 }
