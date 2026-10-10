@@ -21,7 +21,7 @@
 	},
 	"devDependencies": {
 		"@remato/prettier-config": "^1.1.0",
-		"@types/node": "^26.6.3",
+		"@types/node": "^26.6.4",
 		"@vitest/coverage-v8": "^5.0.2",
 		"esbuild": "^0.28.2",
 		"oxlint": "^1.85.0",
